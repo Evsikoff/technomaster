@@ -16,10 +16,13 @@ const OPPONENT_COOLNESS_WINS_STORAGE_KEY = 'technomaster.opponent.coolness.wins'
 function isRunningInYandexGames() {
     const hasSdk = typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isLocalHost = host === '' || host === 'localhost' || host === '127.0.0.1';
     const looksLikeYandexHost = host.endsWith('yandex.ru') || host.endsWith('yandex.net');
-    const isYandex = hasSdk || looksLikeYandexHost;
+    const isYandex = !isLocalHost && (hasSdk || looksLikeYandexHost);
 
-    console.log(`Yandex Games: проверка запуска (SDK=${hasSdk}, host=${host || 'unknown'}): ${isYandex}`);
+    console.log(
+        `Yandex Games: проверка запуска (SDK=${hasSdk}, host=${host || 'unknown'}, local=${isLocalHost}): ${isYandex}`
+    );
     return isYandex;
 }
 
