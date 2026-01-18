@@ -597,11 +597,11 @@ class CardRenderer {
         }
 
         try {
-            // Читаем запись со значением поля "id" = "1" (интерпретируем "поля '0'" как первую колонку id)
-            const result = this.db.exec('SELECT * FROM deck_rules WHERE id = 1');
+            // Читаем запись со значением поля "id" = "0" (как требуется для колоды размером 8 карт)
+            const result = this.db.exec('SELECT * FROM deck_rules WHERE id = 0');
 
             if (!result.length || !result[0].values.length) {
-                console.warn('CardRenderer: Правила для стартовой колоды не найдены (id=1)');
+                console.warn('CardRenderer: Правила для стартовой колоды не найдены (id=0)');
                 return null;
             }
 
