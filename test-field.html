@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technomaster - Тестирование игрового поля</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Technomaster - Тестирование игрового поля</h1>
+
+        <div class="field-test-panel">
+            <h2>Управление полем</h2>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="unavailableCount">Количество недоступных ячеек (0-6):</label>
+                    <select id="unavailableCount">
+                        <option value="random">Случайное (0-6)</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cellScale">Масштаб ячеек:</label>
+                    <select id="cellScale">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100% (200x280)</option>
+                        <option value="1.25">125%</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="regenerateBtn" class="regenerate-btn">Перегенерировать поле</button>
+            <button id="randomBtn" class="random-btn">Полностью случайное поле</button>
+
+            <div class="field-info" id="fieldInfo">
+                <!-- Информация о поле будет добавлена динамически -->
+            </div>
+        </div>
+
+        <div class="field-display">
+            <div id="fieldContainer">
+                <!-- Здесь будет отрисовано игровое поле -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game-field-renderer.js"></script>
+    <script>
+        // Текущие данные поля
+        let currentFieldData = null;
+
+        /**
+         * Обновление информации о поле
+         */
+        function updateFieldInfo(fieldData) {
+            const infoContainer = document.getElementById('fieldInfo');
+
+            const availableCells = fieldData.cells.filter(c => c.isAvailable).length;
+            const unavailableCells = fieldData.unavailableCount;
+
+            infoContainer.innerHTML = `
+                <div class="field-info-item">
+                    <strong>Размер поля:</strong> ${fieldData.gridSize}x${fieldData.gridSize}
+                </div>
+                <div class="field-info-item">
+                    <strong>Всего ячеек:</strong> ${fieldData.cells.length}
+                </div>
+                <div class="field-info-item">
+                    <strong>Доступных:</strong> <span style="color: #4caf50;">${availableCells}</span>
+                </div>
+                <div class="field-info-item">
+                    <strong>Недоступных:</strong> <span style="color: #ef5350;">${unavailableCells}</span>
+                </div>
+                <div class="field-info-item">
+                    <strong>Заблокированные индексы:</strong> [${fieldData.unavailableIndices.join(', ') || 'нет'}]
+                </div>
+            `;
+        }
+
+        /**
+         * Генерация поля с текущими настройками
+         */
+        function generateField() {
+            const container = document.getElementById('fieldContainer');
+            const unavailableSelect = document.getElementById('unavailableCount');
+            const scaleSelect = document.getElementById('cellScale');
+
+            const unavailableValue = unavailableSelect.value;
+            const scale = parseFloat(scaleSelect.value);
+
+            const options = {
+                cellWidth: Math.round(200 * scale),
+                cellHeight: Math.round(280 * scale),
+                cellGap: Math.round(10 * scale)
+            };
+
+            // Если выбрано конкретное количество недоступных ячеек
+            if (unavailableValue !== 'random') {
+                options.unavailableCount = parseInt(unavailableValue, 10);
+            }
+
+            currentFieldData = gameFieldRenderer.regenerateField(container, options);
+            updateFieldInfo(currentFieldData);
+
+            // Добавляем обработчики клика на ячейки
+            addCellClickHandlers();
+        }
+
+        /**
+         * Генерация полностью случайного поля
+         */
+        function generateRandomField() {
+            const container = document.getElementById('fieldContainer');
+            const scaleSelect = document.getElementById('cellScale');
+            const scale = parseFloat(scaleSelect.value);
+
+            const options = {
+                cellWidth: Math.round(200 * scale),
+                cellHeight: Math.round(280 * scale),
+                cellGap: Math.round(10 * scale)
+            };
+
+            currentFieldData = gameFieldRenderer.regenerateField(container, options);
+            updateFieldInfo(currentFieldData);
+
+            // Добавляем обработчики клика на ячейки
+            addCellClickHandlers();
+        }
+
+        /**
+         * Добавление обработчиков клика на ячейки
+         */
+        function addCellClickHandlers() {
+            if (!currentFieldData) return;
+
+            currentFieldData.cells.forEach(cellData => {
+                cellData.element.addEventListener('click', () => {
+                    if (cellData.isAvailable) {
+                        console.log(`Клик по доступной ячейке [${cellData.row}, ${cellData.col}] (индекс: ${cellData.index})`);
+                        // Визуальная обратная связь
+                        cellData.element.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            cellData.element.style.transform = '';
+                        }, 150);
+                    } else {
+                        console.log(`Попытка клика по недоступной ячейке [${cellData.row}, ${cellData.col}] (индекс: ${cellData.index})`);
+                        // Визуальная обратная связь - "покачивание"
+                        cellData.element.style.animation = 'shake 0.3s ease';
+                        setTimeout(() => {
+                            cellData.element.style.animation = '';
+                        }, 300);
+                    }
+                });
+            });
+        }
+
+        // Добавляем анимацию покачивания для недоступных ячеек
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            // Генерируем начальное поле
+            generateField();
+
+            // Обработчики кнопок
+            document.getElementById('regenerateBtn').addEventListener('click', generateField);
+            document.getElementById('randomBtn').addEventListener('click', generateRandomField);
+
+            // Обработчик изменения масштаба
+            document.getElementById('cellScale').addEventListener('change', generateField);
+
+            console.log('Тестовая страница игрового поля загружена');
+            console.log('Используйте gameFieldRenderer для доступа к рендереру');
+            console.log('Используйте currentFieldData для доступа к текущим данным поля');
+        });
+    </script>
+</body>
+</html>
