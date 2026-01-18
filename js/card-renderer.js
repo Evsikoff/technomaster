@@ -230,13 +230,13 @@ class CardRenderer {
         statsBlock.className = 'card-stats';
 
         // Уровень атаки
-        const attackLevelStat = this.createStatItem('АТК', attackLevel, 'attack');
+        const attackLevelStat = this.createStatItem('А', attackLevel, 'attack', 'Атака - сила удара карты');
         // Тип атаки
-        const attackTypeStat = this.createStatItem('ТИП', attackType, 'attack-type');
+        const attackTypeStat = this.createStatItem('Т', attackType, 'attack-type', 'Тип атаки (P - физическая, E - электрическая)');
         // Механическая защита
-        const mechDefStat = this.createStatItem('МЕХ', mechanicalDefense, 'mech-def');
+        const mechDefStat = this.createStatItem('М', mechanicalDefense, 'mech-def', 'Механическая защита - защита от физических атак');
         // Электрическая защита
-        const elecDefStat = this.createStatItem('ЭЛК', electricalDefense, 'elec-def');
+        const elecDefStat = this.createStatItem('Э', electricalDefense, 'elec-def', 'Электрическая защита - защита от электрических атак');
 
         statsBlock.appendChild(attackLevelStat);
         statsBlock.appendChild(attackTypeStat);
@@ -284,11 +284,15 @@ class CardRenderer {
      * @param {string} label - Метка стата
      * @param {string} value - Значение стата
      * @param {string} type - Тип стата для стилизации
+     * @param {string} tooltip - Подсказка при наведении мыши
      * @returns {HTMLElement} - DOM-элемент стата
      */
-    createStatItem(label, value, type) {
+    createStatItem(label, value, type, tooltip = '') {
         const statItem = document.createElement('div');
         statItem.className = `stat-item ${type}`;
+        if (tooltip) {
+            statItem.title = tooltip;
+        }
 
         const statLabel = document.createElement('span');
         statLabel.className = 'stat-label';
