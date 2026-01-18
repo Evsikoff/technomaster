@@ -12,32 +12,42 @@ body {
 }
 
 .start-screen {
+    overflow: hidden;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.start-screen-frame {
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 30px 20px 60px;
+    padding: clamp(20px, 3vw, 40px);
+    gap: clamp(16px, 2vw, 24px);
 }
 
 .game-header {
     width: 100%;
-    max-width: 1200px;
     text-align: center;
-    margin-bottom: 20px;
 }
 
 .game-title {
-    font-size: clamp(32px, 6vw, 56px);
-    letter-spacing: 6px;
+    font-size: clamp(28px, 5vw, 56px);
+    letter-spacing: clamp(2px, 0.8vw, 6px);
     color: #ffd700;
     text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
 .start-main {
-    width: 100%;
-    max-width: 1200px;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: clamp(16px, 2vw, 24px);
 }
 
 .deck-banner {
@@ -80,15 +90,20 @@ body {
 }
 
 .opponents-section {
+    flex: 1;
+    min-height: 0;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 18px;
-    padding: 24px;
+    padding: clamp(16px, 2vw, 24px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.5vw, 20px);
+    overflow: hidden;
 }
 
 .section-title {
-    font-size: 22px;
-    margin-bottom: 20px;
+    font-size: clamp(18px, 3vw, 22px);
     color: #87ceeb;
     text-align: center;
     text-transform: uppercase;
@@ -97,8 +112,10 @@ body {
 
 .opponents-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    grid-template-columns: 1fr;
+    gap: clamp(12px, 1.5vw, 18px);
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 .opponent-badge {
