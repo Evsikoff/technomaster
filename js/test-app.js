@@ -142,6 +142,17 @@ document.addEventListener('DOMContentLoaded', async () => {
  *
  * // Несколько карт подряд
  * [1, 2, 3, 4, 5].forEach(id => testCard({ cardTypeId: id }));
+ *
+ * // Генерация колоды и отрисовка
+ * testGeneratedDeck({
+ *     deck_size: 6,
+ *     level_min: 0,
+ *     level_max: 3,
+ *     group_1_weight: 4,
+ *     group_2_weight: 3,
+ *     group_3_weight: 2,
+ *     group_4_weight: 1
+ * });
  */
 function testCard(params) {
     const container = document.getElementById('cardContainer');
@@ -228,7 +239,26 @@ function testMultipleCards(paramsArray) {
     console.log(`Отрисовано карт: ${paramsArray.length}`);
 }
 
+/**
+ * Генерация колоды карт и отображение результата
+ * @param {Object} options - Параметры генерации
+ * @returns {Array} - Массив сгенерированных карт
+ */
+function testGeneratedDeck(options) {
+    try {
+        const deck = cardRenderer.generateDeck(options);
+        const renderParams = deck.map(card => card.renderParams);
+        testMultipleCards(renderParams);
+        console.log('Сгенерированная колода (коды карт):', deck.map(card => card.cardCode));
+        return deck;
+    } catch (error) {
+        console.error('Ошибка генерации колоды:', error);
+        return [];
+    }
+}
+
 // Экспортируем функции в глобальную область для тестирования из консоли
 window.testCard = testCard;
 window.testMultipleCards = testMultipleCards;
+window.testGeneratedDeck = testGeneratedDeck;
 window.cardRenderer = cardRenderer;
