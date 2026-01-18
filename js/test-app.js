@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderBtn = document.getElementById('renderBtn');
     const randomBtn = document.getElementById('randomBtn');
 
+    const userCardCount = await window.userCards.getUserCardCount();
+    console.log(`Определено количество карт пользователя: ${userCardCount}`);
+
     // Показываем загрузку
     cardContainer.innerHTML = '<div class="loading">Загрузка базы данных...</div>';
 
