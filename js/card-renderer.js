@@ -122,14 +122,14 @@ class CardRenderer {
      */
     getArrowSymbol(direction) {
         const arrows = {
-            'topLeft': '↖',
-            'top': '↑',
-            'topRight': '↗',
-            'right': '→',
-            'bottomRight': '↘',
-            'bottom': '↓',
-            'bottomLeft': '↙',
-            'left': '←'
+            'topLeft': '◤',
+            'top': '▲',
+            'topRight': '◥',
+            'right': '▶',
+            'bottomRight': '◢',
+            'bottom': '▼',
+            'bottomLeft': '◣',
+            'left': '◀'
         };
         return arrows[direction] || '';
     }
