@@ -354,6 +354,46 @@ class CardRenderer {
     }
 
     /**
+     * Получение параметров генерации колоды по правилу
+     * @param {number} ruleId - Идентификатор правила
+     * @returns {Object|null} - Параметры генерации или null
+     */
+    getDeckRuleById(ruleId) {
+        if (!this.dbReady) {
+            throw new Error('База данных не инициализирована. Вызовите init() перед использованием.');
+        }
+
+        if (!Number.isInteger(ruleId)) {
+            throw new Error('Некорректный идентификатор правила колоды.');
+        }
+
+        try {
+            const result = this.db.exec(
+                'SELECT deck_size, level_min, level_max, group_1_weight, group_2_weight, group_3_weight, group_4_weight' +
+                ` FROM deck_rules WHERE id = ${ruleId}`
+            );
+
+            if (!result.length || !result[0].values.length) {
+                return null;
+            }
+
+            const row = result[0].values[0];
+            return {
+                deck_size: row[0],
+                level_min: row[1],
+                level_max: row[2],
+                group_1_weight: row[3],
+                group_2_weight: row[4],
+                group_3_weight: row[5],
+                group_4_weight: row[6]
+            };
+        } catch (error) {
+            console.error('CardRenderer: Ошибка получения правил колоды:', error);
+            return null;
+        }
+    }
+
+    /**
      * Генерация колоды карт по заданным параметрам
      * @param {Object} params - Параметры генерации
      * @param {number} params.deck_size - Размер колоды

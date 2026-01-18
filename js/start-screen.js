@@ -1,6 +1,7 @@
 const OPPONENTS_DB_PATH = 'public/data/cards.db';
 const OPPONENTS_AVATAR_PATH = 'public/img/opponents';
 const MIN_DECK_PULSE_THRESHOLD = 5;
+const START_DECK_RULE_ID = 1;
 
 /**
  * Создает DOM-элемент бейджа соперника.
@@ -73,6 +74,42 @@ async function loadOpponentsFromDb() {
 }
 
 /**
+ * Генерирует стартовую колоду, если карт у игрока нет.
+ * @returns {Promise<number>}
+ */
+async function ensureStartDeck() {
+    const cardCount = await (window.userCards?.getUserCardCount?.() ?? Promise.resolve(0));
+    if (cardCount > 0) {
+        return cardCount;
+    }
+
+    if (!window.cardRenderer) {
+        console.warn('Стартовая колода: CardRenderer не доступен.');
+        return 0;
+    }
+
+    try {
+        await window.cardRenderer.init();
+        const deckRule = window.cardRenderer.getDeckRuleById(START_DECK_RULE_ID);
+
+        if (!deckRule) {
+            console.warn('Стартовая колода: правило не найдено в deck_rules.');
+            return 0;
+        }
+
+        const deck = window.cardRenderer.generateDeck(deckRule);
+        const cards = deck.map(card => card.renderParams);
+
+        await window.userCards?.saveGeneratedCards?.(cards);
+
+        return cards.length;
+    } catch (error) {
+        console.error('Стартовая колода: ошибка генерации.', error);
+        return 0;
+    }
+}
+
+/**
  * Инициализирует стартовый экран.
  */
 async function initStartScreen() {
@@ -85,7 +122,7 @@ async function initStartScreen() {
 
     try {
         const [cardCount, maxCoolness, opponents] = await Promise.all([
-            window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
+            ensureStartDeck(),
             window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0),
             loadOpponentsFromDb()
         ]);

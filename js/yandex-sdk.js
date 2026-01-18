@@ -5,6 +5,7 @@
  */
 
 const USER_CARDS_STORAGE_KEY = 'technomaster.cards.count';
+const USER_CARDS_LIST_STORAGE_KEY = 'technomaster.cards.list';
 const MAX_OPPONENT_COOLNESS_STORAGE_KEY = 'technomaster.opponent.coolness.max';
 const OPPONENT_COOLNESS_WINS_STORAGE_KEY = 'technomaster.opponent.coolness.wins';
 
@@ -200,6 +201,56 @@ function getCardCountFromBrowser() {
 }
 
 /**
+ * Сохраняет карты пользователя в памяти браузера.
+ * @param {Array} cards
+ */
+function saveCardsToBrowser(cards) {
+    if (!Array.isArray(cards)) {
+        console.warn('Browser: некорректные данные карт для сохранения.');
+        return;
+    }
+
+    try {
+        localStorage.setItem(USER_CARDS_LIST_STORAGE_KEY, JSON.stringify(cards));
+        localStorage.setItem(USER_CARDS_STORAGE_KEY, String(cards.length));
+        console.log(`Browser: сохранено карт в локальной памяти = ${cards.length}.`);
+    } catch (error) {
+        console.error('Browser: ошибка сохранения карт.', error);
+    }
+}
+
+/**
+ * Сохраняет карты пользователя в Яндекс Облаке.
+ * @param {Array} cards
+ * @returns {Promise<void>}
+ */
+async function saveCardsToYandexCloud(cards) {
+    if (!Array.isArray(cards)) {
+        console.warn('Yandex Games: некорректные данные карт для облака.');
+        return;
+    }
+
+    if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
+        console.warn('Yandex Games: SDK не доступен для сохранения карт.');
+        return;
+    }
+
+    try {
+        /** @type {SDK} */
+        const ysdk = await window.YaGames.init();
+        /** @type {Player} */
+        const player = await ysdk.getPlayer();
+        await player.setData({
+            cards,
+            cardCount: cards.length
+        });
+        console.log(`Yandex Games: сохранено карт в облаке = ${cards.length}.`);
+    } catch (error) {
+        console.error('Yandex Games: ошибка сохранения карт в облаке.', error);
+    }
+}
+
+/**
  * Получает максимальную крутость побежденного соперника из памяти браузера.
  * @returns {number}
  */
@@ -256,8 +307,24 @@ async function getMaxOpponentCoolness() {
     return getMaxOpponentCoolnessFromBrowser();
 }
 
+/**
+ * Сохраняет сгенерированную колоду в нужные хранилища.
+ * @param {Array} cards
+ * @returns {Promise<void>}
+ */
+async function saveGeneratedCards(cards) {
+    if (isRunningInYandexGames()) {
+        await saveCardsToYandexCloud(cards);
+        saveCardsToBrowser(cards);
+        return;
+    }
+
+    saveCardsToBrowser(cards);
+}
+
 window.userCards = {
     getUserCardCount,
     getMaxOpponentCoolness,
-    isRunningInYandexGames
+    isRunningInYandexGames,
+    saveGeneratedCards
 };
