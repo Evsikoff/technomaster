@@ -11,6 +11,196 @@ body {
     color: #e0e0e0;
 }
 
+.start-screen {
+    overflow: hidden;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.start-screen-frame {
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    aspect-ratio: 16 / 9;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(20px, 3vw, 40px);
+    gap: clamp(16px, 2vw, 24px);
+}
+
+.game-header {
+    width: 100%;
+    text-align: center;
+}
+
+.game-title {
+    font-size: clamp(28px, 5vw, 56px);
+    letter-spacing: clamp(2px, 0.8vw, 6px);
+    color: #ffd700;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.start-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 2vw, 24px);
+}
+
+.deck-banner {
+    width: 100%;
+    padding: 22px 24px;
+    border: none;
+    border-radius: 18px;
+    font-size: clamp(20px, 4vw, 30px);
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #0f1b2d;
+    background: linear-gradient(120deg, #f9d423 0%, #ff4e50 100%);
+    box-shadow: 0 12px 30px rgba(249, 212, 35, 0.35);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.deck-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(255, 78, 80, 0.35);
+}
+
+.deck-banner--pulse {
+    animation: deckPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes deckPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 78, 80, 0.4);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 22px rgba(255, 78, 80, 0.6);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(255, 78, 80, 0.4);
+    }
+}
+
+.opponents-section {
+    flex: 1;
+    min-height: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: clamp(16px, 2vw, 24px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.5vw, 20px);
+    overflow: hidden;
+}
+
+.section-title {
+    font-size: clamp(18px, 3vw, 22px);
+    color: #87ceeb;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.opponents-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(12px, 1.5vw, 18px);
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.6);
+    scrollbar-width: thin;
+}
+
+.opponents-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.opponents-grid::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.opponents-grid::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.85), rgba(255, 78, 80, 0.7));
+    border-radius: 999px;
+    border: 2px solid rgba(20, 30, 50, 0.6);
+}
+
+.opponents-grid::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 1), rgba(255, 78, 80, 0.9));
+}
+
+.opponent-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(24, 33, 54, 0.8);
+    border: 1px solid rgba(135, 206, 235, 0.3);
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.opponent-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 16px rgba(135, 206, 235, 0.2);
+}
+
+.opponent-avatar {
+    width: 100%;
+    max-width: 140px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.opponent-name {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.opponent-sequence {
+    font-size: 14px;
+    color: rgba(224, 224, 224, 0.8);
+}
+
+.opponent-badge--locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    position: relative;
+}
+
+.opponent-badge--locked:hover {
+    transform: none;
+}
+
+.opponent-lock {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ff9b9b;
+}
+
+.opponents-error {
+    text-align: center;
+    color: #ff9b9b;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;

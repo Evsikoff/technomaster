@@ -3,93 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technomaster - Карточный рогалик</title>
+    <title>ТЕХНОМАСТЕР - Стартовый экран</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Technomaster - Тестирование карт</h1>
+<body class="start-screen">
+    <div class="start-screen-frame">
+        <header class="game-header">
+            <h1 class="game-title">ТЕХНОМАСТЕР</h1>
+        </header>
 
-        <div class="test-panel">
-            <h2>Параметры карты</h2>
+        <main class="start-main">
+            <button class="deck-banner" id="deckBanner" type="button">
+                МОЯ КОЛОДА
+            </button>
 
-            <div class="form-group">
-                <label for="cardTypeId">Идентификатор типа карты:</label>
-                <input type="number" id="cardTypeId" value="1" min="1" max="100">
-            </div>
-
-            <div class="form-group">
-                <label>Стрелки:</label>
-                <div class="arrows-grid">
-                    <label><input type="checkbox" id="arrowTopLeft"> ↖ Верхний левый</label>
-                    <label><input type="checkbox" id="arrowTop"> ↑ Верх</label>
-                    <label><input type="checkbox" id="arrowTopRight"> ↗ Верхний правый</label>
-                    <label><input type="checkbox" id="arrowLeft"> ← Лево</label>
-                    <label class="center-label">Карта</label>
-                    <label><input type="checkbox" id="arrowRight"> → Право</label>
-                    <label><input type="checkbox" id="arrowBottomLeft"> ↙ Нижний левый</label>
-                    <label><input type="checkbox" id="arrowBottom"> ↓ Низ</label>
-                    <label><input type="checkbox" id="arrowBottomRight"> ↘ Нижний правый</label>
+            <section class="opponents-section">
+                <h2 class="section-title">Соперники</h2>
+                <div class="opponents-grid" id="opponentsGrid">
+                    <!-- Бейджи соперников будут добавлены динамически -->
                 </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="ownership">Принадлежность:</label>
-                    <select id="ownership">
-                        <option value="player">Player (Игрок)</option>
-                        <option value="rival">Rival (Соперник)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="cardLevel">Уровень карты:</label>
-                    <select id="cardLevel">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="attackLevel">Уровень атаки:</label>
-                    <input type="text" id="attackLevel" value="5" maxlength="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="attackType">Тип атаки:</label>
-                    <input type="text" id="attackType" value="P" maxlength="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="mechanicalDefense">Мех. защита:</label>
-                    <input type="text" id="mechanicalDefense" value="3" maxlength="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="electricalDefense">Эл. защита:</label>
-                    <input type="text" id="electricalDefense" value="2" maxlength="1">
-                </div>
-            </div>
-
-            <button id="renderBtn" class="render-btn">Отрисовать карту</button>
-            <button id="randomBtn" class="random-btn">Случайная карта</button>
-        </div>
-
-        <div class="card-display">
-            <h2>Результат отрисовки</h2>
-            <div id="cardContainer" class="card-container">
-                <!-- Сюда будет отрисована карта -->
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
-    <script src="js/card-renderer.js"></script>
     <script src="js/yandex-sdk.js"></script>
-    <script src="js/test-app.js"></script>
+    <script src="js/start-screen.js"></script>
 </body>
 </html>
