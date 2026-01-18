@@ -237,11 +237,14 @@ function getMaxOpponentCoolnessFromBrowser() {
  * @returns {Promise<number>}
  */
 async function getUserCardCount() {
+    let count;
     if (isRunningInYandexGames()) {
-        return getCardCountFromYandexCloud();
+        count = await getCardCountFromYandexCloud();
+    } else {
+        count = getCardCountFromBrowser();
     }
-
-    return getCardCountFromBrowser();
+    console.log(`getUserCardCount returning: ${count}`);
+    return count;
 }
 
 /**

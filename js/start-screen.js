@@ -84,10 +84,17 @@ async function initStartScreen() {
     }
 
     try {
+        console.log('StartScreen: Start initializing...');
+        console.log('StartScreen: Checking window.userCards:', window.userCards);
+
         let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
             window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0)
         ]);
+
+        console.log(`StartScreen: Card count determined as: ${cardCount}`);
+        console.log(`StartScreen: Max opponent coolness determined as: ${maxCoolness}`);
+        console.log(`StartScreen: window.cardRenderer is available: ${!!window.cardRenderer}`);
 
         // Если карт 0, генерируем стартовую колоду
         if (cardCount === 0 && window.cardRenderer) {
