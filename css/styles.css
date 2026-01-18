@@ -295,6 +295,7 @@ h2 {
     position: absolute;
     font-size: 24px;
     font-weight: bold;
+    line-height: 1;
     color: #ffd700;
     text-shadow: 0 0 5px #ff8c00, 0 0 10px #ff4500, 0 0 2px #000;
     filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.8));
@@ -302,19 +303,19 @@ h2 {
 }
 
 .arrow-top-left {
-    top: 0;
-    left: 2px;
+    top: -4px;
+    left: -2px;
 }
 
 .arrow-top {
-    top: 0;
+    top: -4px;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .arrow-top-right {
-    top: 0;
-    right: 2px;
+    top: -4px;
+    right: -2px;
 }
 
 .arrow-right {
