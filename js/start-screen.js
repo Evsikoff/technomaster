@@ -84,15 +84,44 @@ async function initStartScreen() {
     }
 
     try {
-        const [cardCount, maxCoolness, opponents] = await Promise.all([
+        let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
-            window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0),
-            loadOpponentsFromDb()
+            window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0)
         ]);
+
+        // Если карт 0, генерируем стартовую колоду
+        if (cardCount === 0 && window.cardRenderer) {
+            console.log('StartScreen: Карт 0. Запуск генерации стартовой колоды...');
+            try {
+                await window.cardRenderer.init();
+                const rules = window.cardRenderer.getStarterDeckRules();
+
+                if (rules) {
+                    // Генерируем колоду
+                    const deck = window.cardRenderer.generateDeck(rules);
+                    console.log(`StartScreen: Сгенерировано ${deck.length} карт.`);
+
+                    // Сохраняем (Yandex Cloud + Browser)
+                    if (window.userCards.saveUserDeck) {
+                        await window.userCards.saveUserDeck(deck);
+
+                        // Обновляем счетчик
+                        cardCount = deck.length;
+                        console.log(`StartScreen: Счетчик карт обновлен до ${cardCount}`);
+                    }
+                }
+            } catch (genError) {
+                console.error('StartScreen: Ошибка при генерации стартовой колоды:', genError);
+            }
+        }
+
+        const opponents = await loadOpponentsFromDb();
 
         const hasLowCardCount = cardCount < MIN_DECK_PULSE_THRESHOLD;
         if (hasLowCardCount) {
             deckBanner.classList.add('deck-banner--pulse');
+        } else {
+            deckBanner.classList.remove('deck-banner--pulse');
         }
 
         const maxUnlockedSequence = Math.max(1, Number(maxCoolness) + 1);

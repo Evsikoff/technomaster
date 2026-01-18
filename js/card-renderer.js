@@ -581,16 +581,45 @@ class CardRenderer {
         return flags;
     }
 
-    /**
-     * Получение случайного целого числа в диапазоне
-     * @param {number} min - Минимальное значение
-     * @param {number} max - Максимальное значение
-     * @returns {number}
-     */
     getRandomIntInclusive(min, max) {
         const minimum = Math.min(min, max);
         const maximum = Math.max(min, max);
         return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+    }
+
+    /**
+     * Получение правил генерации стартовой колоды
+     * @returns {Object|null}
+     */
+    getStarterDeckRules() {
+        if (!this.dbReady) {
+            throw new Error('База данных не инициализирована');
+        }
+
+        try {
+            // Читаем запись со значением поля "0" = "1"
+            const result = this.db.exec('SELECT * FROM deck_rules WHERE "0" = 1');
+
+            if (!result.length || !result[0].values.length) {
+                console.warn('CardRenderer: Правила для стартовой колоды не найдены');
+                return null;
+            }
+
+            const columns = result[0].columns;
+            const row = result[0].values[0];
+            const rules = {};
+
+            columns.forEach((col, index) => {
+                rules[col] = row[index];
+            });
+
+            return rules;
+        } catch (error) {
+            console.error('CardRenderer: Ошибка получения правил колоды:', error);
+            // Fallback for debugging if column "0" doesn't exist? 
+            // The user was specific, so we probably shouldn't fallback to magic logic without permission.
+            return null;
+        }
     }
 }
 

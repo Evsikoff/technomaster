@@ -249,15 +249,55 @@ async function getUserCardCount() {
  * @returns {Promise<number>}
  */
 async function getMaxOpponentCoolness() {
-    if (isRunningInYandexGames()) {
-        return getMaxOpponentCoolnessFromYandexCloud();
+    return getMaxOpponentCoolnessFromBrowser();
+}
+
+/**
+ * Сохраняет колоду карт пользователя.
+ * @param {Array} cards - Массив карт (объекты с renderParams и т.д.)
+ * @returns {Promise<boolean>}
+ */
+async function saveUserDeck(cards) {
+    if (!Array.isArray(cards)) {
+        console.error('saveUserDeck: cards должен быть массивом');
+        return false;
     }
 
-    return getMaxOpponentCoolnessFromBrowser();
+    const cardCount = cards.length;
+    const dataToSave = {
+        cards: cards,
+        cardCount: cardCount
+    };
+
+    // Сохраняем в браузер
+    try {
+        localStorage.setItem(USER_CARDS_STORAGE_KEY, String(cardCount));
+        // Сохраняем полную колоду тоже, если нужно (добавляем новый ключ)
+        localStorage.setItem('technomaster.deck', JSON.stringify(cards));
+        console.log(`Browser: сохранено карт: ${cardCount}`);
+    } catch (e) {
+        console.error('Browser: Ошибка сохранения в localStorage', e);
+    }
+
+    // Сохраняем в Яндекс, если доступно
+    if (isRunningInYandexGames()) {
+        try {
+            const ysdk = await window.YaGames.init();
+            const player = await ysdk.getPlayer();
+            await player.setData(dataToSave);
+            console.log('Yandex Games: данные успешно сохранены в облако.');
+        } catch (error) {
+            console.error('Yandex Games: ошибка сохранения в облако.', error);
+            // Не возвращаем false, так как локальное сохранение прошло
+        }
+    }
+
+    return true;
 }
 
 window.userCards = {
     getUserCardCount,
     getMaxOpponentCoolness,
+    saveUserDeck,
     isRunningInYandexGames
 };
