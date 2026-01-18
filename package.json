@@ -1,0 +1,13 @@
+{
+  "name": "technomaster",
+  "version": "1.0.0",
+  "description": "Card roguelike game - Technomaster",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . -p 3000"
+  },
+  "keywords": ["card", "roguelike", "game"],
+  "author": "",
+  "license": "ISC"
+}
