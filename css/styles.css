@@ -297,9 +297,15 @@ h2 {
     font-weight: bold;
     line-height: 1;
     color: #bf00ff;
-    text-shadow: 0 0 5px #9400d3, 0 0 10px #8b00ff, 0 0 2px #000;
-    filter: drop-shadow(0 0 3px rgba(191, 0, 255, 0.8));
-    -webkit-text-stroke: 1px #9400d3;
+    text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 8px #bf00ff,
+        0 0 12px #9400d3;
+    -webkit-text-stroke: 2px #000;
+    paint-order: stroke fill;
 }
 
 .arrow-top-left {
