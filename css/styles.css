@@ -1,0 +1,356 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+    color: #e0e0e0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+    margin-bottom: 15px;
+    color: #87ceeb;
+}
+
+.test-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input[type="number"],
+.form-group input[type="text"],
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background: #2a2a4a;
+    color: #fff;
+    font-size: 14px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 120px;
+}
+
+.arrows-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 400px;
+}
+
+.arrows-grid label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.arrows-grid .center-label {
+    text-align: center;
+    font-weight: bold;
+    color: #ffd700;
+    justify-content: center;
+}
+
+.render-btn,
+.random-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    margin-top: 10px;
+}
+
+.render-btn {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: white;
+}
+
+.render-btn:hover {
+    background: linear-gradient(135deg, #66bb6a, #43a047);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.random-btn {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+}
+
+.random-btn:hover {
+    background: linear-gradient(135deg, #ffa726, #fb8c00);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.card-display {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+.card-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 350px;
+}
+
+/* Card Styles */
+.game-card {
+    position: relative;
+    width: 200px;
+    height: 280px;
+    perspective: 1000px;
+}
+
+.card-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Card Image Frame */
+.card-image-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+}
+
+.card-background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+.card-type-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    z-index: 2;
+}
+
+.card-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* Card Data Frame */
+.card-data-frame {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 32%;
+    background: linear-gradient(180deg, #2a2a4a 0%, #1a1a2e 100%);
+    border-radius: 0 0 10px 10px;
+    padding: 8px;
+    border: 2px solid #444;
+    border-top: none;
+}
+
+.card-data-frame.player {
+    background: linear-gradient(180deg, #1a3a2a 0%, #0a2a1a 100%);
+    border-color: #2e7d32;
+}
+
+.card-data-frame.rival {
+    background: linear-gradient(180deg, #3a1a1a 0%, #2a0a0a 100%);
+    border-color: #c62828;
+}
+
+.card-name {
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffd700;
+    text-align: center;
+    margin-bottom: 6px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    font-size: 10px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.stat-label {
+    color: #888;
+}
+
+.stat-value {
+    color: #fff;
+    font-weight: bold;
+}
+
+.stat-item.attack .stat-value {
+    color: #ff6b6b;
+}
+
+.stat-item.attack-type .stat-value {
+    color: #ffa500;
+}
+
+.stat-item.mech-def .stat-value {
+    color: #87ceeb;
+}
+
+.stat-item.elec-def .stat-value {
+    color: #9b59b6;
+}
+
+/* Arrows */
+.card-arrows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.arrow {
+    position: absolute;
+    font-size: 20px;
+    color: #ffd700;
+    text-shadow: 0 0 5px #ff8c00, 0 0 10px #ff4500;
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.8));
+}
+
+.arrow-top-left {
+    top: 2px;
+    left: 2px;
+}
+
+.arrow-top {
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.arrow-top-right {
+    top: 2px;
+    right: 2px;
+}
+
+.arrow-right {
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+}
+
+.arrow-bottom-right {
+    bottom: 2px;
+    right: 2px;
+}
+
+.arrow-bottom {
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.arrow-bottom-left {
+    bottom: 2px;
+    left: 2px;
+}
+
+.arrow-left {
+    top: 50%;
+    left: 2px;
+    transform: translateY(-50%);
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+/* Error state */
+.error {
+    text-align: center;
+    color: #ff6b6b;
+    padding: 20px;
+}
