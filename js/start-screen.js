@@ -85,15 +85,15 @@ async function ensureStartDeck() {
         return cardCount;
     }
 
-    if (!window.cardRenderer) {
-        console.warn('Стартовая колода: CardRenderer не доступен.');
+    if (!window.deckGenerator) {
+        console.warn('Стартовая колода: DeckGenerator не доступен.');
         return 0;
     }
 
     try {
         console.log('Стартовая колода: запускаем генерацию.');
-        await window.cardRenderer.init();
-        const deckRule = window.cardRenderer.getDeckRuleById(START_DECK_RULE_ID);
+        await window.deckGenerator.init();
+        const deckRule = window.deckGenerator.getDeckRuleById(START_DECK_RULE_ID);
 
         if (!deckRule) {
             console.warn('Стартовая колода: правило не найдено в deck_rules.');
@@ -101,7 +101,7 @@ async function ensureStartDeck() {
         }
 
         console.log('Стартовая колода: параметры генерации получены.', deckRule);
-        const deck = window.cardRenderer.generateDeck(deckRule);
+        const deck = window.deckGenerator.generateDeck(deckRule);
         const cards = deck.map(card => card.renderParams);
         console.log(`Стартовая колода: сгенерировано карт = ${cards.length}.`);
 
