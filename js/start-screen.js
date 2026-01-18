@@ -1,7 +1,7 @@
 const OPPONENTS_DB_PATH = 'public/data/cards.db';
 const OPPONENTS_AVATAR_PATH = 'public/img/opponents';
 const MIN_DECK_PULSE_THRESHOLD = 5;
-const START_DECK_RULE_ID = 1;
+const START_DECK_RULE_ID = 0;
 
 /**
  * Создает DOM-элемент бейджа соперника.
@@ -78,7 +78,9 @@ async function loadOpponentsFromDb() {
  * @returns {Promise<number>}
  */
 async function ensureStartDeck() {
+    console.log('Стартовая колода: проверяем количество карт игрока.');
     const cardCount = await (window.userCards?.getUserCardCount?.() ?? Promise.resolve(0));
+    console.log(`Стартовая колода: текущее количество карт = ${cardCount}.`);
     if (cardCount > 0) {
         return cardCount;
     }
@@ -89,6 +91,7 @@ async function ensureStartDeck() {
     }
 
     try {
+        console.log('Стартовая колода: запускаем генерацию.');
         await window.cardRenderer.init();
         const deckRule = window.cardRenderer.getDeckRuleById(START_DECK_RULE_ID);
 
@@ -97,10 +100,16 @@ async function ensureStartDeck() {
             return 0;
         }
 
+        console.log('Стартовая колода: параметры генерации получены.', deckRule);
         const deck = window.cardRenderer.generateDeck(deckRule);
         const cards = deck.map(card => card.renderParams);
+        console.log(`Стартовая колода: сгенерировано карт = ${cards.length}.`);
 
-        await window.userCards?.saveGeneratedCards?.(cards);
+        const updatedCount = await window.userCards?.saveGeneratedCards?.(cards);
+        if (typeof updatedCount === 'number') {
+            console.log(`Стартовая колода: количество карт после сохранения = ${updatedCount}.`);
+            return updatedCount;
+        }
 
         return cards.length;
     } catch (error) {

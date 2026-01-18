@@ -211,6 +211,7 @@ function saveCardsToBrowser(cards) {
     }
 
     try {
+        console.log(`Browser: попытка сохранить ${cards.length} карт в локальной памяти.`);
         localStorage.setItem(USER_CARDS_LIST_STORAGE_KEY, JSON.stringify(cards));
         localStorage.setItem(USER_CARDS_STORAGE_KEY, String(cards.length));
         console.log(`Browser: сохранено карт в локальной памяти = ${cards.length}.`);
@@ -236,6 +237,7 @@ async function saveCardsToYandexCloud(cards) {
     }
 
     try {
+        console.log(`Yandex Games: попытка сохранить ${cards.length} карт в облаке.`);
         /** @type {SDK} */
         const ysdk = await window.YaGames.init();
         /** @type {Player} */
@@ -310,18 +312,21 @@ async function getMaxOpponentCoolness() {
 /**
  * Сохраняет сгенерированную колоду в нужные хранилища.
  * @param {Array} cards
- * @returns {Promise<void>}
+ * @returns {Promise<number>}
  */
 async function saveGeneratedCards(cards) {
     if (isRunningInYandexGames()) {
         await saveCardsToYandexCloud(cards);
         saveCardsToBrowser(cards);
-        await getUserCardCount();
-        return;
+        const updatedCount = await getUserCardCount();
+        console.log(`Yandex Games: пересчитано количество карт = ${updatedCount}.`);
+        return updatedCount;
     }
 
     saveCardsToBrowser(cards);
-    await getUserCardCount();
+    const updatedCount = await getUserCardCount();
+    console.log(`Browser: пересчитано количество карт = ${updatedCount}.`);
+    return updatedCount;
 }
 
 window.userCards = {
