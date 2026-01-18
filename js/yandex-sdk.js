@@ -316,10 +316,12 @@ async function saveGeneratedCards(cards) {
     if (isRunningInYandexGames()) {
         await saveCardsToYandexCloud(cards);
         saveCardsToBrowser(cards);
+        await getUserCardCount();
         return;
     }
 
     saveCardsToBrowser(cards);
+    await getUserCardCount();
 }
 
 window.userCards = {
