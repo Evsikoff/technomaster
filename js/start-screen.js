@@ -90,14 +90,15 @@ async function initStartScreen() {
             loadOpponentsFromDb()
         ]);
 
-        if (cardCount < MIN_DECK_PULSE_THRESHOLD) {
+        const hasLowCardCount = cardCount < MIN_DECK_PULSE_THRESHOLD;
+        if (hasLowCardCount) {
             deckBanner.classList.add('deck-banner--pulse');
         }
 
         const maxUnlockedSequence = Math.max(1, Number(maxCoolness) + 1);
 
         opponents.forEach(opponent => {
-            const isLocked = opponent.sequence > maxUnlockedSequence;
+            const isLocked = hasLowCardCount || opponent.sequence > maxUnlockedSequence;
             const badge = createOpponentBadge(opponent, isLocked);
             opponentsGrid.append(badge);
         });
