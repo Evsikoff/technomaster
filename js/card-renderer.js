@@ -597,11 +597,11 @@ class CardRenderer {
         }
 
         try {
-            // Читаем запись со значением поля "0" = "1"
-            const result = this.db.exec('SELECT * FROM deck_rules WHERE "0" = 1');
+            // Читаем запись со значением поля "id" = "1" (интерпретируем "поля '0'" как первую колонку id)
+            const result = this.db.exec('SELECT * FROM deck_rules WHERE id = 1');
 
             if (!result.length || !result[0].values.length) {
-                console.warn('CardRenderer: Правила для стартовой колоды не найдены');
+                console.warn('CardRenderer: Правила для стартовой колоды не найдены (id=1)');
                 return null;
             }
 
@@ -616,12 +616,11 @@ class CardRenderer {
             return rules;
         } catch (error) {
             console.error('CardRenderer: Ошибка получения правил колоды:', error);
-            // Fallback for debugging if column "0" doesn't exist? 
-            // The user was specific, so we probably shouldn't fallback to magic logic without permission.
             return null;
         }
     }
 }
 
-// Создаем глобальный экземпляр рендерера
+// Создаем глобальный экземпляр рендерера и привязываем к window
 const cardRenderer = new CardRenderer();
+window.cardRenderer = cardRenderer;
