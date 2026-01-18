@@ -7,7 +7,14 @@
     "start": "npx serve .",
     "dev": "npx serve . -p 3000"
   },
-  "keywords": ["card", "roguelike", "game"],
+  "keywords": [
+    "card",
+    "roguelike",
+    "game"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/ysdk": "^1.2.0"
+  }
 }
