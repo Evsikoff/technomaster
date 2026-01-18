@@ -116,6 +116,27 @@ body {
     gap: clamp(12px, 1.5vw, 18px);
     overflow-y: auto;
     padding-right: 6px;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.6);
+    scrollbar-width: thin;
+}
+
+.opponents-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.opponents-grid::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.opponents-grid::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.85), rgba(255, 78, 80, 0.7));
+    border-radius: 999px;
+    border: 2px solid rgba(20, 30, 50, 0.6);
+}
+
+.opponents-grid::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 1), rgba(255, 78, 80, 0.9));
 }
 
 .opponent-badge {
