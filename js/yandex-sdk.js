@@ -21,30 +21,109 @@ let userDataStorage = 'localStorage';
 let cachedUserData = null;
 
 /**
- * Проверяет, запущена ли игра через iframe в сервисе Яндекс Игры.
+ * Кэшированный результат проверки среды Яндекс Игр.
+ * @type {boolean|null}
+ */
+let isYandexGamesEnvironment = null;
+
+/**
+ * Кэшированный экземпляр Yandex SDK.
+ * @type {SDK|null}
+ */
+let cachedYsdk = null;
+
+/**
+ * Быстрая синхронная проверка признаков Яндекс Игр (без гарантии).
  * @returns {boolean}
  */
-function isRunningInYandexGames() {
+function hasYandexGamesIndicators() {
     try {
-        // Проверяем наличие SDK
-        const hasSdk = typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
-
         // Проверяем хост
         const host = typeof window !== 'undefined' ? window.location.hostname : '';
         const looksLikeYandexHost = host.endsWith('yandex.ru') || host.endsWith('yandex.net');
 
-        // Проверяем, запущены ли мы в iframe
-        const isInIframe = window !== window.top;
+        if (looksLikeYandexHost) {
+            return true;
+        }
 
-        // Проверяем referrer на признаки Яндекса
+        // Проверяем, запущены ли мы в iframe с Яндекс-реферером
+        const isInIframe = window !== window.top;
         const referrer = typeof document !== 'undefined' ? document.referrer : '';
         const hasYandexReferrer = referrer.includes('yandex.ru') || referrer.includes('yandex.net');
 
-        return hasSdk || looksLikeYandexHost || (isInIframe && hasYandexReferrer);
+        return isInIframe && hasYandexReferrer;
     } catch (e) {
-        // В случае ошибки (например, cross-origin iframe) проверяем только SDK
-        return typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
+        return false;
     }
+}
+
+/**
+ * Проверяет, запущена ли игра через iframe в сервисе Яндекс Игры.
+ * Выполняет реальную попытку инициализации SDK для точного определения.
+ * @returns {Promise<boolean>}
+ */
+async function checkYandexGamesEnvironment() {
+    // Возвращаем кэшированный результат, если уже проверяли
+    if (isYandexGamesEnvironment !== null) {
+        return isYandexGamesEnvironment;
+    }
+
+    // Проверяем наличие SDK
+    if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
+        console.log('Yandex Games: SDK не найден на странице.');
+        isYandexGamesEnvironment = false;
+        return false;
+    }
+
+    // SDK есть, но нужно проверить, работает ли он реально
+    // (ошибка "No parent to post message" означает, что нет родительского iframe)
+    try {
+        console.log('Yandex Games: Попытка инициализации SDK...');
+
+        // Устанавливаем таймаут на инициализацию (5 секунд)
+        const initPromise = window.YaGames.init();
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('SDK init timeout')), 5000);
+        });
+
+        cachedYsdk = await Promise.race([initPromise, timeoutPromise]);
+
+        // Если дошли сюда - SDK успешно инициализирован
+        console.log('Yandex Games: SDK успешно инициализирован. Игра запущена на Яндекс Играх.');
+        isYandexGamesEnvironment = true;
+        return true;
+
+    } catch (error) {
+        // Ошибка инициализации - не на Яндекс Играх
+        const errorMessage = error?.message || String(error);
+        console.log(`Yandex Games: Ошибка инициализации SDK: "${errorMessage}"`);
+        console.log('Yandex Games: Игра запущена НЕ на Яндекс Играх.');
+        isYandexGamesEnvironment = false;
+        cachedYsdk = null;
+        return false;
+    }
+}
+
+/**
+ * Синхронная проверка (использует кэшированный результат).
+ * ВАЖНО: Вызывать только после checkYandexGamesEnvironment()!
+ * @returns {boolean}
+ */
+function isRunningInYandexGames() {
+    if (isYandexGamesEnvironment !== null) {
+        return isYandexGamesEnvironment;
+    }
+    // Если ещё не проверяли асинхронно - возвращаем false по умолчанию
+    console.warn('isRunningInYandexGames: вызван до асинхронной проверки, возвращаю false.');
+    return false;
+}
+
+/**
+ * Возвращает кэшированный экземпляр Yandex SDK (если доступен).
+ * @returns {SDK|null}
+ */
+function getCachedYsdk() {
+    return cachedYsdk;
 }
 
 /**
@@ -144,14 +223,25 @@ function saveUserDataToLocalStorage(data) {
  * @returns {Promise<object|null>}
  */
 async function getUserDataFromYandexCloud() {
-    if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
-        console.warn('Yandex Games: SDK не доступен.');
+    // Используем кэшированный SDK или пытаемся получить его
+    let ysdk = getCachedYsdk();
+
+    if (!ysdk) {
+        // Попытка инициализации, если ещё не было
+        const isYandex = await checkYandexGamesEnvironment();
+        if (!isYandex) {
+            console.warn('Yandex Games: SDK не доступен (не на Яндекс Играх).');
+            return null;
+        }
+        ysdk = getCachedYsdk();
+    }
+
+    if (!ysdk) {
+        console.warn('Yandex Games: SDK не инициализирован.');
         return null;
     }
 
     try {
-        /** @type {SDK} */
-        const ysdk = await window.YaGames.init();
         /** @type {Player} */
         const player = await ysdk.getPlayer();
         const data = await player.getData(['userData']);
@@ -173,14 +263,15 @@ async function getUserDataFromYandexCloud() {
  * @returns {Promise<boolean>}
  */
 async function saveUserDataToYandexCloud(data) {
-    if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
-        console.warn('Yandex Games: SDK не доступен для сохранения.');
+    // Используем кэшированный SDK
+    const ysdk = getCachedYsdk();
+
+    if (!ysdk) {
+        console.warn('Yandex Games: SDK не инициализирован для сохранения.');
         return false;
     }
 
     try {
-        /** @type {SDK} */
-        const ysdk = await window.YaGames.init();
         /** @type {Player} */
         const player = await ysdk.getPlayer();
         await player.setData({ userData: data });
@@ -242,8 +333,8 @@ async function saveUserData(data) {
 async function initUserDataStorageController() {
     console.log('=== Инициализация контроллера хранилища данных ===');
 
-    // Шаг 1: Определяем среду запуска
-    const isYandex = isRunningInYandexGames();
+    // Шаг 1: Определяем среду запуска (асинхронная проверка с реальной инициализацией SDK)
+    const isYandex = await checkYandexGamesEnvironment();
 
     if (isYandex) {
         console.log('Игра запущена на Яндекс Играх');
@@ -556,7 +647,9 @@ window.userCards = {
     clearUserDataCache,
 
     // Утилиты
+    checkYandexGamesEnvironment,
     isRunningInYandexGames,
+    getCachedYsdk,
     getStorageType,
     createEmptyUserDataStructure,
     createInitialUserDataStructure
