@@ -33,6 +33,18 @@ let isYandexGamesEnvironment = null;
 let cachedYsdk = null;
 
 /**
+ * Promise инициализации контроллера.
+ * @type {Promise<object>|null}
+ */
+let initPromiseInstance = null;
+
+/**
+ * Флаг завершения инициализации.
+ * @type {boolean}
+ */
+let isInitialized = false;
+
+/**
  * Быстрая синхронная проверка признаков Яндекс Игр (без гарантии).
  * @returns {boolean}
  */
@@ -372,10 +384,38 @@ async function initUserDataStorageController() {
     }
 
     cachedUserData = userData;
+    isInitialized = true;
 
     console.log('=== Инициализация контроллера завершена ===');
 
     return userData;
+}
+
+/**
+ * Возвращает Promise, который резолвится когда контроллер полностью инициализирован.
+ * Используйте эту функцию перед вызовом getUserCardCount, getMaxOpponentCoolness и т.д.
+ * @returns {Promise<object>}
+ */
+function whenReady() {
+    if (isInitialized && cachedUserData) {
+        return Promise.resolve(cachedUserData);
+    }
+
+    if (initPromiseInstance) {
+        return initPromiseInstance;
+    }
+
+    // Если инициализация ещё не началась, запускаем её
+    initPromiseInstance = initUserDataStorageController();
+    return initPromiseInstance;
+}
+
+/**
+ * Проверяет, завершена ли инициализация контроллера.
+ * @returns {boolean}
+ */
+function isReady() {
+    return isInitialized;
 }
 
 /**
@@ -635,6 +675,8 @@ function clearUserDataCache() {
 window.userCards = {
     // Основные функции
     initUserDataStorageController,
+    whenReady,
+    isReady,
     getUserCardCount,
     getMaxOpponentCoolness,
     saveUserDeck,
@@ -657,13 +699,15 @@ window.userCards = {
 
 // Автоматическая инициализация при загрузке скрипта
 if (typeof document !== 'undefined') {
-    // Инициализируем контроллер когда DOM готов
+    // Запускаем инициализацию и сохраняем Promise
+    const startInit = () => {
+        initPromiseInstance = initUserDataStorageController();
+    };
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            initUserDataStorageController();
-        });
+        document.addEventListener('DOMContentLoaded', startInit);
     } else {
         // DOM уже загружен
-        initUserDataStorageController();
+        startInit();
     }
 }
