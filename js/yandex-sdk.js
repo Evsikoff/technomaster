@@ -71,13 +71,21 @@ function hasYandexGamesIndicators() {
 
 /**
  * Проверяет, запущена ли игра через iframe в сервисе Яндекс Игры.
- * Выполняет реальную попытку инициализации SDK для точного определения.
+ * Сначала проверяет глобальную переменную userDataStorage.
  * @returns {Promise<boolean>}
  */
 async function checkYandexGamesEnvironment() {
     // Возвращаем кэшированный результат, если уже проверяли
     if (isYandexGamesEnvironment !== null) {
         return isYandexGamesEnvironment;
+    }
+
+    // Проверяем глобальную переменную окружения userDataStorage
+    if (typeof window !== 'undefined' && window.userDataStorage === 'localStorage') {
+        console.log('Yandex Games: Найдена переменная окружения userDataStorage = "localStorage".');
+        console.log('Yandex Games: Принудительно используется localStorage.');
+        isYandexGamesEnvironment = false;
+        return false;
     }
 
     // Проверяем наличие SDK
