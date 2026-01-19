@@ -1,122 +1,152 @@
 /**
  * Yandex Games SDK integration helpers.
+ * Контроллер хранилища пользовательских данных.
  * @typedef {import('ysdk').SDK} SDK
  * @typedef {import('ysdk').Player} Player
  */
 
-const USER_CARDS_STORAGE_KEY = 'technomaster.cards.count';
-const MAX_OPPONENT_COOLNESS_STORAGE_KEY = 'technomaster.opponent.coolness.max';
-const OPPONENT_COOLNESS_WINS_STORAGE_KEY = 'technomaster.opponent.coolness.wins';
+const USER_DATA_STORAGE_KEY = 'technomaster.userData';
 
 /**
- * Проверяет, запущена ли игра через Яндекс Игры.
+ * Глобальная переменная типа хранилища данных.
+ * Значения: "yandexCloud" | "localStorage"
+ * @type {string}
+ */
+let userDataStorage = 'localStorage';
+
+/**
+ * Кэшированные данные пользователя для быстрого доступа.
+ * @type {object|null}
+ */
+let cachedUserData = null;
+
+/**
+ * Проверяет, запущена ли игра через iframe в сервисе Яндекс Игры.
  * @returns {boolean}
  */
 function isRunningInYandexGames() {
-    const hasSdk = typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
-    const host = typeof window !== 'undefined' ? window.location.hostname : '';
-    const looksLikeYandexHost = host.endsWith('yandex.ru') || host.endsWith('yandex.net');
-    const isYandex = hasSdk || looksLikeYandexHost;
+    try {
+        // Проверяем наличие SDK
+        const hasSdk = typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
 
-    console.log(`Yandex Games: проверка запуска (SDK=${hasSdk}, host=${host || 'unknown'}): ${isYandex}`);
-    return isYandex;
+        // Проверяем хост
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        const looksLikeYandexHost = host.endsWith('yandex.ru') || host.endsWith('yandex.net');
+
+        // Проверяем, запущены ли мы в iframe
+        const isInIframe = window !== window.top;
+
+        // Проверяем referrer на признаки Яндекса
+        const referrer = typeof document !== 'undefined' ? document.referrer : '';
+        const hasYandexReferrer = referrer.includes('yandex.ru') || referrer.includes('yandex.net');
+
+        return hasSdk || looksLikeYandexHost || (isInIframe && hasYandexReferrer);
+    } catch (e) {
+        // В случае ошибки (например, cross-origin iframe) проверяем только SDK
+        return typeof window !== 'undefined' && typeof window.YaGames?.init === 'function';
+    }
 }
 
 /**
- * Определяет количество карт из сохраненных данных.
- * @param {Record<string, unknown>} data
- * @returns {number}
+ * Создаёт пустую структуру данных пользователя по схеме.
+ * @returns {object}
  */
-function extractCardCount(data) {
+function createEmptyUserDataStructure() {
+    return {
+        cardholders: [],
+        cards: [],
+        parties: []
+    };
+}
+
+/**
+ * Создаёт начальную структуру данных пользователя с первым cardholder.
+ * @returns {object}
+ */
+function createInitialUserDataStructure() {
+    const data = createEmptyUserDataStructure();
+
+    // Добавляем первый cardholder для игрока
+    data.cardholders.push({
+        id: 1,
+        player: true,
+        opponent_id: null
+    });
+
+    return data;
+}
+
+/**
+ * Валидирует структуру данных пользователя.
+ * @param {unknown} data - Данные для проверки
+ * @returns {boolean}
+ */
+function isValidUserDataStructure(data) {
     if (!data || typeof data !== 'object') {
-        return 0;
+        return false;
     }
 
-    const possibleCount = data.cardCount;
-    if (typeof possibleCount === 'number' && Number.isFinite(possibleCount)) {
-        return Math.max(0, Math.floor(possibleCount));
+    // Проверяем наличие основных массивов
+    if (!Array.isArray(data.cardholders)) {
+        return false;
+    }
+    if (!Array.isArray(data.cards)) {
+        return false;
+    }
+    if (!Array.isArray(data.parties)) {
+        return false;
     }
 
-    if (Array.isArray(data.cards)) {
-        return data.cards.length;
-    }
-
-    return 0;
+    return true;
 }
 
 /**
- * Нормализует значение крутости соперника.
- * @param {unknown} value
- * @returns {number}
+ * Получает данные пользователя из localStorage.
+ * @returns {object|null}
  */
-function normalizeCoolness(value) {
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-        return 0;
-    }
-
-    return Math.max(0, Math.floor(value));
-}
-
-/**
- * Определяет максимальную крутость соперника из сохраненных данных.
- * @param {Record<string, unknown>} data
- * @returns {number}
- */
-function extractMaxOpponentCoolness(data) {
-    if (!data || typeof data !== 'object') {
-        return 0;
-    }
-
-    const knownKeys = [
-        'maxOpponentCoolness',
-        'opponentMaxCoolness',
-        'maxOpponentLevel',
-        'maxOpponentPower'
-    ];
-
-    for (const key of knownKeys) {
-        if (key in data) {
-            const value = normalizeCoolness(data[key]);
-            if (value > 0) {
-                return value;
-            }
-        }
-    }
-
-    const winsArray = Array.isArray(data.opponentCoolnessWins)
-        ? data.opponentCoolnessWins
-        : Array.isArray(data.wins)
-            ? data.wins
-            : null;
-
-    if (winsArray) {
-        let maxCoolness = 0;
-        for (const entry of winsArray) {
-            if (typeof entry === 'number') {
-                maxCoolness = Math.max(maxCoolness, normalizeCoolness(entry));
-                continue;
-            }
-
-            if (entry && typeof entry === 'object') {
-                const value = normalizeCoolness(entry.coolness ?? entry.level ?? entry.power);
-                maxCoolness = Math.max(maxCoolness, value);
-            }
+function getUserDataFromLocalStorage() {
+    try {
+        const storedData = localStorage.getItem(USER_DATA_STORAGE_KEY);
+        if (!storedData) {
+            return null;
         }
 
-        return maxCoolness;
-    }
+        const parsed = JSON.parse(storedData);
+        if (isValidUserDataStructure(parsed)) {
+            return parsed;
+        }
 
-    return 0;
+        console.warn('Browser: структура данных в localStorage некорректна.');
+        return null;
+    } catch (e) {
+        console.error('Browser: ошибка чтения данных из localStorage.', e);
+        return null;
+    }
 }
 
 /**
- * Получает количество карт пользователя из Яндекс Облака.
- * @returns {Promise<number>}
+ * Сохраняет данные пользователя в localStorage.
+ * @param {object} data - Данные для сохранения
+ * @returns {boolean}
  */
-async function getCardCountFromYandexCloud() {
+function saveUserDataToLocalStorage(data) {
+    try {
+        localStorage.setItem(USER_DATA_STORAGE_KEY, JSON.stringify(data));
+        return true;
+    } catch (e) {
+        console.error('Browser: ошибка сохранения данных в localStorage.', e);
+        return false;
+    }
+}
+
+/**
+ * Получает данные пользователя из Яндекс Облака.
+ * @returns {Promise<object|null>}
+ */
+async function getUserDataFromYandexCloud() {
     if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
-        console.warn('Yandex Games: SDK не доступен для проверки облака.');
-        return 0;
+        console.warn('Yandex Games: SDK не доступен.');
+        return null;
     }
 
     try {
@@ -124,32 +154,28 @@ async function getCardCountFromYandexCloud() {
         const ysdk = await window.YaGames.init();
         /** @type {Player} */
         const player = await ysdk.getPlayer();
-        const data = await player.getData(['cards', 'cardCount']);
-        const cardCount = extractCardCount(data);
+        const data = await player.getData(['userData']);
 
-        if (cardCount === 0) {
-            console.log('Yandex Games: облако доступно, но записей о картах нет.');
-        } else {
-            console.log(`Yandex Games: из облака получено карт: ${cardCount}.`);
+        if (data && data.userData && isValidUserDataStructure(data.userData)) {
+            return data.userData;
         }
 
-        console.log('Yandex Games: проверка облачного прогресса завершена успешно.');
-        return cardCount;
-    } catch (error) {
-        console.error('Yandex Games: ошибка при проверке облачного прогресса.', error);
-        return 0;
+        return null;
+    } catch (e) {
+        console.error('Yandex Games: ошибка получения данных из облака.', e);
+        return null;
     }
 }
 
 /**
- * Получает максимальную крутость побежденного соперника из Яндекс Облака.
- * @returns {Promise<number>}
+ * Сохраняет данные пользователя в Яндекс Облако.
+ * @param {object} data - Данные для сохранения
+ * @returns {Promise<boolean>}
  */
-async function getMaxOpponentCoolnessFromYandexCloud() {
+async function saveUserDataToYandexCloud(data) {
     if (typeof window === 'undefined' || typeof window.YaGames?.init !== 'function') {
-        console.warn('Yandex Games: SDK не доступен для проверки облака.');
-        console.error('Yandex Games: проверка облачного прогресса завершилась неудачей.');
-        return 0;
+        console.warn('Yandex Games: SDK не доступен для сохранения.');
+        return false;
     }
 
     try {
@@ -157,107 +183,191 @@ async function getMaxOpponentCoolnessFromYandexCloud() {
         const ysdk = await window.YaGames.init();
         /** @type {Player} */
         const player = await ysdk.getPlayer();
-        const data = await player.getData([
-            'wins',
-            'opponentCoolnessWins',
-            'maxOpponentCoolness',
-            'opponentMaxCoolness',
-            'maxOpponentLevel',
-            'maxOpponentPower'
-        ]);
-        const maxCoolness = extractMaxOpponentCoolness(data);
+        await player.setData({ userData: data });
+        console.log('Yandex Games: данные успешно сохранены в облако.');
+        return true;
+    } catch (e) {
+        console.error('Yandex Games: ошибка сохранения данных в облако.', e);
+        return false;
+    }
+}
 
-        if (maxCoolness === 0) {
-            console.log('Yandex Games: облако доступно, но записей о победах нет.');
+/**
+ * Получает данные пользователя из соответствующего хранилища.
+ * @returns {Promise<object|null>}
+ */
+async function getUserData() {
+    if (cachedUserData) {
+        return cachedUserData;
+    }
+
+    let data = null;
+
+    if (userDataStorage === 'yandexCloud') {
+        data = await getUserDataFromYandexCloud();
+    } else {
+        data = getUserDataFromLocalStorage();
+    }
+
+    if (data) {
+        cachedUserData = data;
+    }
+
+    return data;
+}
+
+/**
+ * Сохраняет данные пользователя в соответствующее хранилище.
+ * @param {object} data - Данные для сохранения
+ * @returns {Promise<boolean>}
+ */
+async function saveUserData(data) {
+    cachedUserData = data;
+
+    // Всегда сохраняем в localStorage как резервную копию
+    saveUserDataToLocalStorage(data);
+
+    if (userDataStorage === 'yandexCloud') {
+        return await saveUserDataToYandexCloud(data);
+    }
+
+    return true;
+}
+
+/**
+ * Контроллер хранилища пользовательских данных.
+ * Определяет тип хранилища и инициализирует структуру данных.
+ * @returns {Promise<object>}
+ */
+async function initUserDataStorageController() {
+    console.log('=== Инициализация контроллера хранилища данных ===');
+
+    // Шаг 1: Определяем среду запуска
+    const isYandex = isRunningInYandexGames();
+
+    if (isYandex) {
+        console.log('Игра запущена на Яндекс Играх');
+        userDataStorage = 'yandexCloud';
+    } else {
+        console.log('Игра запущена не на Яндекс Играх');
+        userDataStorage = 'localStorage';
+    }
+
+    console.log(`Тип хранилища: ${userDataStorage}`);
+
+    // Шаг 2: Проверяем наличие структуры данных
+    let userData = await getUserData();
+
+    if (!userData || !isValidUserDataStructure(userData)) {
+        // Структура отсутствует - создаём новую
+        console.log('Структура данных не найдена в хранилище. Создаю новую структуру...');
+
+        userData = createInitialUserDataStructure();
+
+        // Сохраняем созданную структуру
+        const saved = await saveUserData(userData);
+        if (saved) {
+            console.log('Структура данных успешно создана и сохранена.');
         } else {
-            console.log(`Yandex Games: максимальная крутость побежденного соперника = ${maxCoolness}.`);
+            console.warn('Не удалось сохранить структуру данных.');
         }
 
-        console.log('Yandex Games: проверка облачного прогресса завершена успешно.');
-        return maxCoolness;
-    } catch (error) {
-        console.error('Yandex Games: ошибка при проверке облачного прогресса.', error);
-        console.error('Yandex Games: проверка облачного прогресса завершилась неудачей.');
-        return 0;
+        console.log('Созданная структура данных:');
+        console.log(JSON.stringify(userData, null, 2));
+    } else {
+        // Структура существует - выводим её
+        console.log('Структура данных найдена в хранилище:');
+        console.log(JSON.stringify(userData, null, 2));
     }
+
+    cachedUserData = userData;
+
+    console.log('=== Инициализация контроллера завершена ===');
+
+    return userData;
 }
 
 /**
- * Получает количество карт пользователя из памяти браузера.
- * @returns {number}
+ * Возвращает текущий тип хранилища данных.
+ * @returns {string}
  */
-function getCardCountFromBrowser() {
-    const storedValue = localStorage.getItem(USER_CARDS_STORAGE_KEY);
-    if (!storedValue) {
-        console.log('Browser: записи о картах отсутствуют, считаем что карт 0.');
-        return 0;
-    }
-
-    const parsed = Number.parseInt(storedValue, 10);
-    const cardCount = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-    console.log(`Browser: количество карт в локальной памяти = ${cardCount}.`);
-    return cardCount;
+function getStorageType() {
+    return userDataStorage;
 }
 
-/**
- * Получает максимальную крутость побежденного соперника из памяти браузера.
- * @returns {number}
- */
-function getMaxOpponentCoolnessFromBrowser() {
-    const storedMax = localStorage.getItem(MAX_OPPONENT_COOLNESS_STORAGE_KEY);
-    if (storedMax) {
-        const parsed = normalizeCoolness(Number.parseInt(storedMax, 10));
-        console.log(`Browser: максимальная крутость побежденного соперника = ${parsed}.`);
-        return parsed;
-    }
-
-    const storedWins = localStorage.getItem(OPPONENT_COOLNESS_WINS_STORAGE_KEY);
-    if (!storedWins) {
-        console.log('Browser: записи о победах отсутствуют, считаем что крутость 0.');
-        return 0;
-    }
-
-    try {
-        const parsedWins = JSON.parse(storedWins);
-        const maxCoolness = extractMaxOpponentCoolness({ wins: parsedWins });
-        if (maxCoolness === 0) {
-            console.log('Browser: записи о победах отсутствуют, считаем что крутость 0.');
-        } else {
-            console.log(`Browser: максимальная крутость побежденного соперника = ${maxCoolness}.`);
-        }
-        return maxCoolness;
-    } catch (error) {
-        console.warn('Browser: не удалось разобрать записи о победах, считаем что крутость 0.', error);
-        return 0;
-    }
-}
+// ========================================
+// Функции для работы с картами (переписаны)
+// ========================================
 
 /**
- * Главная функция получения количества карт.
+ * Получает количество карт у пользователя из структуры данных.
+ * Карты считаются для cardholder с player = true.
  * @returns {Promise<number>}
  */
 async function getUserCardCount() {
-    let count;
-    if (isRunningInYandexGames()) {
-        count = await getCardCountFromYandexCloud();
-    } else {
-        count = getCardCountFromBrowser();
+    const userData = await getUserData();
+
+    if (!userData || !isValidUserDataStructure(userData)) {
+        console.log('getUserCardCount: структура данных не найдена, возвращаю 0.');
+        return 0;
     }
-    console.log(`getUserCardCount returning: ${count}`);
+
+    // Находим cardholder игрока
+    const playerCardholder = userData.cardholders.find(ch => ch.player === true);
+
+    if (!playerCardholder) {
+        console.log('getUserCardCount: cardholder игрока не найден, возвращаю 0.');
+        return 0;
+    }
+
+    // Считаем карты, принадлежащие игроку (по cardholder_id)
+    const playerCards = userData.cards.filter(card => card.cardholder_id === playerCardholder.id);
+    const count = playerCards.length;
+
+    console.log(`getUserCardCount: найдено карт у игрока: ${count}`);
     return count;
 }
 
 /**
- * Главная функция получения максимальной крутости соперника.
+ * Получает максимальный уровень крутости (opponent_power) побеждённого оппонента.
+ * Находит максимальный opponent_power среди партий, где win = true.
  * @returns {Promise<number>}
  */
 async function getMaxOpponentCoolness() {
-    return getMaxOpponentCoolnessFromBrowser();
+    const userData = await getUserData();
+
+    if (!userData || !isValidUserDataStructure(userData)) {
+        console.log('getMaxOpponentCoolness: структура данных не найдена, возвращаю 0.');
+        return 0;
+    }
+
+    // Находим все выигранные партии
+    const wonParties = userData.parties.filter(party => party.win === true);
+
+    if (wonParties.length === 0) {
+        console.log('getMaxOpponentCoolness: выигранных партий не найдено, возвращаю 0.');
+        return 0;
+    }
+
+    // Находим максимальный opponent_power среди выигранных партий
+    let maxCoolness = 0;
+    for (const party of wonParties) {
+        if (typeof party.opponent_power === 'number' && party.opponent_power > maxCoolness) {
+            maxCoolness = party.opponent_power;
+        }
+    }
+
+    console.log(`getMaxOpponentCoolness: максимальный уровень побеждённого оппонента: ${maxCoolness}`);
+    return maxCoolness;
 }
 
+// ========================================
+// Функции для работы с колодой карт
+// ========================================
+
 /**
- * Сохраняет колоду карт пользователя.
- * @param {Array} cards - Массив карт (объекты с renderParams и т.д.)
+ * Сохраняет колоду карт пользователя в новую структуру данных.
+ * @param {Array} cards - Массив карт для сохранения
  * @returns {Promise<boolean>}
  */
 async function saveUserDeck(cards) {
@@ -266,41 +376,201 @@ async function saveUserDeck(cards) {
         return false;
     }
 
-    const cardCount = cards.length;
-    const dataToSave = {
-        cards: cards,
-        cardCount: cardCount
-    };
+    let userData = await getUserData();
 
-    // Сохраняем в браузер
-    try {
-        localStorage.setItem(USER_CARDS_STORAGE_KEY, String(cardCount));
-        // Сохраняем полную колоду тоже, если нужно (добавляем новый ключ)
-        localStorage.setItem('technomaster.deck', JSON.stringify(cards));
-        console.log(`Browser: сохранено карт: ${cardCount}`);
-    } catch (e) {
-        console.error('Browser: Ошибка сохранения в localStorage', e);
+    if (!userData || !isValidUserDataStructure(userData)) {
+        userData = createInitialUserDataStructure();
     }
 
-    // Сохраняем в Яндекс, если доступно
-    if (isRunningInYandexGames()) {
-        try {
-            const ysdk = await window.YaGames.init();
-            const player = await ysdk.getPlayer();
-            await player.setData(dataToSave);
-            console.log('Yandex Games: данные успешно сохранены в облако.');
-        } catch (error) {
-            console.error('Yandex Games: ошибка сохранения в облако.', error);
-            // Не возвращаем false, так как локальное сохранение прошло
-        }
+    // Находим cardholder игрока
+    let playerCardholder = userData.cardholders.find(ch => ch.player === true);
+
+    if (!playerCardholder) {
+        // Создаём cardholder для игрока, если его нет
+        playerCardholder = {
+            id: 1,
+            player: true,
+            opponent_id: null
+        };
+        userData.cardholders.push(playerCardholder);
     }
 
-    return true;
+    // Удаляем старые карты игрока
+    userData.cards = userData.cards.filter(card => card.cardholder_id !== playerCardholder.id);
+
+    // Добавляем новые карты с привязкой к cardholder игрока
+    // Генерируем уникальные ID для карт
+    let maxCardId = userData.cards.reduce((max, card) => Math.max(max, card.id || 0), 0);
+
+    const newCards = cards.map((card, index) => {
+        maxCardId++;
+        return {
+            id: maxCardId,
+            cardholder_id: playerCardholder.id,
+            cardTypeId: card.cardTypeId || card.renderParams?.cardTypeId || index + 1,
+            arrowTopLeft: card.arrowTopLeft || card.renderParams?.arrowTopLeft || false,
+            arrowTop: card.arrowTop || card.renderParams?.arrowTop || false,
+            arrowTopRight: card.arrowTopRight || card.renderParams?.arrowTopRight || false,
+            arrowRight: card.arrowRight || card.renderParams?.arrowRight || false,
+            arrowBottomRight: card.arrowBottomRight || card.renderParams?.arrowBottomRight || false,
+            arrowBottom: card.arrowBottom || card.renderParams?.arrowBottom || false,
+            arrowBottomLeft: card.arrowBottomLeft || card.renderParams?.arrowBottomLeft || false,
+            arrowLeft: card.arrowLeft || card.renderParams?.arrowLeft || false,
+            ownership: 'player',
+            cardLevel: card.cardLevel || card.renderParams?.cardLevel || 1,
+            attackLevel: card.attackLevel || card.renderParams?.attackLevel || 0,
+            attackType: card.attackType || card.renderParams?.attackType || '',
+            mechanicalDefense: card.mechanicalDefense || card.renderParams?.mechanicalDefense || 0,
+            electricalDefense: card.electricalDefense || card.renderParams?.electricalDefense || 0,
+            inHand: card.inHand !== undefined ? card.inHand : true
+        };
+    });
+
+    userData.cards = userData.cards.concat(newCards);
+
+    const saved = await saveUserData(userData);
+
+    if (saved) {
+        console.log(`saveUserDeck: сохранено карт: ${newCards.length}`);
+    }
+
+    return saved;
 }
 
+/**
+ * Записывает результат партии.
+ * @param {number} opponentId - ID оппонента
+ * @param {boolean} win - Победа или поражение
+ * @param {number} opponentPower - Уровень крутости оппонента
+ * @returns {Promise<boolean>}
+ */
+async function recordPartyResult(opponentId, win, opponentPower) {
+    let userData = await getUserData();
+
+    if (!userData || !isValidUserDataStructure(userData)) {
+        userData = createInitialUserDataStructure();
+    }
+
+    // Генерируем ID для новой партии
+    const maxPartyId = userData.parties.reduce((max, party) => Math.max(max, party.id || 0), 0);
+
+    const newParty = {
+        id: maxPartyId + 1,
+        opponent_id: opponentId,
+        win: win,
+        opponent_power: opponentPower
+    };
+
+    userData.parties.push(newParty);
+
+    const saved = await saveUserData(userData);
+
+    if (saved) {
+        console.log(`recordPartyResult: записана партия #${newParty.id}, победа: ${win}, крутость оппонента: ${opponentPower}`);
+    }
+
+    return saved;
+}
+
+/**
+ * Добавляет карту в колоду пользователя.
+ * @param {object} cardData - Данные карты
+ * @returns {Promise<boolean>}
+ */
+async function addCardToUserDeck(cardData) {
+    let userData = await getUserData();
+
+    if (!userData || !isValidUserDataStructure(userData)) {
+        userData = createInitialUserDataStructure();
+    }
+
+    // Находим cardholder игрока
+    let playerCardholder = userData.cardholders.find(ch => ch.player === true);
+
+    if (!playerCardholder) {
+        playerCardholder = {
+            id: 1,
+            player: true,
+            opponent_id: null
+        };
+        userData.cardholders.push(playerCardholder);
+    }
+
+    // Генерируем ID для новой карты
+    const maxCardId = userData.cards.reduce((max, card) => Math.max(max, card.id || 0), 0);
+
+    const newCard = {
+        id: maxCardId + 1,
+        cardholder_id: playerCardholder.id,
+        cardTypeId: cardData.cardTypeId || cardData.renderParams?.cardTypeId || 1,
+        arrowTopLeft: cardData.arrowTopLeft || cardData.renderParams?.arrowTopLeft || false,
+        arrowTop: cardData.arrowTop || cardData.renderParams?.arrowTop || false,
+        arrowTopRight: cardData.arrowTopRight || cardData.renderParams?.arrowTopRight || false,
+        arrowRight: cardData.arrowRight || cardData.renderParams?.arrowRight || false,
+        arrowBottomRight: cardData.arrowBottomRight || cardData.renderParams?.arrowBottomRight || false,
+        arrowBottom: cardData.arrowBottom || cardData.renderParams?.arrowBottom || false,
+        arrowBottomLeft: cardData.arrowBottomLeft || cardData.renderParams?.arrowBottomLeft || false,
+        arrowLeft: cardData.arrowLeft || cardData.renderParams?.arrowLeft || false,
+        ownership: 'player',
+        cardLevel: cardData.cardLevel || cardData.renderParams?.cardLevel || 1,
+        attackLevel: cardData.attackLevel || cardData.renderParams?.attackLevel || 0,
+        attackType: cardData.attackType || cardData.renderParams?.attackType || '',
+        mechanicalDefense: cardData.mechanicalDefense || cardData.renderParams?.mechanicalDefense || 0,
+        electricalDefense: cardData.electricalDefense || cardData.renderParams?.electricalDefense || 0,
+        inHand: true
+    };
+
+    userData.cards.push(newCard);
+
+    const saved = await saveUserData(userData);
+
+    if (saved) {
+        console.log(`addCardToUserDeck: добавлена карта #${newCard.id}`);
+    }
+
+    return saved;
+}
+
+/**
+ * Очищает кэш данных пользователя.
+ * Полезно для принудительного перечитывания из хранилища.
+ */
+function clearUserDataCache() {
+    cachedUserData = null;
+    console.log('Кэш данных пользователя очищен.');
+}
+
+// Экспорт в глобальную область видимости
 window.userCards = {
+    // Основные функции
+    initUserDataStorageController,
     getUserCardCount,
     getMaxOpponentCoolness,
     saveUserDeck,
-    isRunningInYandexGames
+
+    // Дополнительные функции
+    getUserData,
+    saveUserData,
+    recordPartyResult,
+    addCardToUserDeck,
+    clearUserDataCache,
+
+    // Утилиты
+    isRunningInYandexGames,
+    getStorageType,
+    createEmptyUserDataStructure,
+    createInitialUserDataStructure
 };
+
+// Автоматическая инициализация при загрузке скрипта
+if (typeof document !== 'undefined') {
+    // Инициализируем контроллер когда DOM готов
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initUserDataStorageController();
+        });
+    } else {
+        // DOM уже загружен
+        initUserDataStorageController();
+    }
+}
