@@ -87,6 +87,13 @@ async function initStartScreen() {
         console.log('StartScreen: Start initializing...');
         console.log('StartScreen: Checking window.userCards:', window.userCards);
 
+        // Ждём завершения инициализации контроллера хранилища
+        if (window.userCards?.whenReady) {
+            console.log('StartScreen: Ожидаю завершения инициализации контроллера хранилища...');
+            await window.userCards.whenReady();
+            console.log('StartScreen: Контроллер хранилища инициализирован.');
+        }
+
         let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
             window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0)
