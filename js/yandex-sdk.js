@@ -561,7 +561,7 @@ async function saveUserDeck(cards) {
             attackType: card.attackType || card.renderParams?.attackType || '',
             mechanicalDefense: card.mechanicalDefense || card.renderParams?.mechanicalDefense || 0,
             electricalDefense: card.electricalDefense || card.renderParams?.electricalDefense || 0,
-            inHand: card.inHand !== undefined ? card.inHand : true
+            inHand: card.inHand !== undefined ? card.inHand : false
         };
     });
 
@@ -656,7 +656,7 @@ async function addCardToUserDeck(cardData) {
         attackType: cardData.attackType || cardData.renderParams?.attackType || '',
         mechanicalDefense: cardData.mechanicalDefense || cardData.renderParams?.mechanicalDefense || 0,
         electricalDefense: cardData.electricalDefense || cardData.renderParams?.electricalDefense || 0,
-        inHand: true
+        inHand: false
     };
 
     userData.cards.push(newCard);

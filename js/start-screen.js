@@ -23,9 +23,17 @@ function createOpponentBadge(opponent, isLocked) {
         badge.setAttribute('aria-disabled', 'true');
         badge.disabled = true;
     } else {
-        // Добавляем обработчик клика для перехода на экран настройки руки
+        // Добавляем обработчик клика для запуска партии
         badge.addEventListener('click', () => {
-            window.location.href = `hand-setup.html?opponentId=${opponent.id}`;
+            if (!window.partyOrchestrator?.start) {
+                console.error('PartyOrchestrator: модуль не загружен.');
+                return;
+            }
+
+            window.partyOrchestrator.start(opponent.id).catch(error => {
+                console.error('PartyOrchestrator: ошибка запуска партии', error);
+                alert(error?.message || 'Не удалось подготовить партию.');
+            });
         });
     }
 
