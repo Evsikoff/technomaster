@@ -2,7 +2,7 @@ const PARTY_PENDING_KEY = 'technomaster.party.pending';
 const PARTY_PAYLOAD_KEY = 'technomaster.party.payload';
 const DECK_RULES_DB_PATH = 'public/data/cards.db';
 const PLAYER_CARDHOLDER_ID = 1;
-const HAND_SIZE = 5;
+const PARTY_HAND_SIZE = 5;
 
 let deckRulesDb = null;
 
@@ -208,13 +208,13 @@ async function prepareOpponentHand(userData, opponentId) {
         opponentCards = getCardsByCardholder(userData, opponentCardholder.id);
     }
 
-    if (opponentCards.length === HAND_SIZE) {
+    if (opponentCards.length === PARTY_HAND_SIZE) {
         setCardsInHand(userData, opponentCardholder.id, null, true);
         return opponentCardholder;
     }
 
-    if (opponentCards.length < HAND_SIZE) {
-        const neededCards = HAND_SIZE - opponentCards.length;
+    if (opponentCards.length < PARTY_HAND_SIZE) {
+        const neededCards = PARTY_HAND_SIZE - opponentCards.length;
         await addOpponentCardsToReachHand(userData, opponentId, opponentCardholder, neededCards);
         setCardsInHand(userData, opponentCardholder.id, null, true);
         return opponentCardholder;
@@ -233,13 +233,13 @@ async function prepareOpponentHand(userData, opponentId) {
 async function preparePlayerHand(userData) {
     const playerCards = getCardsByCardholder(userData, PLAYER_CARDHOLDER_ID);
 
-    if (playerCards.length < HAND_SIZE) {
+    if (playerCards.length < PARTY_HAND_SIZE) {
         throw new Error(
             'Недостаточно карт для игры. Перейдите в раздел “Моя колода”, чтобы получить новые карты.'
         );
     }
 
-    if (playerCards.length === HAND_SIZE) {
+    if (playerCards.length === PARTY_HAND_SIZE) {
         setCardsInHand(userData, PLAYER_CARDHOLDER_ID, null, true);
     }
 
@@ -285,7 +285,7 @@ async function startParty(opponentId) {
     const userData = await ensureUserData();
     const playerCards = await preparePlayerHand(userData);
 
-    if (playerCards.length > HAND_SIZE) {
+    if (playerCards.length > PARTY_HAND_SIZE) {
         storePendingOpponent(opponentId);
         window.location.href = `hand-setup.html?opponentId=${encodeURIComponent(opponentId)}&party=1`;
         return;
@@ -306,7 +306,7 @@ async function finishParty(opponentId) {
     const userData = await ensureUserData();
 
     const playerHand = getCardsByCardholder(userData, PLAYER_CARDHOLDER_ID).filter(card => card.inHand);
-    if (playerHand.length < HAND_SIZE) {
+    if (playerHand.length < PARTY_HAND_SIZE) {
         throw new Error('Рука игрока не готова. Заполните руку перед стартом партии.');
     }
 
