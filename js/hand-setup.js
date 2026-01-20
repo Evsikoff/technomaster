@@ -583,6 +583,10 @@ async function initHandSetupScreen() {
             await window.userCards.whenReady();
         }
 
+        const userDataSnapshot = await window.userCards?.getUserData?.();
+        console.log('HandSetup: Структура данных из хранилища:');
+        console.log(JSON.stringify(userDataSnapshot, null, 2));
+
         // Инициализируем рендерер карт
         await window.cardRenderer.init();
 
