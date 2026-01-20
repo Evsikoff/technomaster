@@ -23,9 +23,15 @@ function createOpponentBadge(opponent, isLocked) {
         badge.setAttribute('aria-disabled', 'true');
         badge.disabled = true;
     } else {
-        // Добавляем обработчик клика для перехода на экран настройки руки
+        // Добавляем обработчик клика для запуска оркестратора подготовки к партии
         badge.addEventListener('click', () => {
-            window.location.href = `hand-setup.html?opponentId=${opponent.id}`;
+            if (window.opponentPrepOrchestrator) {
+                window.opponentPrepOrchestrator.start(opponent.id);
+            } else {
+                // Fallback на прямой переход, если оркестратор не загружен
+                console.warn('StartScreen: opponentPrepOrchestrator не загружен, прямой переход');
+                window.location.href = `hand-setup.html?opponentId=${opponent.id}`;
+            }
         });
     }
 
