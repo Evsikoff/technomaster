@@ -5,6 +5,7 @@ const MIN_DECK_PULSE_THRESHOLD = 5;
 /**
  * Создает DOM-элемент бейджа соперника.
  * @param {Object} opponent
+ * @param {number} opponent.id
  * @param {number} opponent.sequence
  * @param {string} opponent.name
  * @param {string} opponent.avatar
@@ -15,11 +16,17 @@ function createOpponentBadge(opponent, isLocked) {
     const badge = document.createElement('button');
     badge.className = 'opponent-badge';
     badge.type = 'button';
+    badge.dataset.opponentId = opponent.id;
 
     if (isLocked) {
         badge.classList.add('opponent-badge--locked');
         badge.setAttribute('aria-disabled', 'true');
         badge.disabled = true;
+    } else {
+        // Добавляем обработчик клика для перехода на экран настройки руки
+        badge.addEventListener('click', () => {
+            window.location.href = `hand-setup.html?opponentId=${opponent.id}`;
+        });
     }
 
     const avatar = document.createElement('img');
@@ -49,7 +56,7 @@ function createOpponentBadge(opponent, isLocked) {
 
 /**
  * Загружает список соперников из базы данных SQLite.
- * @returns {Promise<Array<{sequence: number, name: string, avatar: string}>>}
+ * @returns {Promise<Array<{id: number, sequence: number, name: string, avatar: string}>>}
  */
 async function loadOpponentsFromDb() {
     const SQL = await initSqlJs({
@@ -60,15 +67,16 @@ async function loadOpponentsFromDb() {
     const buffer = await response.arrayBuffer();
     const db = new SQL.Database(new Uint8Array(buffer));
 
-    const result = db.exec('SELECT name, avatar, sequence FROM opponents ORDER BY sequence ASC');
+    const result = db.exec('SELECT id, name, avatar, sequence FROM opponents ORDER BY sequence ASC');
     if (!result.length || !result[0].values.length) {
         return [];
     }
 
     return result[0].values.map(row => ({
-        name: row[0],
-        avatar: row[1],
-        sequence: Number(row[2])
+        id: Number(row[0]),
+        name: row[1],
+        avatar: row[2],
+        sequence: Number(row[3])
     }));
 }
 

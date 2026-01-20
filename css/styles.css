@@ -705,3 +705,300 @@ h2 {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
 }
+
+/* ========== HAND SETUP SCREEN STYLES ========== */
+
+.hand-setup-screen {
+    overflow: hidden;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.hand-setup-frame {
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    aspect-ratio: 16 / 9;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(12px, 2vw, 24px);
+    gap: clamp(8px, 1.5vw, 16px);
+}
+
+.hand-setup-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.5vw, 16px);
+}
+
+/* Блок информации об оппоненте */
+.opponent-info-section {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: clamp(8px, 1.5vw, 16px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.opponent-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(8px, 1.5vw, 16px);
+    justify-content: center;
+}
+
+.opponent-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.opponent-info-label {
+    color: #87ceeb;
+    font-weight: 600;
+    font-size: clamp(12px, 2vw, 14px);
+}
+
+.opponent-info-value {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: clamp(12px, 2vw, 14px);
+}
+
+.opponent-deck-desc {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Секции карт */
+.cards-sections {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: clamp(8px, 1.5vw, 16px);
+}
+
+/* Блок колоды */
+.deck-section {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: clamp(8px, 1.5vw, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.deck-cards-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1vw, 12px);
+    justify-content: flex-start;
+    align-content: flex-start;
+    overflow-y: auto;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.deck-cards-container.drag-over {
+    background: rgba(46, 125, 50, 0.2);
+    box-shadow: inset 0 0 20px rgba(46, 125, 50, 0.3);
+}
+
+.deck-cards-container .game-card {
+    transform: scale(0.7);
+    transform-origin: top left;
+    margin-right: -60px;
+    margin-bottom: -84px;
+}
+
+/* Блок руки */
+.hand-section {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: clamp(8px, 1.5vw, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hand-counter {
+    color: #87ceeb;
+    font-weight: 400;
+    font-size: clamp(14px, 2.5vw, 18px);
+}
+
+.hand-slots {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4px, 0.8vw, 8px);
+    align-items: center;
+}
+
+.hand-slot {
+    width: 140px;
+    height: 196px;
+    border: 2px dashed rgba(135, 206, 235, 0.4);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.hand-slot.empty {
+    background: rgba(24, 33, 54, 0.6);
+}
+
+.hand-slot.drag-over {
+    border-color: #4caf50;
+    background: rgba(46, 125, 50, 0.2);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+}
+
+.hand-slot .game-card {
+    transform: scale(0.7);
+    transform-origin: center;
+}
+
+.slot-placeholder {
+    color: rgba(135, 206, 235, 0.5);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Секция кнопок */
+.actions-section {
+    display: flex;
+    gap: clamp(8px, 1.5vw, 16px);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: clamp(10px, 1.5vw, 16px) clamp(16px, 3vw, 32px);
+    border: none;
+    border-radius: 12px;
+    font-size: clamp(14px, 2.5vw, 18px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auto-collect-btn {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+}
+
+.auto-collect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(255, 152, 0, 0.4);
+}
+
+.start-game-btn {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: white;
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+.start-game-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
+}
+
+.start-game-btn:disabled {
+    background: linear-gradient(135deg, #666, #444);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Стили для перетаскиваемых карт */
+.draggable-card {
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.draggable-card:hover {
+    transform: scale(1.05);
+    z-index: 100;
+}
+
+.draggable-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+/* Пустое сообщение */
+.empty-message {
+    color: rgba(224, 224, 224, 0.5);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Адаптивность для экрана настройки руки */
+@media (max-width: 768px) {
+    .cards-sections {
+        flex-direction: column;
+    }
+
+    .hand-slots {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .hand-slot {
+        width: 100px;
+        height: 140px;
+    }
+
+    .hand-slot .game-card {
+        transform: scale(0.5);
+    }
+
+    .deck-cards-container .game-card {
+        transform: scale(0.5);
+        margin-right: -100px;
+        margin-bottom: -140px;
+    }
+}
+
+/* Скроллбар для колоды */
+.deck-cards-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.deck-cards-container::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.deck-cards-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.7), rgba(255, 152, 0, 0.6));
+    border-radius: 999px;
+}
+
+.deck-cards-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.9), rgba(255, 152, 0, 0.8));
+}
