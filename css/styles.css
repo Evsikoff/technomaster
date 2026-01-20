@@ -33,6 +33,7 @@ body {
 .game-header {
     width: 100%;
     text-align: center;
+    position: relative;
 }
 
 .game-title {
@@ -843,15 +844,16 @@ h2 {
 }
 
 .hand-slots {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(4px, 0.8vw, 8px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(4px, 0.8vw, 10px);
+    justify-items: center;
     align-items: center;
 }
 
 .hand-slot {
-    width: 140px;
-    height: 196px;
+    width: clamp(96px, 10vw, 130px);
+    height: clamp(134px, 14vw, 182px);
     border: 2px dashed rgba(135, 206, 235, 0.4);
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.2);
@@ -873,7 +875,7 @@ h2 {
 }
 
 .hand-slot .game-card {
-    transform: scale(0.7);
+    transform: scale(0.6);
     transform-origin: center;
 }
 
@@ -882,6 +884,27 @@ h2 {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.back-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transform: translateY(-50%) translateX(-2px);
 }
 
 /* Секция кнопок */
@@ -963,9 +986,7 @@ h2 {
     }
 
     .hand-slots {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     }
 
     .hand-slot {
@@ -981,6 +1002,12 @@ h2 {
         transform: scale(0.5);
         margin-right: -100px;
         margin-bottom: -140px;
+    }
+
+    .back-btn {
+        position: static;
+        transform: none;
+        margin-top: 12px;
     }
 }
 

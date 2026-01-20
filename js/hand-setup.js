@@ -542,6 +542,13 @@ function setupDragAndDrop() {
  * Настраивает обработчики кнопок
  */
 function setupButtonHandlers() {
+    const backBtn = document.getElementById('backToStartBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    }
+
     const autoCollectBtn = document.getElementById('autoCollectBtn');
     if (autoCollectBtn) {
         autoCollectBtn.addEventListener('click', handleAutoCollect);
