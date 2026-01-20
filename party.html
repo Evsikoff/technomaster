@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕХНОМАСТЕР - Партия</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="party-screen">
+    <div class="start-screen-frame">
+        <header class="game-header">
+            <h1 class="game-title">ПАРТИЯ НАЧАЛАСЬ</h1>
+        </header>
+
+        <main class="start-main">
+            <section class="opponents-section">
+                <h2 class="section-title">Соперник</h2>
+                <p id="partyOpponent" class="opponent-name">-</p>
+            </section>
+
+            <section class="opponents-section">
+                <h2 class="section-title">Рука игрока</h2>
+                <div id="playerHand" class="opponents-grid"></div>
+            </section>
+
+            <section class="opponents-section">
+                <h2 class="section-title">Рука оппонента</h2>
+                <div id="opponentHand" class="opponents-grid"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/party-orchestrator.js"></script>
+    <script src="js/party-screen.js"></script>
+</body>
+</html>

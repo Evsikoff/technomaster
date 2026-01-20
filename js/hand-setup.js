@@ -32,6 +32,15 @@ function getOpponentIdFromUrl() {
 }
 
 /**
+ * Проверяет, запущен ли экран для подготовки партии.
+ * @returns {boolean}
+ */
+function isPartyFlow() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('party') === '1';
+}
+
+/**
  * Инициализирует SQLite базу данных
  * @returns {Promise<Database>}
  */
@@ -495,9 +504,13 @@ function handleStartGame() {
     const handCardIds = handSetupState.handCards.map(card => card.id);
     console.log('Начало игры с картами:', handCardIds);
 
-    // Возвращаем список идентификаторов
-    // Здесь можно добавить переход на экран игры
-    // window.location.href = `game.html?opponentId=${handSetupState.opponentId}&hand=${handCardIds.join(',')}`;
+    if (isPartyFlow() && window.partyOrchestrator?.finish) {
+        window.partyOrchestrator.finish(handSetupState.opponentId).catch(error => {
+            console.error('PartyOrchestrator: ошибка завершения подготовки партии', error);
+            alert(error?.message || 'Не удалось запустить партию.');
+        });
+        return handCardIds;
+    }
 
     return handCardIds;
 }
@@ -539,8 +552,9 @@ function setupButtonHandlers() {
         startGameBtn.addEventListener('click', () => {
             const cardIds = handleStartGame();
             if (cardIds.length === HAND_SIZE) {
-                alert(`Игра начинается с картами: ${cardIds.join(', ')}`);
-                // Переход на экран игры
+                if (!isPartyFlow()) {
+                    alert(`Игра начинается с картами: ${cardIds.join(', ')}`);
+                }
             }
         });
     }
