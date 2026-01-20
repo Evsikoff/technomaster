@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕХНОМАСТЕР - Настройка руки</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+        // Определяем переменную окружения для контроллера хранилища
+        (function() {
+            try {
+                var isInYandexIframe = (window !== window.top) &&
+                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
+                    window.location.hostname.endsWith('yandex.net');
+
+                if (!isInYandexIframe && !isYandexHost) {
+                    window.userDataStorage = 'localStorage';
+                    console.log('ENV: userDataStorage = "localStorage" (не Яндекс Игры)');
+                }
+            } catch (e) {
+                console.log('ENV: Возможно в iframe Яндекс Игр');
+            }
+        })();
+    </script>
+</head>
+<body class="hand-setup-screen">
+    <div class="hand-setup-frame">
+        <header class="game-header">
+            <h1 class="game-title">НАСТРОЙКА РУКИ</h1>
+        </header>
+
+        <main class="hand-setup-main">
+            <!-- Блок "Данные об оппоненте" -->
+            <section class="opponent-info-section">
+                <h2 class="section-title">Соперник</h2>
+                <div class="opponent-info" id="opponentInfo">
+                    <div class="opponent-info-row">
+                        <span class="opponent-info-label">Имя:</span>
+                        <span class="opponent-info-value" id="opponentName">Загрузка...</span>
+                    </div>
+                    <div class="opponent-info-row">
+                        <span class="opponent-info-label">Сила:</span>
+                        <span class="opponent-info-value" id="opponentPower">-</span>
+                    </div>
+                    <div class="opponent-info-row">
+                        <span class="opponent-info-label">Колода:</span>
+                        <span class="opponent-info-value opponent-deck-desc" id="opponentDeckDesc">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="cards-sections">
+                <!-- Блок "Колода" -->
+                <section class="deck-section">
+                    <h2 class="section-title">Колода</h2>
+                    <div class="deck-cards-container" id="deckContainer">
+                        <div class="loading">Загрузка карт...</div>
+                    </div>
+                </section>
+
+                <!-- Блок "Рука" -->
+                <section class="hand-section">
+                    <h2 class="section-title">Рука <span class="hand-counter" id="handCounter">(0/5)</span></h2>
+                    <div class="hand-slots" id="handSlots">
+                        <div class="hand-slot empty" data-slot="0">
+                            <span class="slot-placeholder">Слот 1</span>
+                        </div>
+                        <div class="hand-slot empty" data-slot="1">
+                            <span class="slot-placeholder">Слот 2</span>
+                        </div>
+                        <div class="hand-slot empty" data-slot="2">
+                            <span class="slot-placeholder">Слот 3</span>
+                        </div>
+                        <div class="hand-slot empty" data-slot="3">
+                            <span class="slot-placeholder">Слот 4</span>
+                        </div>
+                        <div class="hand-slot empty" data-slot="4">
+                            <span class="slot-placeholder">Слот 5</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Блок "Кнопки" -->
+            <section class="actions-section">
+                <button class="action-btn auto-collect-btn" id="autoCollectBtn" type="button">
+                    Собрать руку автоматически
+                </button>
+                <button class="action-btn start-game-btn" id="startGameBtn" type="button" disabled>
+                    Начать игру
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/yandex-sdk.js"></script>
+    <script src="js/card-renderer.js"></script>
+    <script src="js/auto-hand-collector.js"></script>
+    <script src="js/hand-setup.js"></script>
+</body>
+</html>

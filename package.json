@@ -16,5 +16,8 @@
   "license": "ISC",
   "dependencies": {
     "@types/ysdk": "^1.2.0"
+  },
+  "devDependencies": {
+    "sql.js": "^1.13.0"
   }
 }
