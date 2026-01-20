@@ -724,8 +724,8 @@ h2 {
     aspect-ratio: 16 / 9;
     display: flex;
     flex-direction: column;
-    padding: clamp(12px, 2vw, 24px);
-    gap: clamp(8px, 1.5vw, 16px);
+    padding: clamp(8px, 1.5vw, 16px);
+    gap: clamp(6px, 1vw, 12px);
 }
 
 .hand-setup-main {
@@ -733,21 +733,21 @@ h2 {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: clamp(8px, 1.5vw, 16px);
+    gap: clamp(6px, 1vw, 12px);
 }
 
 /* Блок информации об оппоненте */
 .opponent-info-section {
     background: rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: clamp(8px, 1.5vw, 16px);
+    padding: clamp(6px, 1vw, 12px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .opponent-info {
     display: flex;
     flex-wrap: wrap;
-    gap: clamp(8px, 1.5vw, 16px);
+    gap: clamp(6px, 1vw, 12px);
     justify-content: center;
 }
 
@@ -756,7 +756,7 @@ h2 {
     align-items: center;
     gap: 8px;
     background: rgba(0, 0, 0, 0.2);
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 8px;
 }
 
@@ -785,7 +785,7 @@ h2 {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: clamp(8px, 1.5vw, 16px);
+    gap: clamp(6px, 1vw, 12px);
 }
 
 /* Блок колоды */
@@ -794,10 +794,10 @@ h2 {
     min-width: 0;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: clamp(8px, 1.5vw, 12px);
+    padding: clamp(6px, 1vw, 10px);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     overflow: hidden;
 }
 
@@ -833,10 +833,10 @@ h2 {
     width: 100%;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: clamp(8px, 1.5vw, 12px);
+    padding: clamp(6px, 1vw, 10px);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .hand-counter {
@@ -847,15 +847,15 @@ h2 {
 
 .hand-slots {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(4px, 0.8vw, 10px);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(4px, 0.8vw, 8px);
     justify-items: center;
     align-items: center;
 }
 
 .hand-slot {
-    width: clamp(96px, 10vw, 130px);
-    height: clamp(134px, 14vw, 182px);
+    width: clamp(72px, 7vw, 100px);
+    height: clamp(100px, 10vw, 140px);
     border: 2px dashed rgba(135, 206, 235, 0.4);
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.2);
@@ -877,7 +877,7 @@ h2 {
 }
 
 .hand-slot .game-card {
-    transform: scale(0.6);
+    transform: scale(0.45);
     transform-origin: center;
 }
 
@@ -912,13 +912,13 @@ h2 {
 /* Секция кнопок */
 .actions-section {
     display: flex;
-    gap: clamp(8px, 1.5vw, 16px);
+    gap: clamp(6px, 1vw, 12px);
     justify-content: center;
     flex-wrap: wrap;
 }
 
 .action-btn {
-    padding: clamp(10px, 1.5vw, 16px) clamp(16px, 3vw, 32px);
+    padding: clamp(8px, 1.2vw, 14px) clamp(14px, 2.6vw, 28px);
     border: none;
     border-radius: 12px;
     font-size: clamp(14px, 2.5vw, 18px);
@@ -988,16 +988,16 @@ h2 {
     }
 
     .hand-slots {
-        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
     }
 
     .hand-slot {
-        width: 100px;
-        height: 140px;
+        width: 90px;
+        height: 126px;
     }
 
     .hand-slot .game-card {
-        transform: scale(0.5);
+        transform: scale(0.4);
     }
 
     .deck-cards-container .game-card {
