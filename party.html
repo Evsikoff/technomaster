@@ -5,31 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ТЕХНОМАСТЕР - Партия</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 </head>
 <body class="party-screen">
-    <div class="start-screen-frame">
-        <header class="game-header">
-            <h1 class="game-title">ПАРТИЯ НАЧАЛАСЬ</h1>
-        </header>
+    <div class="party-frame">
+        <!-- Панель сообщений -->
+        <div class="party-messages-panel">
+            <div id="messageContent" class="message-content">Загрузка партии...</div>
+        </div>
 
-        <main class="start-main">
-            <section class="opponents-section">
-                <h2 class="section-title">Соперник</h2>
-                <p id="partyOpponent" class="opponent-name">-</p>
+        <!-- Основная игровая область -->
+        <div class="party-main-area">
+            <!-- Секция оппонента -->
+            <section class="party-opponent-section">
+                <!-- Информация о сопернике -->
+                <div class="opponent-profile">
+                    <img id="opponentAvatar" class="opponent-avatar-large" src="public/img/opponents/opponent_01.png" alt="Аватар">
+                    <div class="opponent-details">
+                        <span id="opponentNameDisplay" class="opponent-name-display">Соперник</span>
+                        <span id="opponentPowerDisplay" class="opponent-power-display">Сила: -</span>
+                    </div>
+                </div>
+
+                <!-- Карты оппонента рубашками вверх -->
+                <div id="opponentHandContainer" class="opponent-hand-container">
+                    <!-- Карты соперника будут отрисованы здесь -->
+                </div>
+
+                <!-- Текущий счет -->
+                <div class="party-score">
+                    <span class="score-label">Счёт:</span>
+                    <span id="scoreOpponent" class="score-value opponent">0</span>
+                    <span class="score-separator">:</span>
+                    <span id="scorePlayer" class="score-value player">0</span>
+                </div>
             </section>
 
-            <section class="opponents-section">
-                <h2 class="section-title">Рука игрока</h2>
-                <div id="playerHand" class="opponents-grid"></div>
+            <!-- Секция игрового поля -->
+            <section class="party-field-section">
+                <div id="gameFieldContainer" class="game-field-wrapper">
+                    <!-- Игровое поле будет отрисовано здесь -->
+                </div>
             </section>
 
-            <section class="opponents-section">
-                <h2 class="section-title">Рука оппонента</h2>
-                <div id="opponentHand" class="opponents-grid"></div>
+            <!-- Секция карт игрока -->
+            <section class="party-player-section">
+                <div id="playerHandContainer" class="player-hand-container">
+                    <!-- Карты игрока будут отрисованы здесь -->
+                </div>
             </section>
-        </main>
+        </div>
+
+        <!-- Оверлей для боя -->
+        <div id="battleOverlay" class="battle-overlay hidden">
+            <div class="battle-container">
+                <div id="attackerCard" class="battle-card attacker">
+                    <!-- Атакующая карта -->
+                </div>
+                <div class="battle-arrows">
+                    <div id="attackArrow" class="battle-arrow attack-arrow">
+                        <span id="attackValue" class="attack-value">0</span>
+                    </div>
+                    <div id="defenseArrow" class="battle-arrow defense-arrow">
+                        <span id="defenseValue" class="defense-value">0</span>
+                    </div>
+                </div>
+                <div id="defenderCard" class="battle-card defender">
+                    <!-- Защищающаяся карта -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Оверлей для выбора карты -->
+        <div id="selectionOverlay" class="selection-overlay hidden">
+            <div class="selection-message">
+                <span id="selectionText">Выберите карту</span>
+            </div>
+        </div>
+
+        <!-- Индикатор режима -->
+        <div id="modeIndicator" class="mode-indicator">
+            <span id="modeText">Загрузка...</span>
+        </div>
     </div>
 
+    <script src="js/yandex-sdk.js"></script>
+    <script src="js/card-renderer.js"></script>
+    <script src="js/game-field-renderer.js"></script>
     <script src="js/party-orchestrator.js"></script>
     <script src="js/party-screen.js"></script>
 </body>
