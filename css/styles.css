@@ -1258,39 +1258,35 @@ h2 {
     flex-direction: column;
 }
 
-/* Контейнер карт игрока */
+/* Контейнер карт игрока - сетка 2 колонки */
 .player-hand-container {
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 4px;
+    padding: 8px;
+    align-content: start;
 }
 
-/* Карта игрока в руке - компактный вид как стопка */
+/* Карта игрока в руке */
 .player-hand-card {
     width: 100%;
-    height: 80px;
-    flex-shrink: 0;
+    aspect-ratio: 5 / 7;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
     cursor: grab;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, height 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     position: relative;
     overflow: visible;
 }
 
-.player-hand-card:last-child {
-    height: auto;
-    min-height: 180px;
-}
-
 .player-hand-card:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
     z-index: 10;
-    height: 140px;
 }
 
 .player-hand-card.dragging {
@@ -1299,7 +1295,7 @@ h2 {
 }
 
 .player-hand-card .game-card {
-    transform: scale(0.7);
+    transform: scale(0.85);
     transform-origin: top center;
     position: absolute;
     top: 0;
@@ -1310,7 +1306,6 @@ h2 {
 .player-hand-card.used {
     opacity: 0.3;
     pointer-events: none;
-    height: 50px;
 }
 
 /* Ячейка поля - состояние готовности к приёму */
