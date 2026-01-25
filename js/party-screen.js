@@ -59,6 +59,7 @@ const partyScreenState = {
     // Drag & Drop
     draggedCard: null,
     draggedCardData: null,
+    dragPreview: null,
 
     // Выбор карт
     selectedCells: [],
@@ -359,6 +360,27 @@ function handleCardDragStart(e) {
     e.dataTransfer.setData('text/plain', cardWrapper.dataset.cardId);
     e.dataTransfer.effectAllowed = 'move';
 
+    // Создаём кастомный drag image - клон карты
+    const gameCard = cardWrapper.querySelector('.game-card');
+    if (gameCard) {
+        const dragImage = gameCard.cloneNode(true);
+        dragImage.classList.add('drag-preview');
+        dragImage.style.position = 'absolute';
+        dragImage.style.top = '-9999px';
+        dragImage.style.left = '-9999px';
+        dragImage.style.transform = 'scale(0.5)';
+        dragImage.style.opacity = '0.9';
+        dragImage.style.pointerEvents = 'none';
+        dragImage.style.zIndex = '9999';
+        document.body.appendChild(dragImage);
+
+        // Устанавливаем кастомный drag image
+        e.dataTransfer.setDragImage(dragImage, 50, 70);
+
+        // Сохраняем для удаления позже
+        partyScreenState.dragPreview = dragImage;
+    }
+
     // Подсвечиваем доступные ячейки
     enableDropTargets();
 }
@@ -370,6 +392,12 @@ function handleCardDragEnd(e) {
     const cardWrapper = e.target.closest('.player-hand-card');
     if (cardWrapper) {
         cardWrapper.classList.remove('dragging');
+    }
+
+    // Удаляем кастомный drag image
+    if (partyScreenState.dragPreview) {
+        partyScreenState.dragPreview.remove();
+        partyScreenState.dragPreview = null;
     }
 
     partyScreenState.draggedCard = null;

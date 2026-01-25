@@ -1330,6 +1330,25 @@ h2 {
     }
 }
 
+/* Ячейка при наведении карты - яркая подсветка */
+.game-field-cell.drag-over {
+    border-color: #ffd700 !important;
+    border-width: 3px;
+    background: rgba(255, 215, 0, 0.2) !important;
+    box-shadow:
+        0 0 30px rgba(255, 215, 0, 0.8),
+        inset 0 0 40px rgba(255, 215, 0, 0.3) !important;
+    animation: none;
+    transform: scale(1.05);
+    transition: all 0.15s ease;
+}
+
+/* Drag preview стиль */
+.drag-preview {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}
+
 /* Карта на поле - выделение для выбора */
 .game-field-cell.selectable {
     cursor: pointer;
