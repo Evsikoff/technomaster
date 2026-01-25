@@ -301,9 +301,12 @@ function renderPlayerHand() {
 function initGameField() {
     const container = document.getElementById('gameFieldContainer');
 
-    // Генерируем поле через gameFieldRenderer
+    // Генерируем поле через gameFieldRenderer с уменьшенными размерами
     const fieldData = gameFieldRenderer.renderField({
-        unavailableCount: null // случайное количество 0-6
+        unavailableCount: null, // случайное количество 0-6
+        cellWidth: 80,
+        cellHeight: 112,
+        cellGap: 4
     });
 
     // Сохраняем данные поля
