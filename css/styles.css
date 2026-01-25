@@ -1274,7 +1274,7 @@ h2 {
 /* Карта игрока в руке */
 .player-hand-card {
     width: 100%;
-    aspect-ratio: 5 / 7;
+    height: 238px; /* 280 * 0.85 */
     display: flex;
     justify-content: center;
     align-items: flex-start;
