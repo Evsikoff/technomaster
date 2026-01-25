@@ -1212,11 +1212,11 @@ h2 {
 
 /* Секция игрового поля (центр) */
 .party-field-section {
-    flex: 0 0 auto;
+    flex: 1;
     min-width: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     padding: clamp(4px, 0.5vw, 8px);
@@ -1226,7 +1226,7 @@ h2 {
 .game-field-wrapper {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     height: 100%;
 }
 
@@ -1235,9 +1235,9 @@ h2 {
     padding: 4px;
 }
 
-/* Карта на поле - масштабируем карту 200x280 в ячейку 80x112 */
+/* Карта на поле - масштабируем карту 200x280 в ячейку */
 .party-field-section .game-field-cell .game-card {
-    transform: scale(0.38);
+    transform: scale(0.45);
     transform-origin: center;
     position: absolute;
     top: 50%;
@@ -1248,8 +1248,8 @@ h2 {
 
 /* Секция карт игрока (правая) */
 .party-player-section {
-    flex: 1;
-    min-width: 0;
+    flex: 0 0 auto;
+    width: 240px;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 8px;
