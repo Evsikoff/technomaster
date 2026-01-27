@@ -1042,7 +1042,7 @@ const partyGameOrchestrator = (() => {
         const usedPlayerCards = state.playerHand.filter(c => c.used);
 
         for (const card of usedPlayerCards) {
-            const currentLevel = card.cardLevel || 1;
+            const currentLevel = Number(card.cardLevel || 1);
 
             if (currentLevel >= MAX_CARD_LEVEL) {
                 continue; // Уже максимальный уровень

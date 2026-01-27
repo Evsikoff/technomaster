@@ -1125,10 +1125,6 @@ function highlightRewardCard(cellIndex, duration = 2000) {
     }
 
     cellData.element.classList.add('reward-highlight');
-
-    setTimeout(() => {
-        cellData.element.classList.remove('reward-highlight');
-    }, duration);
 }
 
 /**
