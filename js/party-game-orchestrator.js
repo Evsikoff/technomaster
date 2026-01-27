@@ -931,12 +931,22 @@ const partyGameOrchestrator = (() => {
 
         console.log(`PartyGameOrchestrator: Поле: ${cardsOnField}, Свободных: ${availableCells}, Игрок: ${playerHasCards}, Оппонент: ${opponentHasCards}`);
 
+        if (state.currentTurn === 'player' && !playerHasCards && opponentHasCards) {
+            state.currentTurn = 'rival';
+            await switchTurn();
+            return;
+        }
+
+        if (state.currentTurn === 'rival' && !opponentHasCards && playerHasCards) {
+            state.currentTurn = 'player';
+            await switchTurn();
+            return;
+        }
+
         // Проверяем условия окончания
         const gameOver = (
             availableCells === 0 ||
-            (!playerHasCards && !opponentHasCards) ||
-            (!playerHasCards && state.currentTurn === 'player') ||
-            (!opponentHasCards && state.currentTurn === 'rival')
+            (!playerHasCards && !opponentHasCards)
         );
 
         if (gameOver) {
