@@ -631,32 +631,41 @@ function updateScore() {
  * Симуляция хода оппонента (заглушка)
  */
 function simulateOpponentTurn() {
-    // Находим неиспользованную карту оппонента
-    const availableCard = partyScreenState.opponentHand.find(c => !c.used);
-    if (!availableCard) {
+    // Подготавливаем состояние поля для расчёта хода
+    const fieldState = {
+        cells: partyScreenState.fieldCells.map(c => ({
+            index: c.index,
+            row: c.row,
+            col: c.col,
+            isAvailable: c.isAvailable,
+            card: partyScreenState.fieldCards.get(c.index) || null
+        }))
+    };
+
+    const move = window.aiMoveCalculator?.calculateAiMove(
+        fieldState,
+        partyScreenState.opponentHand,
+        partyScreenState.playerHand
+    );
+
+    if (!move || move.cardId === null || move.cellIndex === null) {
         showMessage('Оппонент исчерпал карты!');
         return;
     }
 
-    // Находим свободную ячейку
-    const emptyCells = partyScreenState.fieldCells.filter(
-        c => c.isAvailable && !partyScreenState.fieldCards.has(c.index)
-    );
-
-    if (emptyCells.length === 0) {
-        showMessage('Нет свободных ячеек!');
+    const selectedCard = partyScreenState.opponentHand.find(card => card.id === move.cardId);
+    if (!selectedCard) {
+        showMessage('Оппонент не может выбрать карту!');
         return;
     }
 
-    const targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-
     // Размещаем карту оппонента
-    placeCardOnField(targetCell.index, availableCard, 'opponent');
-    markCardAsUsed(availableCard.id, partyScreenState.opponentHand);
+    placeCardOnField(move.cellIndex, selectedCard, 'opponent');
+    markCardAsUsed(selectedCard.id, partyScreenState.opponentHand);
     renderOpponentHand();
     updateScore();
 
-    showMessage(`Оппонент разместил карту в ячейке ${targetCell.index}`);
+    showMessage(`Оппонент разместил карту в ячейке ${move.cellIndex}`);
 
     // Возвращаем ход игроку
     setTimeout(() => {
