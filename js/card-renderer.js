@@ -168,12 +168,25 @@ class CardRenderer {
             arrowBottomLeft = false,
             arrowLeft = false,
             ownership = 'player',
-            cardLevel = '1',
+            cardLevel: rawCardLevel = '1',
             attackLevel = '0',
             attackType = 'P',
             mechanicalDefense = '0',
             electricalDefense = '0'
         } = params;
+
+        // Маппинг уровня карты: внутренний формат (0,1,2) -> формат рендерера (1,2,3)
+        // Если уровень уже в формате 1,2,3 - оставляем как есть
+        // Если уровень в формате 0,1,2 - добавляем +1
+        const numLevel = Number(rawCardLevel);
+        let cardLevel;
+        if (numLevel >= 0 && numLevel <= 2) {
+            // Внутренний формат 0,1,2 -> конвертируем в 1,2,3
+            cardLevel = String(numLevel + 1);
+        } else {
+            // Уже в формате 1,2,3 или некорректное значение
+            cardLevel = String(rawCardLevel);
+        }
 
         // Получаем данные типа карты из базы данных
         const cardType = this.getCardType(cardTypeId);

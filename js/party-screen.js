@@ -1152,7 +1152,8 @@ function getPartyScreenState() {
         playerScore: partyScreenState.playerScore,
         opponentScore: partyScreenState.opponentScore,
         playerHand: partyScreenState.playerHand,
-        opponentHand: partyScreenState.opponentHand
+        opponentHand: partyScreenState.opponentHand,
+        opponentData: partyScreenState.opponentData
     };
 }
 
@@ -1303,7 +1304,7 @@ async function showLevelUp(leveledUpCards) {
                             arrowBottomLeft: updatedCard.arrowBottomLeft,
                             arrowLeft: updatedCard.arrowLeft,
                             ownership: updatedCard.owner === 'player' ? 'player' : 'rival',
-                            cardLevel: String(updatedCard.cardLevel || 1),
+                            cardLevel: String(updatedCard.cardLevel || 0),
                             attackLevel: String(updatedCard.attackLevel || 0),
                             attackType: updatedCard.attackType || 'P',
                             mechanicalDefense: String(updatedCard.mechanicalDefense || 0),
