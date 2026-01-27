@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technomaster - Тестирование генерации колоды</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <style>
+        .deck-generator-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .deck-generator-title {
+            text-align: center;
+            color: #00ffff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .generator-panel {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .generator-panel h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .param-group {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .param-group label {
+            display: block;
+            color: #87ceeb;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .param-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .param-group input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .param-group .hint {
+            color: #666;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .weights-section {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .weights-section h3 {
+            color: #ffa500;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .weights-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .weight-input {
+            text-align: center;
+        }
+
+        .weight-input label {
+            display: block;
+            color: #ffa500;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .weight-input input {
+            width: 60px;
+            padding: 8px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .generator-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generator-btn.primary {
+            background: linear-gradient(135deg, #00ffff 0%, #0099cc 100%);
+            color: #000;
+        }
+
+        .generator-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .generator-btn.secondary {
+            background: linear-gradient(135deg, #ffa500 0%, #cc7700 100%);
+            color: #000;
+        }
+
+        .generator-btn.secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 165, 0, 0.4);
+        }
+
+        .generator-btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #cc3333 100%);
+            color: #fff;
+        }
+
+        .generator-btn.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .cards-display {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        .cards-display h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+        }
+
+        .cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .card-wrapper-test {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .card-wrapper-test:hover {
+            transform: scale(1.05);
+        }
+
+        .card-wrapper-test.selected {
+            outline: 3px solid #00ff00;
+            outline-offset: 5px;
+        }
+
+        .card-info {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #87ceeb;
+            font-size: 0.75rem;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status-message.info {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            color: #00ffff;
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+        }
+
+        .status-message.error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            color: #ff6b6b;
+        }
+
+        .level-up-section {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .level-up-section h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+        }
+
+        .level-up-info {
+            color: #87ceeb;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .json-output {
+            background: #0a0a1a;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .json-output pre {
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            color: #00ffff;
+            font-size: 1.5rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">Загрузка базы данных...</div>
+    </div>
+
+    <div class="deck-generator-container">
+        <h1 class="deck-generator-title">Тестирование генерации колоды</h1>
+
+        <div class="generator-panel">
+            <h2>Параметры генерации</h2>
+
+            <div class="params-grid">
+                <div class="param-group">
+                    <label for="deckSize">Размер колоды (deck_size)</label>
+                    <input type="number" id="deckSize" value="8" min="1" max="50">
+                    <div class="hint">Количество карт для генерации</div>
+                </div>
+
+                <div class="param-group">
+                    <label for="levelMin">Мин. уровень (level_min)</label>
+                    <input type="number" id="levelMin" value="0" min="0" max="3">
+                    <div class="hint">От 0 до 3</div>
+                </div>
+
+                <div class="param-group">
+                    <label for="levelMax">Макс. уровень (level_max)</label>
+                    <input type="number" id="levelMax" value="2" min="0" max="3">
+                    <div class="hint">От 0 до 3</div>
+                </div>
+            </div>
+
+            <div class="weights-section">
+                <h3>Веса групп карт (вероятность выбора)</h3>
+                <div class="weights-grid">
+                    <div class="weight-input">
+                        <label>Группа 1</label>
+                        <input type="number" id="group1Weight" value="4" min="0" max="100">
+                    </div>
+                    <div class="weight-input">
+                        <label>Группа 2</label>
+                        <input type="number" id="group2Weight" value="3" min="0" max="100">
+                    </div>
+                    <div class="weight-input">
+                        <label>Группа 3</label>
+                        <input type="number" id="group3Weight" value="2" min="0" max="100">
+                    </div>
+                    <div class="weight-input">
+                        <label>Группа 4</label>
+                        <input type="number" id="group4Weight" value="1" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons-row">
+                <button id="generateBtn" class="generator-btn primary">Сгенерировать колоду</button>
+                <button id="presetStarter" class="generator-btn secondary">Стартовая колода</button>
+                <button id="presetAdvanced" class="generator-btn secondary">Продвинутая колода</button>
+                <button id="clearBtn" class="generator-btn danger">Очистить</button>
+            </div>
+
+            <div class="level-up-section">
+                <h3>Тест повышения уровня карты</h3>
+                <div class="level-up-info">
+                    Кликните на карту, чтобы выбрать её, затем нажмите кнопку "Повысить уровень"
+                </div>
+                <div class="buttons-row">
+                    <button id="levelUpBtn" class="generator-btn primary" disabled>Повысить уровень выбранной карты</button>
+                </div>
+                <div id="selectedCardInfo" class="level-up-info" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+
+        <div class="cards-display">
+            <h2>Сгенерированные карты (<span id="cardCount">0</span>)</h2>
+            <div id="statusMessage" class="status-message info">
+                Нажмите "Сгенерировать колоду" для создания карт
+            </div>
+            <div id="cardsGrid" class="cards-grid"></div>
+
+            <div class="json-output">
+                <h3 style="color: #00ffff; margin-bottom: 10px;">JSON коды карт:</h3>
+                <pre id="jsonOutput">[]</pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/card-renderer.js"></script>
+    <script src="js/yandex-sdk.js"></script>
+    <script>
+        // Глобальные переменные
+        let generatedDeck = [];
+        let selectedCardIndex = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const generateBtn = document.getElementById('generateBtn');
+            const presetStarterBtn = document.getElementById('presetStarter');
+            const presetAdvancedBtn = document.getElementById('presetAdvanced');
+            const clearBtn = document.getElementById('clearBtn');
+            const levelUpBtn = document.getElementById('levelUpBtn');
+            const cardsGrid = document.getElementById('cardsGrid');
+            const cardCount = document.getElementById('cardCount');
+            const statusMessage = document.getElementById('statusMessage');
+            const jsonOutput = document.getElementById('jsonOutput');
+            const selectedCardInfo = document.getElementById('selectedCardInfo');
+
+            try {
+                // Инициализация
+                await cardRenderer.init();
+                await window.userCards.whenReady();
+                loadingOverlay.classList.add('hidden');
+                showStatus('База данных загружена. Готово к генерации колоды.', 'success');
+            } catch (error) {
+                loadingOverlay.innerHTML = `<div class="loading-spinner" style="color: #ff6b6b;">Ошибка: ${error.message}</div>`;
+                return;
+            }
+
+            // Функция отображения статуса
+            function showStatus(message, type = 'info') {
+                statusMessage.textContent = message;
+                statusMessage.className = `status-message ${type}`;
+            }
+
+            // Функция получения параметров из формы
+            function getParams() {
+                return {
+                    deck_size: parseInt(document.getElementById('deckSize').value, 10),
+                    level_min: parseInt(document.getElementById('levelMin').value, 10),
+                    level_max: parseInt(document.getElementById('levelMax').value, 10),
+                    group_1_weight: parseInt(document.getElementById('group1Weight').value, 10),
+                    group_2_weight: parseInt(document.getElementById('group2Weight').value, 10),
+                    group_3_weight: parseInt(document.getElementById('group3Weight').value, 10),
+                    group_4_weight: parseInt(document.getElementById('group4Weight').value, 10)
+                };
+            }
+
+            // Функция установки параметров в форму
+            function setParams(params) {
+                document.getElementById('deckSize').value = params.deck_size;
+                document.getElementById('levelMin').value = params.level_min;
+                document.getElementById('levelMax').value = params.level_max;
+                document.getElementById('group1Weight').value = params.group_1_weight;
+                document.getElementById('group2Weight').value = params.group_2_weight;
+                document.getElementById('group3Weight').value = params.group_3_weight;
+                document.getElementById('group4Weight').value = params.group_4_weight;
+            }
+
+            // Функция отображения колоды
+            function displayDeck(deck) {
+                cardsGrid.innerHTML = '';
+                selectedCardIndex = null;
+                levelUpBtn.disabled = true;
+                selectedCardInfo.textContent = '';
+
+                deck.forEach((card, index) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'card-wrapper-test';
+                    wrapper.dataset.index = index;
+
+                    const cardElement = cardRenderer.renderCard({
+                        ...card.renderParams,
+                        ownership: 'player'
+                    });
+                    wrapper.appendChild(cardElement);
+
+                    const info = document.createElement('div');
+                    info.className = 'card-info';
+                    info.textContent = `#${index + 1} | Lvl: ${card.renderParams.cardLevel} | Type: ${card.renderParams.cardTypeId}`;
+                    wrapper.appendChild(info);
+
+                    // Обработчик клика для выбора карты
+                    wrapper.addEventListener('click', () => {
+                        // Снимаем выделение со всех карт
+                        document.querySelectorAll('.card-wrapper-test').forEach(w => {
+                            w.classList.remove('selected');
+                        });
+
+                        // Выделяем выбранную карту
+                        wrapper.classList.add('selected');
+                        selectedCardIndex = index;
+                        levelUpBtn.disabled = false;
+
+                        const params = card.renderParams;
+                        selectedCardInfo.innerHTML = `
+                            <strong>Выбрана карта #${index + 1}</strong><br>
+                            Тип: ${params.cardTypeId} | Уровень: ${params.cardLevel} |
+                            Атака: ${params.attackLevel} (${params.attackType}) |
+                            Защита: М${params.mechanicalDefense} / Э${params.electricalDefense}
+                        `;
+                    });
+
+                    cardsGrid.appendChild(wrapper);
+                });
+
+                cardCount.textContent = deck.length;
+                jsonOutput.textContent = JSON.stringify(deck.map(c => c.renderParams), null, 2);
+            }
+
+            // Генерация колоды
+            generateBtn.addEventListener('click', () => {
+                try {
+                    const params = getParams();
+                    console.log('Параметры генерации:', params);
+
+                    generatedDeck = cardRenderer.generateDeck(params);
+                    displayDeck(generatedDeck);
+
+                    showStatus(`Успешно сгенерировано ${generatedDeck.length} карт`, 'success');
+                } catch (error) {
+                    showStatus(`Ошибка генерации: ${error.message}`, 'error');
+                    console.error('Ошибка генерации:', error);
+                }
+            });
+
+            // Пресет: Стартовая колода
+            presetStarterBtn.addEventListener('click', () => {
+                const starterRules = cardRenderer.getStarterDeckRules();
+                if (starterRules) {
+                    setParams(starterRules);
+                    showStatus('Загружены параметры стартовой колоды', 'info');
+                } else {
+                    setParams({
+                        deck_size: 8,
+                        level_min: 0,
+                        level_max: 1,
+                        group_1_weight: 5,
+                        group_2_weight: 3,
+                        group_3_weight: 2,
+                        group_4_weight: 0
+                    });
+                    showStatus('Используются стандартные параметры стартовой колоды', 'info');
+                }
+            });
+
+            // Пресет: Продвинутая колода
+            presetAdvancedBtn.addEventListener('click', () => {
+                setParams({
+                    deck_size: 12,
+                    level_min: 1,
+                    level_max: 3,
+                    group_1_weight: 2,
+                    group_2_weight: 3,
+                    group_3_weight: 3,
+                    group_4_weight: 2
+                });
+                showStatus('Загружены параметры продвинутой колоды', 'info');
+            });
+
+            // Очистка
+            clearBtn.addEventListener('click', () => {
+                generatedDeck = [];
+                cardsGrid.innerHTML = '';
+                cardCount.textContent = '0';
+                jsonOutput.textContent = '[]';
+                selectedCardIndex = null;
+                levelUpBtn.disabled = true;
+                selectedCardInfo.textContent = '';
+                showStatus('Колода очищена', 'info');
+            });
+
+            // Повышение уровня карты
+            levelUpBtn.addEventListener('click', () => {
+                if (selectedCardIndex === null || !generatedDeck[selectedCardIndex]) {
+                    showStatus('Выберите карту для повышения уровня', 'error');
+                    return;
+                }
+
+                const selectedCard = generatedDeck[selectedCardIndex];
+                const currentLevel = parseInt(selectedCard.renderParams.cardLevel, 10);
+
+                if (currentLevel >= 2) {
+                    showStatus('Карта уже максимального уровня (2)', 'error');
+                    return;
+                }
+
+                try {
+                    // Используем generateCardParams для генерации новых параметров
+                    const newLevel = currentLevel + 1;
+                    const newParams = cardRenderer.generateCardParams(
+                        selectedCard.renderParams.cardTypeId,
+                        newLevel
+                    );
+
+                    // Обновляем карту в колоде
+                    generatedDeck[selectedCardIndex] = {
+                        renderParams: {
+                            ...newParams,
+                            ownership: 'player'
+                        },
+                        cardCode: JSON.stringify(newParams)
+                    };
+
+                    // Перерисовываем колоду
+                    displayDeck(generatedDeck);
+
+                    // Снова выбираем ту же карту
+                    const wrappers = document.querySelectorAll('.card-wrapper-test');
+                    if (wrappers[selectedCardIndex]) {
+                        wrappers[selectedCardIndex].click();
+                    }
+
+                    showStatus(`Карта #${selectedCardIndex + 1} повышена до уровня ${newLevel}`, 'success');
+                } catch (error) {
+                    showStatus(`Ошибка повышения уровня: ${error.message}`, 'error');
+                    console.error('Ошибка повышения уровня:', error);
+                }
+            });
+        });
+
+        // Глобальные функции для тестирования из консоли
+        window.testGenerateDeck = function(params) {
+            const deck = cardRenderer.generateDeck(params);
+            console.log('Сгенерированная колода:', deck);
+            return deck;
+        };
+
+        window.testGenerateCardParams = function(cardTypeId, level) {
+            const params = cardRenderer.generateCardParams(cardTypeId, level);
+            console.log('Параметры карты:', params);
+            return params;
+        };
+
+        window.testLevelUp = async function(oldCardId) {
+            const result = await window.userCards.processCardLevelUpAndSave(oldCardId, cardRenderer);
+            console.log('Результат повышения уровня:', result);
+            return result;
+        };
+    </script>
+</body>
+</html>

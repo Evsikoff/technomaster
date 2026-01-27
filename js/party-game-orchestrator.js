@@ -189,6 +189,11 @@ const partyGameOrchestrator = (() => {
             state.opponentHand = initialState.opponentHand || [];
             state.unavailableCells = initialState.unavailableCells || [];
 
+            // Сохраняем данные оппонента из initialState (если переданы)
+            if (initialState.opponentData) {
+                state.opponentData = initialState.opponentData;
+            }
+
             // Инициализируем fieldState из fieldCells
             if (initialState.fieldCells && initialState.fieldCells.length > 0) {
                 state.fieldState = {
@@ -1150,14 +1155,18 @@ const partyGameOrchestrator = (() => {
         const selectableCells = candidateCards.map(c => c.cellIndex).filter(i => i !== undefined);
 
         if (selectableCells.length > 0 && state.screenApi?.enableWinnerSelection) {
-            state.screenApi.enableWinnerSelection(selectableCells, async (selectedCellIndex) => {
-                const selectedCard = candidateCards.find(c => c.cellIndex === selectedCellIndex);
-                if (selectedCard) {
-                    addSystemMessage(`Вы забрали карту: ${selectedCard.cardTypeId}`);
-                    await saveGameProgress('player', selectedCard.id, null);
-                } else {
-                    await saveGameProgress('player', null, null);
-                }
+            // Оборачиваем callback в Promise, чтобы дождаться выбора игрока
+            await new Promise((resolve) => {
+                state.screenApi.enableWinnerSelection(selectableCells, async (selectedCellIndex) => {
+                    const selectedCard = candidateCards.find(c => c.cellIndex === selectedCellIndex);
+                    if (selectedCard) {
+                        addSystemMessage(`Вы забрали карту: ${selectedCard.cardTypeId}`);
+                        await saveGameProgress('player', selectedCard.id, null);
+                    } else {
+                        await saveGameProgress('player', null, null);
+                    }
+                    resolve();
+                });
             });
         } else {
             // Фоллбэк: берем первую карту

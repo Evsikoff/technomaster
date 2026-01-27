@@ -262,8 +262,94 @@ function testGeneratedDeck(options) {
     }
 }
 
+/**
+ * Генерация параметров одной карты по типу и уровню
+ *
+ * Пример использования:
+ * testGenerateCardParams(5, 2);
+ *
+ * @param {number} cardTypeId - ID типа карты
+ * @param {number} level - Уровень карты (0-3)
+ * @returns {Object} - Параметры карты
+ */
+function testGenerateCardParams(cardTypeId, level) {
+    try {
+        const params = cardRenderer.generateCardParams(cardTypeId, level);
+        console.log('Сгенерированные параметры карты:', params);
+
+        // Отображаем карту
+        const container = document.getElementById('cardContainer');
+        if (container) {
+            container.innerHTML = '';
+            const cardElement = cardRenderer.renderCard({
+                ...params,
+                ownership: 'player'
+            });
+            container.appendChild(cardElement);
+        }
+
+        return params;
+    } catch (error) {
+        console.error('Ошибка генерации параметров карты:', error);
+        return null;
+    }
+}
+
+/**
+ * Тест повышения уровня карты
+ *
+ * Пример использования:
+ * // Сначала получите userData и найдите ID карты
+ * const userData = await window.userCards.getUserData();
+ * console.log(userData.cards);
+ * // Затем вызовите функцию с ID карты
+ * await testCardLevelUp(1);
+ *
+ * @param {number} oldCardId - ID карты для повышения уровня
+ * @returns {Promise<Object>} - Результат операции
+ */
+async function testCardLevelUp(oldCardId) {
+    try {
+        const result = await window.userCards.processCardLevelUpAndSave(oldCardId, cardRenderer);
+        console.log('Результат повышения уровня:', result);
+
+        if (result.status === 'success') {
+            // Отображаем новую карту
+            const container = document.getElementById('cardContainer');
+            if (container) {
+                container.innerHTML = '';
+                const cardElement = cardRenderer.renderCard({
+                    cardTypeId: result.newCard.cardTypeId,
+                    arrowTopLeft: result.newCard.arrowTopLeft,
+                    arrowTop: result.newCard.arrowTop,
+                    arrowTopRight: result.newCard.arrowTopRight,
+                    arrowRight: result.newCard.arrowRight,
+                    arrowBottomRight: result.newCard.arrowBottomRight,
+                    arrowBottom: result.newCard.arrowBottom,
+                    arrowBottomLeft: result.newCard.arrowBottomLeft,
+                    arrowLeft: result.newCard.arrowLeft,
+                    ownership: 'player',
+                    cardLevel: String(result.newCard.cardLevel),
+                    attackLevel: result.newCard.attackLevel,
+                    attackType: result.newCard.attackType,
+                    mechanicalDefense: result.newCard.mechanicalDefense,
+                    electricalDefense: result.newCard.electricalDefense
+                });
+                container.appendChild(cardElement);
+            }
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Ошибка повышения уровня карты:', error);
+        return { status: 'error', message: error.message };
+    }
+}
+
 // Экспортируем функции в глобальную область для тестирования из консоли
 window.testCard = testCard;
 window.testMultipleCards = testMultipleCards;
 window.testGeneratedDeck = testGeneratedDeck;
+window.testGenerateCardParams = testGenerateCardParams;
+window.testCardLevelUp = testCardLevelUp;
 window.cardRenderer = cardRenderer;

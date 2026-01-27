@@ -168,12 +168,25 @@ class CardRenderer {
             arrowBottomLeft = false,
             arrowLeft = false,
             ownership = 'player',
-            cardLevel = '1',
+            cardLevel: rawCardLevel = '1',
             attackLevel = '0',
             attackType = 'P',
             mechanicalDefense = '0',
             electricalDefense = '0'
         } = params;
+
+        // Маппинг уровня карты: внутренний формат (0,1,2) -> формат рендерера (1,2,3)
+        // Если уровень уже в формате 1,2,3 - оставляем как есть
+        // Если уровень в формате 0,1,2 - добавляем +1
+        const numLevel = Number(rawCardLevel);
+        let cardLevel;
+        if (numLevel >= 0 && numLevel <= 2) {
+            // Внутренний формат 0,1,2 -> конвертируем в 1,2,3
+            cardLevel = String(numLevel + 1);
+        } else {
+            // Уже в формате 1,2,3 или некорректное значение
+            cardLevel = String(rawCardLevel);
+        }
 
         // Получаем данные типа карты из базы данных
         const cardType = this.getCardType(cardTypeId);
@@ -585,6 +598,96 @@ class CardRenderer {
         const minimum = Math.min(min, max);
         const maximum = Math.max(min, max);
         return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+    }
+
+    /**
+     * Генерация параметров одной карты по типу и уровню.
+     * Используется для повышения уровня карты и других операций,
+     * требующих генерации карты с известным типом.
+     *
+     * @param {number} cardTypeId - Идентификатор типа карты
+     * @param {number} level - Уровень карты (0-3)
+     * @returns {Object} - Параметры карты для рендеринга
+     */
+    generateCardParams(cardTypeId, level) {
+        if (!this.dbReady) {
+            throw new Error('База данных не инициализирована. Вызовите init() перед использованием.');
+        }
+
+        if (!Number.isInteger(cardTypeId) || cardTypeId <= 0) {
+            throw new Error('cardTypeId должен быть положительным целым числом.');
+        }
+
+        if (!Number.isInteger(level) || level < 0 || level > 3) {
+            throw new Error('level должен быть целым числом в диапазоне 0-3.');
+        }
+
+        // Получаем данные типа карты
+        const cardTypeResult = this.db.exec(
+            `SELECT id, attack_type FROM card_types WHERE id = ${cardTypeId}`
+        );
+
+        if (cardTypeResult.length === 0 || cardTypeResult[0].values.length === 0) {
+            throw new Error(`Тип карты с id=${cardTypeId} не найден.`);
+        }
+
+        const attackType = cardTypeResult[0].values[0][1];
+
+        // Получаем данные уровня карты
+        const levelsResult = this.db.exec(
+            `SELECT power_min, power_max, reliability_min, reliability_max, shielding_min, shielding_max,` +
+            ` arrows_1, arrows_2, arrows_3, arrows_4, arrows_5, arrows_6, arrows_7, arrows_8` +
+            ` FROM card_levels WHERE card_type_id = ${cardTypeId} AND level = ${level}`
+        );
+
+        if (levelsResult.length === 0 || levelsResult[0].values.length === 0) {
+            throw new Error(`Не найдены уровни для card_type_id=${cardTypeId} и level=${level}.`);
+        }
+
+        const levelRow = levelsResult[0].values[0];
+        const powerMin = levelRow[0];
+        const powerMax = levelRow[1];
+        const reliabilityMin = levelRow[2];
+        const reliabilityMax = levelRow[3];
+        const shieldingMin = levelRow[4];
+        const shieldingMax = levelRow[5];
+        const arrowWeights = levelRow.slice(6, 14);
+
+        // Генерируем статы
+        const attackLevel = this.getRandomIntInclusive(powerMin, powerMax);
+        const mechanicalDefense = this.getRandomIntInclusive(reliabilityMin, reliabilityMax);
+        const electricalDefense = this.getRandomIntInclusive(shieldingMin, shieldingMax);
+        const arrowsCount = this.pickWeightedIndex(arrowWeights);
+
+        // Генерируем стрелки
+        const arrowDirections = [
+            'topLeft',
+            'top',
+            'topRight',
+            'right',
+            'bottomRight',
+            'bottom',
+            'bottomLeft',
+            'left'
+        ];
+        const arrowFlags = this.assignRandomArrows(arrowDirections, arrowsCount);
+
+        return {
+            cardTypeId,
+            arrowTopLeft: arrowFlags.topLeft,
+            arrowTop: arrowFlags.top,
+            arrowTopRight: arrowFlags.topRight,
+            arrowRight: arrowFlags.right,
+            arrowBottomRight: arrowFlags.bottomRight,
+            arrowBottom: arrowFlags.bottom,
+            arrowBottomLeft: arrowFlags.bottomLeft,
+            arrowLeft: arrowFlags.left,
+            cardLevel: String(level),
+            attackLevel: String(attackLevel),
+            attackType: attackType,
+            mechanicalDefense: String(mechanicalDefense),
+            electricalDefense: String(electricalDefense)
+        };
     }
 
     /**
