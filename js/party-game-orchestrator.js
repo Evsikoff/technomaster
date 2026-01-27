@@ -497,27 +497,38 @@ const partyGameOrchestrator = (() => {
         const captures = conflicts.filter(c => c.type === 'capture');
         const battles = conflicts.filter(c => c.type === 'battle');
 
+        // Флаг: проиграл ли атакующий битву
+        let attackerLostBattle = false;
+
         // Сначала обрабатываем битвы (показываем анимацию боя)
         // Результаты битв (захваты) собираем для последующего комбо
         const battleCapturedCells = [];
         if (battles.length > 0) {
-            const capturedFromBattle = await processBattles(battles, cellIndex, owner);
-            if (capturedFromBattle) {
-                battleCapturedCells.push(...capturedFromBattle);
+            const battleResult = await processBattles(battles, cellIndex, owner);
+            if (battleResult.attackerLost) {
+                // Атакующий проиграл битву - его карта перешла к противнику
+                // Мгновенные захваты и комбо НЕ происходят
+                attackerLostBattle = true;
+                console.log('PartyGameOrchestrator: Атакующий проиграл битву, захваты отменены');
+            } else if (battleResult.capturedCells.length > 0) {
+                battleCapturedCells.push(...battleResult.capturedCells);
             }
         }
 
-        // Потом обрабатываем мгновенные захваты (без боя)
-        const instantCapturedCells = [];
-        if (captures.length > 0) {
-            const captured = await processInstantCaptures(captures, owner);
-            instantCapturedCells.push(...captured);
-        }
+        // Мгновенные захваты и комбо происходят только если атакующий НЕ проиграл битву
+        if (!attackerLostBattle) {
+            // Потом обрабатываем мгновенные захваты (без боя)
+            const instantCapturedCells = [];
+            if (captures.length > 0) {
+                const captured = await processInstantCaptures(captures, owner);
+                instantCapturedCells.push(...captured);
+            }
 
-        // Теперь запускаем комбо для всех захваченных карт
-        const allCapturedCells = [...battleCapturedCells, ...instantCapturedCells];
-        if (allCapturedCells.length > 0) {
-            await processComboChain(allCapturedCells, owner);
+            // Теперь запускаем комбо для всех захваченных карт
+            const allCapturedCells = [...battleCapturedCells, ...instantCapturedCells];
+            if (allCapturedCells.length > 0) {
+                await processComboChain(allCapturedCells, owner);
+            }
         }
 
         // Этап 4: Проверка окончания игры
@@ -633,10 +644,10 @@ const partyGameOrchestrator = (() => {
 
     /**
      * Шаг 3.3: Обработка битв
-     * Возвращает массив захваченных ячеек (для комбо)
+     * Возвращает объект { capturedCells: [], attackerLost: boolean }
      */
     async function processBattles(battles, attackerCellIndex, attackerOwner) {
-        if (battles.length === 0) return [];
+        if (battles.length === 0) return { capturedCells: [], attackerLost: false };
 
         let selectedTarget;
 
@@ -655,11 +666,11 @@ const partyGameOrchestrator = (() => {
             }
         }
 
-        if (!selectedTarget) return [];
+        if (!selectedTarget) return { capturedCells: [], attackerLost: false };
 
-        // Шаг 3.4: Расчет боя - возвращает захваченную ячейку или пустой массив
-        const capturedCell = await executeBattle(attackerCellIndex, selectedTarget.defenderCellIndex, attackerOwner);
-        return capturedCell ? [capturedCell] : [];
+        // Шаг 3.4: Расчет боя - возвращает результат
+        const battleResult = await executeBattle(attackerCellIndex, selectedTarget.defenderCellIndex, attackerOwner);
+        return battleResult;
     }
 
     /**
@@ -715,14 +726,14 @@ const partyGameOrchestrator = (() => {
 
     /**
      * Шаг 3.4: Расчет боя
-     * Возвращает индекс захваченной ячейки или null
+     * Возвращает объект { capturedCells: [], attackerLost: boolean }
      */
     async function executeBattle(attackerCellIndex, defenderCellIndex, attackerOwner) {
         const attackerCell = getCellByIndex(attackerCellIndex);
         const defenderCell = getCellByIndex(defenderCellIndex);
 
         if (!attackerCell?.card || !defenderCell?.card) {
-            return null;
+            return { capturedCells: [], attackerLost: false };
         }
 
         const attacker = attackerCell.card;
@@ -780,8 +791,8 @@ const partyGameOrchestrator = (() => {
 
             syncFieldState();
 
-            // Возвращаем захваченную ячейку для комбо (комбо вызывается в processMoveConsequences)
-            return defenderCellIndex;
+            // Возвращаем результат: атакующий победил, защитник захвачен
+            return { capturedCells: [defenderCellIndex], attackerLost: false };
 
         } else {
             // Атакующий меняет владельца (переходит к врагу)
@@ -807,8 +818,8 @@ const partyGameOrchestrator = (() => {
 
             syncFieldState();
 
-            // Комбо НЕ срабатывает при проигрыше - возвращаем null
-            return null;
+            // Атакующий проиграл - комбо и захваты не происходят
+            return { capturedCells: [], attackerLost: true };
         }
     }
 
