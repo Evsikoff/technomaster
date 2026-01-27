@@ -497,18 +497,28 @@ const partyGameOrchestrator = (() => {
         const captures = conflicts.filter(c => c.type === 'capture');
         const battles = conflicts.filter(c => c.type === 'battle');
 
-        // Обрабатываем мгновенные захваты
-        if (captures.length > 0) {
-            await processCaptures(captures, owner);
-        }
-
-        // Шаг 3.3: Обработка битв
+        // Сначала обрабатываем битвы (показываем анимацию боя)
+        // Результаты битв (захваты) собираем для последующего комбо
+        const battleCapturedCells = [];
         if (battles.length > 0) {
-            await processBattles(battles, cellIndex, owner);
+            const capturedFromBattle = await processBattles(battles, cellIndex, owner);
+            if (capturedFromBattle) {
+                battleCapturedCells.push(...capturedFromBattle);
+            }
         }
 
-        // Шаг 3.5: Комбо (цепная реакция) - обрабатывается после захватов
-        // Комбо уже обработано внутри processCaptures
+        // Потом обрабатываем мгновенные захваты (без боя)
+        const instantCapturedCells = [];
+        if (captures.length > 0) {
+            const captured = await processInstantCaptures(captures, owner);
+            instantCapturedCells.push(...captured);
+        }
+
+        // Теперь запускаем комбо для всех захваченных карт
+        const allCapturedCells = [...battleCapturedCells, ...instantCapturedCells];
+        if (allCapturedCells.length > 0) {
+            await processComboChain(allCapturedCells, owner);
+        }
 
         // Этап 4: Проверка окончания игры
         await checkGameEnd();
@@ -578,9 +588,10 @@ const partyGameOrchestrator = (() => {
     }
 
     /**
-     * Обработка мгновенных захватов
+     * Обработка мгновенных захватов (без боя)
+     * Возвращает массив индексов захваченных ячеек для последующего комбо
      */
-    async function processCaptures(captures, newOwner) {
+    async function processInstantCaptures(captures, newOwner) {
         const capturedCells = [];
 
         for (const capture of captures) {
@@ -602,6 +613,8 @@ const partyGameOrchestrator = (() => {
 
         // Визуализируем смену владельцев
         if (capturedCells.length > 0 && state.screenApi?.handleEvent) {
+            addSystemMessage(`Захвачено карт: ${capturedCells.length}`);
+
             await state.screenApi.handleEvent({
                 type: 'ownership_change',
                 changes: capturedCells.map(cellIndex => ({
@@ -614,15 +627,16 @@ const partyGameOrchestrator = (() => {
             syncFieldState();
         }
 
-        // Шаг 3.5: Запускаем комбо для захваченных карт
-        await processComboChain(capturedCells, newOwner);
+        // Возвращаем захваченные ячейки для комбо (комбо вызывается в processMoveConsequences)
+        return capturedCells;
     }
 
     /**
      * Шаг 3.3: Обработка битв
+     * Возвращает массив захваченных ячеек (для комбо)
      */
     async function processBattles(battles, attackerCellIndex, attackerOwner) {
-        if (battles.length === 0) return;
+        if (battles.length === 0) return [];
 
         let selectedTarget;
 
@@ -641,10 +655,11 @@ const partyGameOrchestrator = (() => {
             }
         }
 
-        if (!selectedTarget) return;
+        if (!selectedTarget) return [];
 
-        // Шаг 3.4: Расчет боя
-        await executeBattle(attackerCellIndex, selectedTarget.defenderCellIndex, attackerOwner);
+        // Шаг 3.4: Расчет боя - возвращает захваченную ячейку или пустой массив
+        const capturedCell = await executeBattle(attackerCellIndex, selectedTarget.defenderCellIndex, attackerOwner);
+        return capturedCell ? [capturedCell] : [];
     }
 
     /**
@@ -700,13 +715,14 @@ const partyGameOrchestrator = (() => {
 
     /**
      * Шаг 3.4: Расчет боя
+     * Возвращает индекс захваченной ячейки или null
      */
     async function executeBattle(attackerCellIndex, defenderCellIndex, attackerOwner) {
         const attackerCell = getCellByIndex(attackerCellIndex);
         const defenderCell = getCellByIndex(defenderCellIndex);
 
         if (!attackerCell?.card || !defenderCell?.card) {
-            return;
+            return null;
         }
 
         const attacker = attackerCell.card;
@@ -764,8 +780,8 @@ const partyGameOrchestrator = (() => {
 
             syncFieldState();
 
-            // Запускаем комбо от захваченной карты
-            await processComboChain([defenderCellIndex], attackerOwner);
+            // Возвращаем захваченную ячейку для комбо (комбо вызывается в processMoveConsequences)
+            return defenderCellIndex;
 
         } else {
             // Атакующий меняет владельца (переходит к врагу)
@@ -791,7 +807,8 @@ const partyGameOrchestrator = (() => {
 
             syncFieldState();
 
-            // Комбо НЕ срабатывает при проигрыше
+            // Комбо НЕ срабатывает при проигрыше - возвращаем null
+            return null;
         }
     }
 
@@ -1083,21 +1100,24 @@ const partyGameOrchestrator = (() => {
     async function handlePlayerVictory() {
         addSystemMessage('Выберите карту соперника для взятия!');
 
-        // Получаем карты оппонента, которые были на поле
-        const opponentFieldCards = [];
+        // Получаем ID карт оппонента, которые он выставил на поле
+        const usedOpponentCardIds = new Set(
+            state.opponentHand.filter(c => c.used).map(c => c.id)
+        );
+
+        // Находим эти карты на поле (независимо от текущего владельца)
+        const candidateCards = [];
         state.fieldState?.cells?.forEach(cell => {
-            if (cell.card && getCardOwner(cell.card) === 'opponent') {
-                opponentFieldCards.push({
+            if (cell.card && usedOpponentCardIds.has(cell.card.id)) {
+                candidateCards.push({
                     ...cell.card,
                     cellIndex: cell.index
                 });
             }
         });
 
-        // Добавляем карты из руки оппонента (использованные)
-        const usedOpponentCards = state.opponentHand.filter(c => c.used);
-
-        const candidateCards = [...opponentFieldCards];
+        console.log('PartyGameOrchestrator: Карты для выбора награды:', candidateCards.length,
+            'usedOpponentCardIds:', [...usedOpponentCardIds]);
 
         if (candidateCards.length === 0) {
             addSystemMessage('Нет доступных карт для взятия.');
