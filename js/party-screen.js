@@ -1265,12 +1265,12 @@ async function showLevelUp(leveledUpCards) {
     // Подсвечиваем карты на поле, которые получили level up
     for (const cardInfo of leveledUpCards) {
         const levelUpId = Number(cardInfo.id);
-
+        const nextCardLevel = String(cardInfo.newLevel ?? 1);
         partyScreenState.playerHand = partyScreenState.playerHand.map(card => (
             Number(card.id) === levelUpId
                 ? {
                     ...card,
-                    cardLevel: cardInfo.newLevel,
+                            cardLevel: nextCardLevel,
                     attackLevel: cardInfo.newStats?.attackLevel ?? card.attackLevel,
                     mechanicalDefense: cardInfo.newStats?.mechanicalDefense ?? card.mechanicalDefense,
                     electricalDefense: cardInfo.newStats?.electricalDefense ?? card.electricalDefense
