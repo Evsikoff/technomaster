@@ -1096,6 +1096,13 @@ function getPartyScreenState() {
     return {
         mode: partyScreenState.mode,
         fieldCards: Object.fromEntries(partyScreenState.fieldCards),
+        fieldCells: partyScreenState.fieldCells.map(c => ({
+            index: c.index,
+            row: c.row,
+            col: c.col,
+            isAvailable: c.isAvailable,
+            card: partyScreenState.fieldCards.get(c.index) || null
+        })),
         unavailableCells: partyScreenState.unavailableCells,
         playerScore: partyScreenState.playerScore,
         opponentScore: partyScreenState.opponentScore,
@@ -1158,11 +1165,17 @@ async function initPartyScreen() {
         if (window.partyGameOrchestrator?.start) {
             partyScreenState.orchestratorActive = true;
 
-            // Передаем состояние экрана оркестратору
+            // Передаем состояние экрана оркестратору (без DOM-элементов)
             const screenState = {
                 playerHand: partyScreenState.playerHand,
                 opponentHand: partyScreenState.opponentHand,
-                fieldCells: partyScreenState.fieldCells,
+                fieldCells: partyScreenState.fieldCells.map(c => ({
+                    index: c.index,
+                    row: c.row,
+                    col: c.col,
+                    isAvailable: c.isAvailable,
+                    card: partyScreenState.fieldCards.get(c.index) || null
+                })),
                 unavailableCells: partyScreenState.unavailableCells,
                 opponentData: partyScreenState.opponentData
             };

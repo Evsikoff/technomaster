@@ -188,6 +188,19 @@ const partyGameOrchestrator = (() => {
             state.playerHand = initialState.playerHand || [];
             state.opponentHand = initialState.opponentHand || [];
             state.unavailableCells = initialState.unavailableCells || [];
+
+            // Инициализируем fieldState из fieldCells
+            if (initialState.fieldCells && initialState.fieldCells.length > 0) {
+                state.fieldState = {
+                    cells: initialState.fieldCells.map(c => ({
+                        index: c.index,
+                        row: c.row !== undefined ? c.row : Math.floor(c.index / 4),
+                        col: c.col !== undefined ? c.col : c.index % 4,
+                        isAvailable: c.isAvailable,
+                        card: c.card || null
+                    }))
+                };
+            }
         }
 
         // Получаем данные партии из sessionStorage
@@ -272,20 +285,26 @@ const partyGameOrchestrator = (() => {
         if (state.screenApi?.getState) {
             const screenState = state.screenApi.getState();
 
-            state.fieldState = {
-                cells: screenState.fieldCells?.map(c => ({
-                    index: c.index,
-                    row: c.row !== undefined ? c.row : Math.floor(c.index / 4),
-                    col: c.col !== undefined ? c.col : c.index % 4,
-                    isAvailable: c.isAvailable,
-                    card: screenState.fieldCards?.[c.index] || c.card || null
-                })) || []
-            };
+            // fieldCells уже содержит card из Map, используем напрямую
+            if (screenState.fieldCells && screenState.fieldCells.length > 0) {
+                state.fieldState = {
+                    cells: screenState.fieldCells.map(c => ({
+                        index: c.index,
+                        row: c.row !== undefined ? c.row : Math.floor(c.index / 4),
+                        col: c.col !== undefined ? c.col : c.index % 4,
+                        isAvailable: c.isAvailable,
+                        card: c.card || null
+                    }))
+                };
+            }
 
             state.unavailableCells = screenState.unavailableCells || [];
             state.playerHand = screenState.playerHand || state.playerHand;
             state.opponentHand = screenState.opponentHand || state.opponentHand;
         }
+
+        console.log('PartyGameOrchestrator: syncFieldState - cells:', state.fieldState?.cells?.length,
+            'cardsOnField:', state.fieldState?.cells?.filter(c => c.card).length);
     }
 
     // === Этап 1: Ход Игрока ===
