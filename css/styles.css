@@ -1544,6 +1544,34 @@ h2 {
     letter-spacing: 1px;
 }
 
+.party-return-btn {
+    position: absolute;
+    top: clamp(8px, 1.5vw, 16px);
+    right: clamp(8px, 1.5vw, 16px);
+    padding: clamp(6px, 1vw, 10px) clamp(14px, 2vw, 22px);
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: #ffffff;
+    font-size: clamp(12px, 1.6vw, 16px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    z-index: 60;
+}
+
+.party-return-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
+}
+
+.party-return-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* Режимы экрана */
 .party-frame.mode-locked {
     pointer-events: none;

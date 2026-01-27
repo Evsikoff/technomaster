@@ -96,6 +96,27 @@ function getPartyPayload() {
     }
 }
 
+function clearPartyPayload() {
+    const payloadKey = window.partyOrchestrator?.keys?.payload || 'technomaster.party.payload';
+    const pendingKey = window.partyOrchestrator?.keys?.pending || 'technomaster.party.pending';
+    sessionStorage.removeItem(payloadKey);
+    sessionStorage.removeItem(pendingKey);
+}
+
+function showReturnButton() {
+    const returnButton = document.getElementById('partyReturnButton');
+    if (returnButton) {
+        returnButton.classList.remove('hidden');
+    }
+}
+
+function hideReturnButton() {
+    const returnButton = document.getElementById('partyReturnButton');
+    if (returnButton) {
+        returnButton.classList.add('hidden');
+    }
+}
+
 /**
  * Инициализирует SQLite базу данных
  */
@@ -161,8 +182,8 @@ function setScreenMode(mode) {
         [PartyScreenMode.LOADING]: 'Загрузка...',
         [PartyScreenMode.EVENTS]: 'Обработка событий',
         [PartyScreenMode.PLAYER_TURN]: 'Ваш ход',
-        [PartyScreenMode.SELECT_ATTACK]: 'Выберите карту для атаки',
-        [PartyScreenMode.SELECT_WINNER]: 'Выберите карту для взятия',
+        [PartyScreenMode.SELECT_ATTACK]: 'Выбор карты',
+        [PartyScreenMode.SELECT_WINNER]: 'Выбор карты',
         [PartyScreenMode.BATTLE]: 'Бой!',
         [PartyScreenMode.OWNERSHIP_CHANGE]: 'Смена владельца',
         [PartyScreenMode.GAME_END]: 'Партия завершена'
@@ -177,31 +198,36 @@ function setScreenMode(mode) {
         case PartyScreenMode.OWNERSHIP_CHANGE:
             frame.classList.add('mode-locked');
             selectionOverlay.classList.add('hidden');
+            hideReturnButton();
             break;
 
         case PartyScreenMode.PLAYER_TURN:
             frame.classList.add('mode-player-turn');
             selectionOverlay.classList.add('hidden');
             battleOverlay.classList.add('hidden');
+            hideReturnButton();
             enableDropTargets();
             break;
 
         case PartyScreenMode.SELECT_ATTACK:
-            frame.classList.add('mode-locked', 'mode-select-attack');
-            document.getElementById('selectionText').textContent = 'Выберите карту для атаки';
-            selectionOverlay.classList.remove('hidden');
+            frame.classList.add('mode-select-attack');
+            selectionOverlay.classList.add('hidden');
+            battleOverlay.classList.add('hidden');
+            hideReturnButton();
             break;
 
         case PartyScreenMode.SELECT_WINNER:
-            frame.classList.add('mode-locked', 'mode-select-winner');
-            document.getElementById('selectionText').textContent = 'Выберите карту для взятия';
-            selectionOverlay.classList.remove('hidden');
+            frame.classList.add('mode-select-winner');
+            selectionOverlay.classList.add('hidden');
+            battleOverlay.classList.add('hidden');
+            hideReturnButton();
             break;
 
         case PartyScreenMode.GAME_END:
-            frame.classList.add('mode-locked', 'mode-game-end');
+            frame.classList.add('mode-game-end');
             selectionOverlay.classList.add('hidden');
             battleOverlay.classList.add('hidden');
+            showReturnButton();
             break;
     }
 
@@ -711,6 +737,7 @@ function handleFallbackOpponentTurn() {
  */
 function handleFallbackGameEnd() {
     setScreenMode(PartyScreenMode.GAME_END);
+    clearPartyPayload();
 
     const playerScore = partyScreenState.playerScore;
     const opponentScore = partyScreenState.opponentScore;
@@ -1022,7 +1049,7 @@ async function handleOpponentMove(event) {
 async function handleGameEnd(event) {
     const { winner, playerScore, opponentScore } = event;
 
-    setScreenMode(PartyScreenMode.EVENTS);
+    setScreenMode(PartyScreenMode.GAME_END);
 
     const resultText = winner === 'player'
         ? `Победа! Счёт: ${playerScore}:${opponentScore}`
@@ -1032,7 +1059,9 @@ async function handleGameEnd(event) {
 
     showMessage(resultText);
 
-    // Можно добавить кнопку возврата или перехода к результатам
+    if (winner !== 'player') {
+        clearPartyPayload();
+    }
 }
 
 /**
@@ -1069,6 +1098,8 @@ function enableWinnerSelection(selectableCells, callback) {
  * Обработка выбора карты
  */
 function handleCardSelection(cellIndex) {
+    const wasWinnerSelection = partyScreenState.mode === PartyScreenMode.SELECT_WINNER;
+
     // Убираем выделение со всех ячеек
     partyScreenState.fieldCells.forEach(cellData => {
         cellData.element.classList.remove('selectable');
@@ -1079,6 +1110,11 @@ function handleCardSelection(cellIndex) {
     if (partyScreenState.selectionCallback) {
         partyScreenState.selectionCallback(cellIndex);
         partyScreenState.selectionCallback = null;
+    }
+
+    if (wasWinnerSelection) {
+        clearPartyPayload();
+        setScreenMode(PartyScreenMode.GAME_END);
     }
 }
 
@@ -1120,6 +1156,14 @@ async function initPartyScreen() {
     setScreenMode(PartyScreenMode.LOADING);
     showMessage('Загрузка партии...');
 
+    const returnButton = document.getElementById('partyReturnButton');
+    if (returnButton) {
+        returnButton.addEventListener('click', () => {
+            clearPartyPayload();
+            window.location.href = 'index.html';
+        });
+    }
+
     try {
         // Получаем данные партии
         const payload = getPartyPayload();
@@ -1127,6 +1171,7 @@ async function initPartyScreen() {
         if (!payload) {
             showMessage('Ошибка: данные партии не найдены');
             console.error('PartyScreen: Данные партии не найдены');
+            setScreenMode(PartyScreenMode.GAME_END);
             return;
         }
 
@@ -1230,8 +1275,6 @@ async function showLevelUp(leveledUpCards) {
  * Показ экрана выбора награды (карты противника)
  */
 function showRewardSelection(candidateCards, callback) {
-    setScreenMode(PartyScreenMode.SELECT_WINNER);
-
     const selectableCells = [];
 
     // Находим ячейки с картами противника
@@ -1242,9 +1285,12 @@ function showRewardSelection(candidateCards, callback) {
     }
 
     if (selectableCells.length > 0) {
+        setScreenMode(PartyScreenMode.SELECT_WINNER);
         enableWinnerSelection(selectableCells, callback);
     } else if (callback) {
         callback(null);
+        clearPartyPayload();
+        setScreenMode(PartyScreenMode.GAME_END);
     }
 }
 
