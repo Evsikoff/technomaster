@@ -931,12 +931,22 @@ const partyGameOrchestrator = (() => {
 
         console.log(`PartyGameOrchestrator: Поле: ${cardsOnField}, Свободных: ${availableCells}, Игрок: ${playerHasCards}, Оппонент: ${opponentHasCards}`);
 
+        if (state.currentTurn === 'player' && !playerHasCards && opponentHasCards) {
+            state.currentTurn = 'rival';
+            await startRivalTurn();
+            return;
+        }
+
+        if (state.currentTurn === 'rival' && !opponentHasCards && playerHasCards) {
+            state.currentTurn = 'player';
+            await startPlayerTurn();
+            return;
+        }
+
         // Проверяем условия окончания
         const gameOver = (
             availableCells === 0 ||
-            (!playerHasCards && !opponentHasCards) ||
-            (!playerHasCards && state.currentTurn === 'player') ||
-            (!opponentHasCards && state.currentTurn === 'rival')
+            (!playerHasCards && !opponentHasCards)
         );
 
         if (gameOver) {
@@ -1195,6 +1205,11 @@ const partyGameOrchestrator = (() => {
 
         addSystemMessage(`Соперник забрал вашу карту!`);
 
+        const selectedCellIndex = findCardCellIndex(selectedCardId);
+        if (selectedCellIndex !== null && state.screenApi?.highlightRewardCard) {
+            state.screenApi.highlightRewardCard(selectedCellIndex);
+        }
+
         await delay(1500);
 
         await saveGameProgress('rival', null, selectedCardId);
@@ -1323,6 +1338,18 @@ const partyGameOrchestrator = (() => {
                 return cell.card;
             }
         }
+        return null;
+    }
+
+    function findCardCellIndex(cardId) {
+        if (!state.fieldState?.cells) return null;
+
+        for (const cell of state.fieldState.cells) {
+            if (cell.card && cell.card.id === cardId) {
+                return cell.index;
+            }
+        }
+
         return null;
     }
 
