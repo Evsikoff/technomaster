@@ -1376,6 +1376,29 @@ h2 {
     }
 }
 
+/* Карта на поле - выделение награды */
+.game-field-cell.reward-highlight::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 3px solid #ff6b6b;
+    border-radius: 10px;
+    animation: rewardPulse 1.2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes rewardPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
+    }
+}
+
 /* Карта на поле - выделение атакующей */
 .game-field-cell.attacker-highlight {
     border-color: #ff6b6b !important;

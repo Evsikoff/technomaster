@@ -1205,6 +1205,11 @@ const partyGameOrchestrator = (() => {
 
         addSystemMessage(`Соперник забрал вашу карту!`);
 
+        const selectedCellIndex = findCardCellIndex(selectedCardId);
+        if (selectedCellIndex !== null && state.screenApi?.highlightRewardCard) {
+            state.screenApi.highlightRewardCard(selectedCellIndex);
+        }
+
         await delay(1500);
 
         await saveGameProgress('rival', null, selectedCardId);
@@ -1333,6 +1338,18 @@ const partyGameOrchestrator = (() => {
                 return cell.card;
             }
         }
+        return null;
+    }
+
+    function findCardCellIndex(cardId) {
+        if (!state.fieldState?.cells) return null;
+
+        for (const cell of state.fieldState.cells) {
+            if (cell.card && cell.card.id === cardId) {
+                return cell.index;
+            }
+        }
+
         return null;
     }
 

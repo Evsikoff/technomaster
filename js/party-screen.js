@@ -1118,6 +1118,19 @@ function handleCardSelection(cellIndex) {
     }
 }
 
+function highlightRewardCard(cellIndex, duration = 2000) {
+    const cellData = partyScreenState.fieldCells.find(c => c.index === cellIndex);
+    if (!cellData || !cellData.element) {
+        return;
+    }
+
+    cellData.element.classList.add('reward-highlight');
+
+    setTimeout(() => {
+        cellData.element.classList.remove('reward-highlight');
+    }, duration);
+}
+
 /**
  * Вспомогательная функция задержки
  */
@@ -1355,6 +1368,7 @@ window.partyScreen = {
     enableWinnerSelection: enableWinnerSelection,
     showLevelUp: showLevelUp,
     showRewardSelection: showRewardSelection,
+    highlightRewardCard: highlightRewardCard,
     updateScore: updateScore,
     sendFieldState: sendFieldStateToOrchestrator,
     modes: PartyScreenMode,
