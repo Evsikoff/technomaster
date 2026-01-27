@@ -933,13 +933,13 @@ const partyGameOrchestrator = (() => {
 
         if (state.currentTurn === 'player' && !playerHasCards && opponentHasCards) {
             state.currentTurn = 'rival';
-            await switchTurn();
+            await startRivalTurn();
             return;
         }
 
         if (state.currentTurn === 'rival' && !opponentHasCards && playerHasCards) {
             state.currentTurn = 'player';
-            await switchTurn();
+            await startPlayerTurn();
             return;
         }
 
