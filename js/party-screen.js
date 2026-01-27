@@ -1251,9 +1251,23 @@ async function showLevelUp(leveledUpCards) {
 
     // Подсвечиваем карты на поле, которые получили level up
     for (const cardInfo of leveledUpCards) {
+        const levelUpId = Number(cardInfo.id);
+
+        partyScreenState.playerHand = partyScreenState.playerHand.map(card => (
+            Number(card.id) === levelUpId
+                ? {
+                    ...card,
+                    cardLevel: cardInfo.newLevel,
+                    attackLevel: cardInfo.newStats?.attackLevel ?? card.attackLevel,
+                    mechanicalDefense: cardInfo.newStats?.mechanicalDefense ?? card.mechanicalDefense,
+                    electricalDefense: cardInfo.newStats?.electricalDefense ?? card.electricalDefense
+                }
+                : card
+        ));
+
         // Находим ячейку с этой картой
         for (const [cellIndex, cardData] of partyScreenState.fieldCards.entries()) {
-            if (cardData.id === cardInfo.id) {
+            if (Number(cardData.id) === levelUpId) {
                 const cellData = partyScreenState.fieldCells.find(c => c.index === cellIndex);
                 if (cellData && cellData.element) {
                     const updatedCard = {
@@ -1270,7 +1284,7 @@ async function showLevelUp(leveledUpCards) {
                     if (cellInner) {
                         cellInner.innerHTML = '';
                         const cardElement = window.cardRenderer.renderCard({
-                            cardTypeId: updatedCard.cardTypeId,
+                            cardTypeId: cardInfo.cardTypeId ?? updatedCard.cardTypeId,
                             arrowTopLeft: updatedCard.arrowTopLeft,
                             arrowTop: updatedCard.arrowTop,
                             arrowTopRight: updatedCard.arrowTopRight,
@@ -1300,6 +1314,8 @@ async function showLevelUp(leveledUpCards) {
             }
         }
     }
+
+    renderPlayerHand();
 
     await delay(2000);
 }
