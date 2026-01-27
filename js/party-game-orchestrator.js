@@ -1131,10 +1131,10 @@ const partyGameOrchestrator = (() => {
             state.opponentHand.filter(c => c.used).map(c => c.id)
         );
 
-        // Находим эти карты на поле (независимо от текущего владельца)
+        // Находим эти карты на поле, которые игрок успел захватить
         const candidateCards = [];
         state.fieldState?.cells?.forEach(cell => {
-            if (cell.card && usedOpponentCardIds.has(cell.card.id)) {
+            if (cell.card && usedOpponentCardIds.has(cell.card.id) && getCardOwner(cell.card) === 'player') {
                 candidateCards.push({
                     ...cell.card,
                     cellIndex: cell.index
