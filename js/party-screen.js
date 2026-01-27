@@ -1,6 +1,7 @@
 /**
  * Party Screen Module for Technomaster
  * Экран партии - полный игровой экран с логикой боя
+ * Работает в связке с PartyGameOrchestrator
  */
 
 const PARTY_SCREEN_DB_PATH = 'public/data/cards.db';
@@ -15,7 +16,8 @@ const PartyScreenMode = {
     SELECT_ATTACK: 'select_attack',   // Выбор карты для атаки
     SELECT_WINNER: 'select_winner',   // Выбор карты для взятия победителем
     BATTLE: 'battle',           // Бой между картами
-    OWNERSHIP_CHANGE: 'ownership_change' // Изменение владельцев карт
+    OWNERSHIP_CHANGE: 'ownership_change', // Изменение владельцев карт
+    GAME_END: 'game_end'        // Конец игры
 };
 
 /**
@@ -69,7 +71,10 @@ const partyScreenState = {
     db: null,
 
     // Флаг готовности
-    isReady: false
+    isReady: false,
+
+    // Оркестратор управляет игрой
+    orchestratorActive: false
 };
 
 /**
@@ -146,7 +151,8 @@ function setScreenMode(mode) {
         'mode-select-attack',
         'mode-select-winner',
         'mode-battle',
-        'mode-ownership-change'
+        'mode-ownership-change',
+        'mode-game-end'
     );
 
     partyScreenState.mode = mode;
@@ -158,7 +164,8 @@ function setScreenMode(mode) {
         [PartyScreenMode.SELECT_ATTACK]: 'Выберите карту для атаки',
         [PartyScreenMode.SELECT_WINNER]: 'Выберите карту для взятия',
         [PartyScreenMode.BATTLE]: 'Бой!',
-        [PartyScreenMode.OWNERSHIP_CHANGE]: 'Смена владельца'
+        [PartyScreenMode.OWNERSHIP_CHANGE]: 'Смена владельца',
+        [PartyScreenMode.GAME_END]: 'Партия завершена'
     };
 
     modeText.textContent = modeTexts[mode] || mode;
@@ -189,6 +196,12 @@ function setScreenMode(mode) {
             frame.classList.add('mode-locked', 'mode-select-winner');
             document.getElementById('selectionText').textContent = 'Выберите карту для взятия';
             selectionOverlay.classList.remove('hidden');
+            break;
+
+        case PartyScreenMode.GAME_END:
+            frame.classList.add('mode-locked', 'mode-game-end');
+            selectionOverlay.classList.add('hidden');
+            battleOverlay.classList.add('hidden');
             break;
     }
 
@@ -511,13 +524,13 @@ async function handleCellDrop(e) {
 
     // Переключаемся в режим событий
     setScreenMode(PartyScreenMode.EVENTS);
-    showMessage('Карта размещена. Ожидание...');
 
     // Отправляем состояние поля оркестратору
     sendFieldStateToOrchestrator();
 
-    // Если оркестратор готов - вызываем его
+    // Передаем управление оркестратору
     if (window.partyGameOrchestrator?.onPlayerMove) {
+        partyScreenState.orchestratorActive = true;
         await window.partyGameOrchestrator.onPlayerMove({
             type: 'place_card',
             cellIndex: cellIndex,
@@ -525,9 +538,10 @@ async function handleCellDrop(e) {
             cardData: cardData
         });
     } else {
-        // Заглушка: передаём ход сопернику через таймаут
+        // Резервный режим без оркестратора - простое поочередное размещение
+        console.warn('PartyScreen: Оркестратор недоступен, используется резервный режим');
         setTimeout(() => {
-            simulateOpponentTurn();
+            handleFallbackOpponentTurn();
         }, 1000);
     }
 }
@@ -628,9 +642,11 @@ function updateScore() {
 }
 
 /**
- * Симуляция хода оппонента (заглушка)
+ * Резервный ход оппонента (без оркестратора)
  */
-function simulateOpponentTurn() {
+function handleFallbackOpponentTurn() {
+    showMessage('Ход соперника...');
+
     // Подготавливаем состояние поля для расчёта хода
     const fieldState = {
         cells: partyScreenState.fieldCells.map(c => ({
@@ -649,13 +665,15 @@ function simulateOpponentTurn() {
     );
 
     if (!move || move.cardId === null || move.cellIndex === null) {
-        showMessage('Оппонент исчерпал карты!');
+        showMessage('Партия завершена!');
+        handleFallbackGameEnd();
         return;
     }
 
     const selectedCard = partyScreenState.opponentHand.find(card => card.id === move.cardId);
     if (!selectedCard) {
-        showMessage('Оппонент не может выбрать карту!');
+        showMessage('Партия завершена!');
+        handleFallbackGameEnd();
         return;
     }
 
@@ -665,24 +683,48 @@ function simulateOpponentTurn() {
     renderOpponentHand();
     updateScore();
 
-    showMessage(`Оппонент разместил карту в ячейке ${move.cellIndex}`);
+    showMessage(`Оппонент разместил карту`);
 
     // Возвращаем ход игроку
     setTimeout(() => {
         // Проверяем, остались ли карты
         const playerHasCards = partyScreenState.playerHand.some(c => !c.used);
+        const opponentHasCards = partyScreenState.opponentHand.some(c => !c.used);
         const hasEmptyCells = partyScreenState.fieldCells.some(
             c => c.isAvailable && !partyScreenState.fieldCards.has(c.index)
         );
 
-        if (playerHasCards && hasEmptyCells) {
+        if (!hasEmptyCells || (!playerHasCards && !opponentHasCards)) {
+            handleFallbackGameEnd();
+        } else if (playerHasCards) {
             setScreenMode(PartyScreenMode.PLAYER_TURN);
             showMessage('Ваш ход! Перетащите карту на поле.');
         } else {
-            showMessage('Партия завершена!');
-            setScreenMode(PartyScreenMode.EVENTS);
+            // У игрока нет карт, но у оппонента есть
+            setTimeout(() => handleFallbackOpponentTurn(), 1000);
         }
     }, 1500);
+}
+
+/**
+ * Резервная обработка окончания игры (без оркестратора)
+ */
+function handleFallbackGameEnd() {
+    setScreenMode(PartyScreenMode.GAME_END);
+
+    const playerScore = partyScreenState.playerScore;
+    const opponentScore = partyScreenState.opponentScore;
+
+    let resultText;
+    if (playerScore > opponentScore) {
+        resultText = `Победа! Счёт: ${playerScore}:${opponentScore}`;
+    } else if (opponentScore > playerScore) {
+        resultText = `Поражение! Счёт: ${playerScore}:${opponentScore}`;
+    } else {
+        resultText = `Ничья! Счёт: ${playerScore}:${opponentScore}`;
+    }
+
+    showMessage(resultText);
 }
 
 /**
@@ -1054,6 +1096,13 @@ function getPartyScreenState() {
     return {
         mode: partyScreenState.mode,
         fieldCards: Object.fromEntries(partyScreenState.fieldCards),
+        fieldCells: partyScreenState.fieldCells.map(c => ({
+            index: c.index,
+            row: c.row,
+            col: c.col,
+            isAvailable: c.isAvailable,
+            card: partyScreenState.fieldCards.get(c.index) || null
+        })),
         unavailableCells: partyScreenState.unavailableCells,
         playerScore: partyScreenState.playerScore,
         opponentScore: partyScreenState.opponentScore,
@@ -1098,7 +1147,7 @@ async function initPartyScreen() {
         updateOpponentDisplay();
 
         // Инициализируем игровое поле
-        initGameField();
+        const fieldData = initGameField();
 
         // Отрисовываем руки
         renderOpponentHand();
@@ -1110,21 +1159,92 @@ async function initPartyScreen() {
         // Помечаем готовность
         partyScreenState.isReady = true;
 
-        showMessage('Партия началась! Ваш ход.');
-
-        // Переключаемся в режим хода игрока
-        setScreenMode(PartyScreenMode.PLAYER_TURN);
-
         console.log('PartyScreen: Инициализация завершена');
 
-        // Вызываем оркестратор партии (если он готов)
+        // Запускаем оркестратор партии (он управляет игрой)
         if (window.partyGameOrchestrator?.start) {
-            window.partyGameOrchestrator.start(getPartyScreenState());
+            partyScreenState.orchestratorActive = true;
+
+            // Передаем состояние экрана оркестратору (без DOM-элементов)
+            const screenState = {
+                playerHand: partyScreenState.playerHand,
+                opponentHand: partyScreenState.opponentHand,
+                fieldCells: partyScreenState.fieldCells.map(c => ({
+                    index: c.index,
+                    row: c.row,
+                    col: c.col,
+                    isAvailable: c.isAvailable,
+                    card: partyScreenState.fieldCards.get(c.index) || null
+                })),
+                unavailableCells: partyScreenState.unavailableCells,
+                opponentData: partyScreenState.opponentData
+            };
+
+            await window.partyGameOrchestrator.start(screenState);
+        } else {
+            // Резервный режим без оркестратора
+            console.warn('PartyScreen: Оркестратор недоступен, запуск в резервном режиме');
+            showMessage('Партия началась! Ваш ход.');
+            setScreenMode(PartyScreenMode.PLAYER_TURN);
         }
 
     } catch (error) {
         console.error('PartyScreen: Ошибка инициализации:', error);
         showMessage(`Ошибка загрузки: ${error.message}`);
+    }
+}
+
+/**
+ * Показ анимации повышения уровня карт
+ */
+async function showLevelUp(leveledUpCards) {
+    if (!Array.isArray(leveledUpCards) || leveledUpCards.length === 0) {
+        return;
+    }
+
+    showMessage(`Карты повысили уровень: ${leveledUpCards.length}!`);
+
+    // Подсвечиваем карты на поле, которые получили level up
+    for (const cardInfo of leveledUpCards) {
+        // Находим ячейку с этой картой
+        for (const [cellIndex, cardData] of partyScreenState.fieldCards.entries()) {
+            if (cardData.id === cardInfo.id) {
+                const cellData = partyScreenState.fieldCells.find(c => c.index === cellIndex);
+                if (cellData && cellData.element) {
+                    cellData.element.classList.add('level-up-highlight');
+
+                    // Убираем подсветку через 2 секунды
+                    setTimeout(() => {
+                        cellData.element.classList.remove('level-up-highlight');
+                    }, 2000);
+                }
+                break;
+            }
+        }
+    }
+
+    await delay(2000);
+}
+
+/**
+ * Показ экрана выбора награды (карты противника)
+ */
+function showRewardSelection(candidateCards, callback) {
+    setScreenMode(PartyScreenMode.SELECT_WINNER);
+
+    const selectableCells = [];
+
+    // Находим ячейки с картами противника
+    for (const [cellIndex, cardData] of partyScreenState.fieldCards.entries()) {
+        if (cardData.owner === 'opponent') {
+            selectableCells.push(cellIndex);
+        }
+    }
+
+    if (selectableCells.length > 0) {
+        enableWinnerSelection(selectableCells, callback);
+    } else if (callback) {
+        callback(null);
     }
 }
 
@@ -1138,6 +1258,8 @@ window.partyScreen = {
     placeCard: placeCardOnField,
     enableAttackSelection: enableAttackSelection,
     enableWinnerSelection: enableWinnerSelection,
+    showLevelUp: showLevelUp,
+    showRewardSelection: showRewardSelection,
     updateScore: updateScore,
     sendFieldState: sendFieldStateToOrchestrator,
     modes: PartyScreenMode,
