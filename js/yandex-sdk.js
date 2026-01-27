@@ -679,6 +679,122 @@ function clearUserDataCache() {
     console.log('Кэш данных пользователя очищен.');
 }
 
+// ========================================
+// Функция повышения уровня карты
+// ========================================
+
+/**
+ * Функция технической замены карты на уровень выше.
+ * Использует существующую логику генерации карт через cardRenderer.generateCardParams.
+ *
+ * @param {number} oldCardId - ID заменяемой карты
+ * @param {object} userData - Объект данных пользователя
+ * @param {object} cardGenerator - Ссылка на модуль генерации (cardRenderer)
+ * @returns {object} - Результат операции
+ */
+function processCardLevelUp(oldCardId, userData, cardGenerator) {
+    // Шаг 1: Валидация и подготовка
+    if (!userData || !Array.isArray(userData.cards)) {
+        return { status: 'error', message: 'Некорректная структура userData' };
+    }
+
+    if (!cardGenerator || typeof cardGenerator.generateCardParams !== 'function') {
+        return { status: 'error', message: 'cardGenerator не предоставлен или не имеет метода generateCardParams' };
+    }
+
+    const cardIndex = userData.cards.findIndex(c => c.id === oldCardId);
+    if (cardIndex === -1) {
+        return { status: 'error', message: 'Card not found' };
+    }
+
+    const oldCard = userData.cards[cardIndex];
+    const currentLevel = parseInt(oldCard.cardLevel, 10);
+
+    // Проверка максимального уровня (0, 1, 2 - три уровня, максимум 2)
+    if (currentLevel >= 2) {
+        return { status: 'skipped', message: 'Карта уже максимального уровня' };
+    }
+
+    const targetLevel = currentLevel + 1;
+
+    // Шаг 2: Генерация новых параметров карты через существующую функцию
+    let newStats;
+    try {
+        newStats = cardGenerator.generateCardParams(oldCard.cardTypeId, targetLevel);
+    } catch (error) {
+        return {
+            status: 'error',
+            message: `Ошибка генерации параметров карты: ${error.message}`
+        };
+    }
+
+    // Шаг 3: Генерация нового ID
+    const maxId = userData.cards.reduce((max, c) => (c.id > max ? c.id : max), 0);
+    const newId = maxId + 1;
+
+    // Шаг 4: Сборка объекта новой карты
+    const newCard = {
+        id: newId,
+        cardholder_id: oldCard.cardholder_id,
+        cardTypeId: oldCard.cardTypeId,
+        cardLevel: targetLevel,
+        ownership: 'player',
+        inHand: false,
+
+        // Данные из генератора
+        attackLevel: newStats.attackLevel,
+        attackType: newStats.attackType,
+        mechanicalDefense: newStats.mechanicalDefense,
+        electricalDefense: newStats.electricalDefense,
+
+        // Стрелки из генератора
+        arrowTopLeft: newStats.arrowTopLeft,
+        arrowTop: newStats.arrowTop,
+        arrowTopRight: newStats.arrowTopRight,
+        arrowRight: newStats.arrowRight,
+        arrowBottomRight: newStats.arrowBottomRight,
+        arrowBottom: newStats.arrowBottom,
+        arrowBottomLeft: newStats.arrowBottomLeft,
+        arrowLeft: newStats.arrowLeft
+    };
+
+    // Шаг 5: Атомарная замена в хранилище
+    userData.cards.splice(cardIndex, 1);
+    userData.cards.push(newCard);
+
+    // Шаг 6: Возврат данных для оркестратора
+    return {
+        status: 'success',
+        oldCardId: oldCardId,
+        newCard: newCard
+    };
+}
+
+/**
+ * Асинхронная обёртка для processCardLevelUp с автоматическим сохранением.
+ * Получает userData из хранилища, выполняет операцию и сохраняет результат.
+ *
+ * @param {number} oldCardId - ID заменяемой карты
+ * @param {object} cardGenerator - Ссылка на модуль генерации (cardRenderer)
+ * @returns {Promise<object>} - Результат операции
+ */
+async function processCardLevelUpAndSave(oldCardId, cardGenerator) {
+    const userData = await getUserData();
+
+    if (!userData) {
+        return { status: 'error', message: 'Не удалось получить данные пользователя' };
+    }
+
+    const result = processCardLevelUp(oldCardId, userData, cardGenerator);
+
+    if (result.status === 'success') {
+        await saveUserData(userData);
+        console.log(`processCardLevelUpAndSave: Карта #${oldCardId} повышена до уровня ${result.newCard.cardLevel}`);
+    }
+
+    return result;
+}
+
 // Экспорт в глобальную область видимости
 window.userCards = {
     // Основные функции
@@ -695,6 +811,10 @@ window.userCards = {
     recordPartyResult,
     addCardToUserDeck,
     clearUserDataCache,
+
+    // Функции повышения уровня карты
+    processCardLevelUp,
+    processCardLevelUpAndSave,
 
     // Утилиты
     checkYandexGamesEnvironment,
