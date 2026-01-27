@@ -459,7 +459,7 @@ h2 {
 }
 
 .stat-item.attack .stat-value {
-    color: #4d0404;
+    color: #ff6b6b;
 }
 
 .stat-item.attack-type .stat-value {
@@ -1510,7 +1510,7 @@ h2 {
 .attack-value.type-P { color: #ff9800; }
 .attack-value.type-E { color: #ffee58; }
 .attack-value.type-A { color: #9c27b0; }
-.attack-value.type-X { color: #f44336; }
+.attack-value.type-X { color: #ef9791; }
 
 /* Оверлей выбора */
 .selection-overlay {
