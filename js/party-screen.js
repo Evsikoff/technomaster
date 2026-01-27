@@ -1256,6 +1256,39 @@ async function showLevelUp(leveledUpCards) {
             if (cardData.id === cardInfo.id) {
                 const cellData = partyScreenState.fieldCells.find(c => c.index === cellIndex);
                 if (cellData && cellData.element) {
+                    const updatedCard = {
+                        ...cardData,
+                        cardLevel: cardInfo.newLevel,
+                        attackLevel: cardInfo.newStats?.attackLevel ?? cardData.attackLevel,
+                        mechanicalDefense: cardInfo.newStats?.mechanicalDefense ?? cardData.mechanicalDefense,
+                        electricalDefense: cardInfo.newStats?.electricalDefense ?? cardData.electricalDefense
+                    };
+
+                    partyScreenState.fieldCards.set(cellIndex, updatedCard);
+
+                    const cellInner = cellData.element.querySelector('.cell-inner');
+                    if (cellInner) {
+                        cellInner.innerHTML = '';
+                        const cardElement = window.cardRenderer.renderCard({
+                            cardTypeId: updatedCard.cardTypeId,
+                            arrowTopLeft: updatedCard.arrowTopLeft,
+                            arrowTop: updatedCard.arrowTop,
+                            arrowTopRight: updatedCard.arrowTopRight,
+                            arrowRight: updatedCard.arrowRight,
+                            arrowBottomRight: updatedCard.arrowBottomRight,
+                            arrowBottom: updatedCard.arrowBottom,
+                            arrowBottomLeft: updatedCard.arrowBottomLeft,
+                            arrowLeft: updatedCard.arrowLeft,
+                            ownership: updatedCard.owner === 'player' ? 'player' : 'rival',
+                            cardLevel: String(updatedCard.cardLevel || 1),
+                            attackLevel: String(updatedCard.attackLevel || 0),
+                            attackType: updatedCard.attackType || 'P',
+                            mechanicalDefense: String(updatedCard.mechanicalDefense || 0),
+                            electricalDefense: String(updatedCard.electricalDefense || 0)
+                        });
+                        cellInner.appendChild(cardElement);
+                    }
+
                     cellData.element.classList.add('level-up-highlight');
 
                     // Убираем подсветку через 2 секунды
