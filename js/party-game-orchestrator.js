@@ -1181,18 +1181,20 @@ const partyGameOrchestrator = (() => {
      */
     async function handlePlayerDefeat() {
         // AI выбирает карту для кражи
-        const playerFieldCards = [];
+        const usedPlayerCardIds = new Set(
+            state.playerHand.filter(c => c.used).map(c => c.id)
+        );
+
+        // Находим карты игрока, захваченные соперником на поле
+        const candidateCards = [];
         state.fieldState?.cells?.forEach(cell => {
-            if (cell.card && getCardOwner(cell.card) === 'player') {
-                playerFieldCards.push({
+            if (cell.card && usedPlayerCardIds.has(cell.card.id) && getCardOwner(cell.card) === 'rival') {
+                candidateCards.push({
                     ...cell.card,
                     cellIndex: cell.index
                 });
             }
         });
-
-        // Добавляем использованные карты игрока
-        const candidateCards = state.playerHand.filter(c => c.used);
 
         if (candidateCards.length === 0) {
             addSystemMessage('Соперник не смог забрать карту.');
