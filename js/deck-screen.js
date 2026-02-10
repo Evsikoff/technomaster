@@ -251,9 +251,13 @@ function createCollectionSlot(typeId, group) {
     nameLabel.textContent = group.meta.name;
     slot.appendChild(nameLabel);
 
-    // Обработчик клика: открыть экземпляры
+    // Обработчик клика: если одна карта — сразу детали, иначе список экземпляров
     slot.addEventListener('click', () => {
-        showInstances(typeId, group);
+        if (count === 1) {
+            showCardDetail(bestCard, group.meta);
+        } else {
+            showInstances(typeId, group);
+        }
     });
 
     return slot;
@@ -368,7 +372,7 @@ function showCardDetail(card, meta) {
     const attackRange = ATTACK_POWER_RANGES[attackVal] || '???';
     document.getElementById('ruleAttackValue').textContent = attackVal;
     document.getElementById('ruleAttackHint').textContent =
-        `Сила атаки ${attackVal} (${attackRange} ед). Этой картой можно захватить врагов с защитой меньше ${attackVal}.`;
+        `Уровень атаки ${attackVal} — реальная сила удара рассчитывается случайно от 0 до ${attackRange} ед. Чем выше уровень, тем больше шанс пробить защиту врага.`;
 
     // Тип атаки
     const atkType = card.attackType || 'P';
