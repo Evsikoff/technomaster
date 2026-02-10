@@ -147,6 +147,11 @@ async function initStartScreen() {
 
         const opponents = await loadOpponentsFromDb();
 
+        // Клик по баннеру «МОЯ КОЛОДА» — переход на экран колоды
+        deckBanner.addEventListener('click', () => {
+            window.location.href = 'deck.html';
+        });
+
         const hasLowCardCount = cardCount < MIN_DECK_PULSE_THRESHOLD;
         if (hasLowCardCount) {
             deckBanner.classList.add('deck-banner--pulse');

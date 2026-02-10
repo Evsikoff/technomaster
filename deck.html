@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕХНОМАСТЕР - Моя колода</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+        (function() {
+            try {
+                var isInYandexIframe = (window !== window.top) &&
+                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
+                    window.location.hostname.endsWith('yandex.net');
+
+                if (!isInYandexIframe && !isYandexHost) {
+                    window.userDataStorage = 'localStorage';
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="deck-screen">
+    <div class="deck-screen-frame">
+        <header class="game-header">
+            <button class="back-btn" id="deckBackBtn" type="button">&#8592;</button>
+            <h1 class="game-title">МОЯ КОЛОДА</h1>
+            <span class="deck-card-counter" id="deckCardCounter">Карты: 0 / 100</span>
+        </header>
+
+        <div class="deck-action-bar">
+            <button class="action-btn deck-shop-btn" id="deckShopBtn" type="button">Получить ещё карты</button>
+            <button class="action-btn deck-collector-btn" id="deckCollectorBtn" type="button">Уровень коллекционера</button>
+        </div>
+
+        <main class="deck-main">
+            <div class="deck-collection-grid" id="deckCollectionGrid">
+                <!-- Слоты коллекции будут добавлены динамически -->
+            </div>
+        </main>
+
+        <!-- Режим просмотра экземпляров -->
+        <div class="deck-instances-overlay hidden" id="deckInstancesOverlay">
+            <div class="deck-instances-panel">
+                <div class="deck-instances-header">
+                    <button class="back-btn" id="instancesBackBtn" type="button">&#8592;</button>
+                    <h2 class="deck-instances-title" id="instancesTitle">Все карты</h2>
+                </div>
+                <div class="deck-instances-grid" id="deckInstancesGrid">
+                    <!-- Экземпляры карт -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно характеристик -->
+        <div class="deck-detail-modal hidden" id="deckDetailModal">
+            <button class="deck-detail-close" id="detailCloseBtn" type="button">&#10005;</button>
+            <div class="deck-detail-content">
+                <div class="deck-detail-card" id="detailCardContainer">
+                    <!-- Карта рендерится сюда -->
+                </div>
+                <div class="deck-detail-info">
+                    <h2 class="deck-detail-name" id="detailName"></h2>
+                    <p class="deck-detail-level" id="detailLevel"></p>
+                    <p class="deck-detail-description" id="detailDescription"></p>
+
+                    <div class="deck-detail-rules">
+                        <h3 class="deck-rules-title">Параметры карты</h3>
+
+                        <div class="deck-rule-item" id="ruleAttack">
+                            <span class="rule-icon">&#9876;</span>
+                            <div class="rule-text">
+                                <span class="rule-label">Атака:</span>
+                                <span class="rule-value" id="ruleAttackValue"></span>
+                                <p class="rule-hint" id="ruleAttackHint"></p>
+                            </div>
+                        </div>
+
+                        <div class="deck-rule-item" id="ruleType">
+                            <span class="rule-icon rule-type-icon" id="ruleTypeIcon"></span>
+                            <div class="rule-text">
+                                <span class="rule-label">Тип атаки:</span>
+                                <span class="rule-value" id="ruleTypeValue"></span>
+                                <div id="ruleTypeHint"></div>
+                            </div>
+                        </div>
+
+                        <div class="deck-rule-item" id="ruleMechDef">
+                            <span class="rule-icon">&#128737;</span>
+                            <div class="rule-text">
+                                <span class="rule-label">Механическая защита:</span>
+                                <span class="rule-value" id="ruleMechDefValue"></span>
+                                <p class="rule-hint">Защищает от Физических атак (P).</p>
+                            </div>
+                        </div>
+
+                        <div class="deck-rule-item" id="ruleElecDef">
+                            <span class="rule-icon">&#9889;</span>
+                            <div class="rule-text">
+                                <span class="rule-label">Электрическая защита:</span>
+                                <span class="rule-value" id="ruleElecDefValue"></span>
+                                <p class="rule-hint">Защищает от Магии (M) и Тока (E).</p>
+                            </div>
+                        </div>
+
+                        <div class="deck-rule-item" id="ruleArrows">
+                            <span class="rule-icon">&#10146;</span>
+                            <div class="rule-text">
+                                <span class="rule-label">Стрелки:</span>
+                                <p class="rule-hint">Стрелки нужны для Атаки и Комбо. Если враг атакует сторону БЕЗ стрелки — защита карты не сработает!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/yandex-sdk.js"></script>
+    <script src="js/card-renderer.js"></script>
+    <script src="js/deck-screen.js"></script>
+</body>
+</html>
