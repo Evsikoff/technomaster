@@ -2203,6 +2203,17 @@ h2 {
     line-height: 1.4;
 }
 
+.rule-hint--current {
+    margin-bottom: 4px;
+}
+
+.rule-hint--other-title {
+    color: #87ceeb;
+    font-weight: 600;
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
 /* Адаптивность экрана колоды */
 @media (max-width: 768px) {
     .deck-detail-content {

@@ -41,20 +41,16 @@ const ATTACK_TYPE_DESCRIPTIONS = {
 };
 
 /**
- * Диапазоны силы атаки (по значению attackLevel)
+ * Вычисляет реальный верхний предел силы атаки.
+ * Формула из party-game-orchestrator: getStatValue(level) = level * 16,
+ * затем бросок Math.floor(Math.random() * max), т.е. от 0 до (level * 16 - 1).
+ * @param {number} level
+ * @returns {number}
  */
-const ATTACK_POWER_RANGES = {
-    0: '0-15',
-    1: '16-31',
-    2: '32-47',
-    3: '48-63',
-    4: '64-79',
-    5: '80-95',
-    6: '96-111',
-    7: '112-127',
-    8: '128-143',
-    9: '144-160'
-};
+function getAttackMaxValue(level) {
+    const n = parseInt(level, 10) || 0;
+    return Math.max(0, n * 16 - 1);
+}
 
 /**
  * Состояние экрана
@@ -369,17 +365,40 @@ function showCardDetail(card, meta) {
 
     // Атака
     const attackVal = parseInt(card.attackLevel, 10) || 0;
-    const attackRange = ATTACK_POWER_RANGES[attackVal] || '???';
+    const attackMax = getAttackMaxValue(attackVal);
     document.getElementById('ruleAttackValue').textContent = attackVal;
     document.getElementById('ruleAttackHint').textContent =
-        `Уровень атаки ${attackVal} — реальная сила удара рассчитывается случайно от 0 до ${attackRange} ед. Чем выше уровень, тем больше шанс пробить защиту врага.`;
+        `Уровень атаки ${attackVal} — в бою сила удара рассчитывается случайно от 0 до ${attackMax} ед. Защита противника рассчитывается так же. Чем выше уровень, тем больше шанс пробить защиту врага.`;
 
     // Тип атаки
     const atkType = card.attackType || 'P';
     const typeInfo = ATTACK_TYPE_DESCRIPTIONS[atkType] || { name: atkType, hint: '' };
     document.getElementById('ruleTypeIcon').textContent = atkType;
     document.getElementById('ruleTypeValue').textContent = typeInfo.name;
-    document.getElementById('ruleTypeHint').textContent = typeInfo.hint;
+
+    // Собираем подсказку: сначала текущий тип, затем остальные
+    const typeHintEl = document.getElementById('ruleTypeHint');
+    typeHintEl.innerHTML = '';
+
+    const currentLine = document.createElement('p');
+    currentLine.className = 'rule-hint rule-hint--current';
+    currentLine.textContent = typeInfo.hint;
+    typeHintEl.appendChild(currentLine);
+
+    const otherTypes = Object.entries(ATTACK_TYPE_DESCRIPTIONS).filter(([key]) => key !== atkType);
+    if (otherTypes.length > 0) {
+        const otherTitle = document.createElement('p');
+        otherTitle.className = 'rule-hint rule-hint--other-title';
+        otherTitle.textContent = 'Другие типы атак:';
+        typeHintEl.appendChild(otherTitle);
+
+        otherTypes.forEach(([key, info]) => {
+            const line = document.createElement('p');
+            line.className = 'rule-hint';
+            line.textContent = `${key} — ${info.hint}`;
+            typeHintEl.appendChild(line);
+        });
+    }
 
     // Защиты
     document.getElementById('ruleMechDefValue').textContent = card.mechanicalDefense;
