@@ -266,24 +266,14 @@ function updateOpponentDisplay() {
 }
 
 /**
- * Отрисовка карт оппонента (рубашками вверх)
+ * Отрисовка информации о картах оппонента (количество оставшихся)
  */
 function renderOpponentHand() {
-    const container = document.getElementById('opponentHandContainer');
-    container.innerHTML = '';
-
-    partyScreenState.opponentHand.forEach((card, index) => {
-        const cardBack = document.createElement('div');
-        cardBack.className = 'opponent-card-back';
-        cardBack.dataset.cardIndex = index;
-        cardBack.dataset.cardId = card.id;
-
-        if (card.used) {
-            cardBack.classList.add('used');
-        }
-
-        container.appendChild(cardBack);
-    });
+    const countEl = document.getElementById('opponentCardCount');
+    if (countEl) {
+        const remainingCards = partyScreenState.opponentHand.filter(c => !c.used).length;
+        countEl.textContent = remainingCards;
+    }
 }
 
 /**
@@ -341,12 +331,12 @@ function renderPlayerHand() {
 function initGameField() {
     const container = document.getElementById('gameFieldContainer');
 
-    // Генерируем поле через gameFieldRenderer
+    // Генерируем поле с ячейками 170×238 (соответствует scale 0.85 карты 200×280)
     const fieldData = gameFieldRenderer.renderField({
         unavailableCount: null, // случайное количество 0-6
-        cellWidth: 100,
-        cellHeight: 140,
-        cellGap: 5
+        cellWidth: 170,
+        cellHeight: 238,
+        cellGap: 6
     });
 
     // Сохраняем данные поля
@@ -357,6 +347,9 @@ function initGameField() {
     // Добавляем поле в контейнер
     container.innerHTML = '';
     container.appendChild(fieldData.element);
+
+    // Масштабируем поле под доступное пространство
+    scaleFieldToFit();
 
     // Настраиваем обработчики для ячеек
     fieldData.cells.forEach(cellData => {
@@ -371,9 +364,37 @@ function initGameField() {
         }
     });
 
+    // Пересчитываем масштаб при изменении размера окна
+    window.addEventListener('resize', scaleFieldToFit);
+
     console.log(`PartyScreen: Игровое поле создано. Заблокированных ячеек: ${fieldData.unavailableCount}`);
 
     return fieldData;
+}
+
+/**
+ * Масштабирование игрового поля под доступное пространство контейнера
+ */
+function scaleFieldToFit() {
+    const wrapper = document.getElementById('gameFieldContainer');
+    const field = wrapper ? wrapper.querySelector('.game-field') : null;
+    if (!field || !wrapper) return;
+
+    // Сбрасываем масштаб для точного измерения
+    field.style.transform = 'none';
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const fieldWidth = field.scrollWidth;
+    const fieldHeight = field.scrollHeight;
+
+    if (fieldWidth === 0 || fieldHeight === 0) return;
+
+    const scaleX = wrapperRect.width / fieldWidth;
+    const scaleY = wrapperRect.height / fieldHeight;
+    const scale = Math.min(scaleX, scaleY, 1); // не увеличиваем больше 1
+
+    field.style.transform = `scale(${scale})`;
+    field.style.transformOrigin = 'center center';
 }
 
 /**

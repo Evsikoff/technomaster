@@ -1081,10 +1081,10 @@ h2 {
     gap: clamp(4px, 0.5vw, 8px);
 }
 
-/* Секция оппонента (левая) */
+/* Секция оппонента (левая, компактная) */
 .party-opponent-section {
     flex: 0 0 auto;
-    width: clamp(100px, 12vw, 150px);
+    width: clamp(60px, 7vw, 85px);
     background: rgba(60, 30, 30, 0.6);
     border-radius: 10px;
     padding: 6px;
@@ -1097,17 +1097,17 @@ h2 {
 /* Профиль оппонента */
 .opponent-profile {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: clamp(4px, 0.4vw, 6px);
+    gap: 3px;
     padding: clamp(3px, 0.3vw, 5px);
     background: rgba(0, 0, 0, 0.3);
     border-radius: 6px;
 }
 
 .opponent-avatar-large {
-    width: clamp(30px, 3.5vw, 50px);
-    height: clamp(30px, 3.5vw, 50px);
+    width: clamp(32px, 4vw, 52px);
+    height: clamp(32px, 4vw, 52px);
     object-fit: cover;
     border-radius: 6px;
     border: 2px solid rgba(198, 40, 40, 0.6);
@@ -1117,16 +1117,17 @@ h2 {
 .opponent-details {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 1px;
     min-width: 0;
+    width: 100%;
 }
 
 .opponent-name-display {
     font-size: clamp(8px, 0.9vw, 11px);
     font-weight: 700;
     color: #ff6b6b;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1138,40 +1139,30 @@ h2 {
     color: rgba(255, 107, 107, 0.8);
 }
 
-/* Контейнер карт оппонента */
-.opponent-hand-container {
-    flex: 1;
-    min-height: 0;
+/* Счётчик карт оппонента */
+.opponent-hand-counter {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 4px;
-}
-
-/* Рубашка карты оппонента - стопка */
-.opponent-card-back {
-    width: 100%;
-    height: 40px;
-    flex-shrink: 0;
-    background: url('../public/img/cardback.png') center/cover no-repeat;
-    border: 2px solid #c62828;
+    align-items: center;
+    gap: 2px;
+    padding: clamp(4px, 0.5vw, 8px);
+    background: rgba(0, 0, 0, 0.3);
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
-    position: relative;
 }
 
-.opponent-card-back:last-child {
-    height: auto;
-    min-height: 80px;
-    aspect-ratio: 5 / 7;
+.opponent-cards-label {
+    font-size: clamp(7px, 0.7vw, 9px);
+    color: rgba(255, 107, 107, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.opponent-card-back.used {
-    opacity: 0.3;
-    border-color: rgba(198, 40, 40, 0.3);
-    filter: grayscale(0.5);
-    height: 25px;
+.opponent-cards-count {
+    font-size: clamp(18px, 2.5vw, 30px);
+    font-weight: 700;
+    color: #ff6b6b;
+    text-shadow: 0 2px 8px rgba(198, 40, 40, 0.5);
+    line-height: 1;
 }
 
 /* Счёт партии */
@@ -1227,17 +1218,19 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 100%;
 }
 
 /* Адаптивное игровое поле для экрана партии */
 .party-field-section .game-field {
     padding: 4px;
+    transform-origin: center center;
 }
 
 /* Карта на поле - масштабируем карту 200x280 в ячейку */
 .party-field-section .game-field-cell .game-card {
-    transform: scale(0.45);
+    transform: scale(0.85);
     transform-origin: center;
     position: absolute;
     top: 50%;
@@ -1249,32 +1242,33 @@ h2 {
 /* Секция карт игрока (правая) */
 .party-player-section {
     flex: 0 0 auto;
-    width: 240px;
+    width: 190px;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid rgba(46, 125, 50, 0.4);
     display: flex;
     flex-direction: column;
 }
 
-/* Контейнер карт игрока - сетка 2 колонки */
+/* Контейнер карт игрока - одна колонка */
 .player-hand-container {
     flex: 1;
     min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 4px;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 4px;
-    align-content: start;
+    align-items: center;
 }
 
 /* Карта игрока в руке */
 .player-hand-card {
-    width: 100%;
-    height: 154px; /* 280 * 0.55 */
+    width: 170px; /* 200 * 0.85 */
+    height: 238px; /* 280 * 0.85 */
+    flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -1285,7 +1279,7 @@ h2 {
 }
 
 .player-hand-card:hover {
-    transform: scale(1.08);
+    transform: scale(1.05);
     z-index: 10;
 }
 
@@ -1295,7 +1289,7 @@ h2 {
 }
 
 .player-hand-card .game-card {
-    transform: scale(0.55);
+    transform: scale(0.85);
     transform-origin: top center;
     position: absolute;
     top: 0;
@@ -1627,13 +1621,13 @@ h2 {
 /* Анимация смены владельца */
 @keyframes ownershipChange {
     0% {
-        transform: scale(1) rotateY(0deg);
+        transform: scale(0.85) rotateY(0deg);
     }
     50% {
-        transform: scale(1.1) rotateY(90deg);
+        transform: scale(0.95) rotateY(90deg);
     }
     100% {
-        transform: scale(1) rotateY(0deg);
+        transform: scale(0.85) rotateY(0deg);
     }
 }
 
@@ -1660,20 +1654,13 @@ h2 {
     animation: valueCount 0.3s ease-out;
 }
 
-/* Скроллбар для контейнеров карт */
-.opponent-hand-container::-webkit-scrollbar,
+/* Скроллбар для контейнера карт */
 .player-hand-container::-webkit-scrollbar {
     width: 4px;
 }
 
-.opponent-hand-container::-webkit-scrollbar-track,
 .player-hand-container::-webkit-scrollbar-track {
     background: rgba(20, 30, 50, 0.6);
-    border-radius: 999px;
-}
-
-.opponent-hand-container::-webkit-scrollbar-thumb {
-    background: rgba(198, 40, 40, 0.6);
     border-radius: 999px;
 }
 
@@ -1732,15 +1719,15 @@ h2 {
 
 @keyframes levelUpCard {
     0% {
-        transform: scale(1);
+        transform: scale(0.85);
         filter: brightness(1);
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(0.95);
         filter: brightness(1.5);
     }
     100% {
-        transform: scale(1);
+        transform: scale(0.85);
         filter: brightness(1);
     }
 }
@@ -1766,18 +1753,22 @@ h2 {
         flex-direction: column;
     }
 
-    .party-opponent-section,
-    .party-player-section {
+    .party-opponent-section {
         width: 100%;
         flex-direction: row;
-        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
     }
 
     .opponent-profile {
         flex-direction: row;
     }
 
-    .opponent-hand-container,
+    .party-player-section {
+        width: 100%;
+        flex-direction: row;
+    }
+
     .player-hand-container {
         flex-direction: row;
         flex-wrap: wrap;
@@ -1785,17 +1776,12 @@ h2 {
         overflow-y: hidden;
     }
 
-    .opponent-card-back {
-        width: 50px;
-        flex-shrink: 0;
-    }
-
     .player-hand-card {
         width: auto;
     }
 
     .player-hand-card .game-card {
-        transform: scale(0.35);
+        transform: scale(0.45);
     }
 }
 
