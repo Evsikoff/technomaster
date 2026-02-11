@@ -2227,3 +2227,485 @@ h2 {
         transform: scale(0.5);
     }
 }
+
+/* ========== SHOP SCREEN STYLES ========== */
+
+.shop-screen {
+    overflow: hidden;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.shop-screen-frame {
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    aspect-ratio: 16 / 9;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(12px, 2vw, 24px);
+    gap: clamp(8px, 1vw, 16px);
+    position: relative;
+}
+
+.shop-screen-frame .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vw, 24px);
+    position: relative;
+}
+
+.shop-screen-frame .game-title {
+    font-size: clamp(22px, 4vw, 42px);
+}
+
+/* Основная область — сетка блистеров */
+.shop-main {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.shop-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(12px, 2vw, 24px);
+    justify-content: center;
+    align-content: flex-start;
+    overflow-y: auto;
+    height: 100%;
+    padding: 4px;
+    padding-right: 8px;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.6);
+    scrollbar-width: thin;
+}
+
+.shop-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.shop-grid::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.shop-grid::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.7), rgba(255, 152, 0, 0.6));
+    border-radius: 999px;
+}
+
+/* Карточка блистера */
+.shop-blister-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(6px, 0.8vw, 10px);
+    padding: clamp(10px, 1.5vw, 18px);
+    border-radius: 16px;
+    background: rgba(24, 33, 54, 0.8);
+    border: 1px solid rgba(135, 206, 235, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    width: clamp(130px, 14vw, 200px);
+}
+
+.shop-blister-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.4);
+}
+
+.shop-blister-image-wrap {
+    width: clamp(80px, 9vw, 140px);
+    height: clamp(100px, 11vw, 170px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-blister-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.shop-blister-name {
+    font-size: clamp(11px, 1.4vw, 16px);
+    color: #ffd700;
+    text-align: center;
+    font-weight: 600;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Кнопки цен */
+.shop-price-btn {
+    padding: clamp(4px, 0.6vw, 8px) clamp(10px, 1.4vw, 18px);
+    border: none;
+    border-radius: 10px;
+    font-size: clamp(11px, 1.3vw, 15px);
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.shop-price-btn:hover {
+    transform: scale(1.05);
+}
+
+.shop-price-btn--free {
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.shop-price-btn--video {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.shop-price-btn--purchase {
+    background: linear-gradient(120deg, #f9d423, #ff4e50);
+    color: #0f1b2d;
+    box-shadow: 0 4px 12px rgba(249, 212, 35, 0.3);
+}
+
+/* Модальное окно товара */
+.shop-product-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+}
+
+.shop-product-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.shop-product-content {
+    width: 88%;
+    max-height: 90%;
+    display: flex;
+    gap: clamp(16px, 3vw, 32px);
+    position: relative;
+    overflow-y: auto;
+    padding: clamp(16px, 2.5vw, 32px);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(135, 206, 235, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(135, 206, 235, 0.4) transparent;
+}
+
+.shop-product-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.shop-product-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.shop-product-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(135, 206, 235, 0.5), rgba(249, 212, 35, 0.4));
+    border-radius: 3px;
+}
+
+.shop-product-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(30, 30, 60, 0.85);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 110;
+}
+
+.shop-product-close:hover {
+    background: rgba(255, 78, 80, 0.5);
+}
+
+.shop-product-image-wrap {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(120px, 16vw, 240px);
+}
+
+.shop-product-image {
+    max-width: 100%;
+    max-height: clamp(150px, 20vw, 300px);
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.shop-product-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.2vw, 14px);
+}
+
+.shop-product-name {
+    font-size: clamp(20px, 3.5vw, 32px);
+    color: #ffd700;
+    margin: 0;
+}
+
+.shop-product-marketing {
+    font-size: clamp(13px, 1.8vw, 17px);
+    color: rgba(224, 224, 224, 0.9);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.shop-product-tech {
+    font-size: clamp(12px, 1.5vw, 15px);
+    color: #87ceeb;
+    margin: 0;
+    font-style: italic;
+}
+
+.shop-product-cta {
+    align-self: flex-start;
+    padding: clamp(10px, 1.5vw, 16px) clamp(20px, 3vw, 36px);
+    border: none;
+    border-radius: 12px;
+    font-size: clamp(14px, 2vw, 20px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: clamp(4px, 0.8vw, 10px);
+}
+
+.shop-product-cta:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.shop-product-cta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Спиннер загрузки */
+.shop-spinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border-radius: 16px;
+    z-index: 120;
+}
+
+.shop-spinner.hidden {
+    display: none;
+}
+
+.shop-spinner-circle {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 215, 0, 0.2);
+    border-top-color: #ffd700;
+    border-radius: 50%;
+    animation: shopSpin 0.8s linear infinite;
+}
+
+@keyframes shopSpin {
+    to { transform: rotate(360deg); }
+}
+
+.shop-spinner-text {
+    color: #ffd700;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Оверлей полученных карт */
+.shop-received-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-received-panel {
+    width: 90%;
+    max-height: 90%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    padding: clamp(12px, 2vw, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.2vw, 16px);
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+}
+
+.shop-received-title {
+    font-size: clamp(20px, 3.5vw, 32px);
+    color: #ffd700;
+    margin: 0;
+    text-align: center;
+}
+
+.shop-received-subtitle {
+    font-size: clamp(13px, 2vw, 18px);
+    color: #87ceeb;
+    margin: 0;
+}
+
+.shop-received-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(8px, 1.2vw, 16px);
+    justify-content: center;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.6);
+}
+
+.shop-received-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.shop-received-grid::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.shop-received-grid::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.7), rgba(255, 152, 0, 0.6));
+    border-radius: 999px;
+}
+
+.shop-received-card {
+    width: 140px;
+    height: 196px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: cardReveal 0.4s ease-out backwards;
+}
+
+.shop-received-card .game-card {
+    transform: scale(0.65);
+    transform-origin: center;
+}
+
+@keyframes cardReveal {
+    from {
+        opacity: 0;
+        transform: scale(0.5) rotateY(90deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotateY(0deg);
+    }
+}
+
+.shop-received-card:nth-child(1) { animation-delay: 0.1s; }
+.shop-received-card:nth-child(2) { animation-delay: 0.25s; }
+.shop-received-card:nth-child(3) { animation-delay: 0.4s; }
+.shop-received-card:nth-child(4) { animation-delay: 0.55s; }
+.shop-received-card:nth-child(5) { animation-delay: 0.7s; }
+
+.shop-received-close-btn {
+    padding: clamp(10px, 1.5vw, 16px) clamp(30px, 5vw, 60px);
+    border: none;
+    border-radius: 12px;
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    background: linear-gradient(120deg, #f9d423, #ff4e50);
+    color: #0f1b2d;
+    box-shadow: 0 8px 20px rgba(249, 212, 35, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shop-received-close-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(255, 78, 80, 0.4);
+}
+
+/* Адаптивность экрана магазина */
+@media (max-width: 768px) {
+    .shop-product-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .shop-product-image-wrap {
+        width: 60%;
+    }
+
+    .shop-blister-card {
+        width: 120px;
+    }
+
+    .shop-blister-image-wrap {
+        width: 80px;
+        height: 100px;
+    }
+
+    .shop-received-card {
+        width: 110px;
+        height: 154px;
+    }
+
+    .shop-received-card .game-card {
+        transform: scale(0.5);
+    }
+}
