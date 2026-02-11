@@ -1923,7 +1923,9 @@ h2 {
 
 .deck-instances-panel {
     width: 90%;
-    max-height: 90%;
+    height: 90%;
+    min-height: 72vh;
+    max-height: 94vh;
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     border-radius: 16px;
     border: 1px solid rgba(135, 206, 235, 0.3);
@@ -1955,6 +1957,27 @@ h2 {
     flex: 1;
     min-height: 0;
     padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.65) rgba(20, 30, 50, 0.65);
+}
+
+.deck-instances-grid::-webkit-scrollbar {
+    width: 10px;
+}
+
+.deck-instances-grid::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.65);
+    border-radius: 999px;
+}
+
+.deck-instances-grid::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.9), rgba(255, 215, 0, 0.6));
+    border-radius: 999px;
+    border: 2px solid rgba(20, 30, 50, 0.65);
+}
+
+.deck-instances-grid::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 230, 120, 1), rgba(255, 215, 0, 0.75));
 }
 
 .deck-instance-card {
