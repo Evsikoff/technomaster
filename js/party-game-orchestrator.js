@@ -1188,7 +1188,7 @@ const partyGameOrchestrator = (() => {
         // Находим карты игрока, захваченные соперником на поле
         const candidateCards = [];
         state.fieldState?.cells?.forEach(cell => {
-            if (cell.card && usedPlayerCardIds.has(cell.card.id) && getCardOwner(cell.card) === 'rival') {
+            if (cell.card && usedPlayerCardIds.has(cell.card.id) && getCardOwner(cell.card) === 'opponent') {
                 candidateCards.push({
                     ...cell.card,
                     cellIndex: cell.index

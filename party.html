@@ -16,7 +16,7 @@
 
         <!-- Основная игровая область -->
         <div class="party-main-area">
-            <!-- Секция оппонента -->
+            <!-- Секция оппонента (компактная) -->
             <section class="party-opponent-section">
                 <!-- Информация о сопернике -->
                 <div class="opponent-profile">
@@ -27,9 +27,10 @@
                     </div>
                 </div>
 
-                <!-- Карты оппонента рубашками вверх -->
-                <div id="opponentHandContainer" class="opponent-hand-container">
-                    <!-- Карты соперника будут отрисованы здесь -->
+                <!-- Количество карт оппонента -->
+                <div id="opponentHandContainer" class="opponent-hand-counter">
+                    <span class="opponent-cards-label">Карт:</span>
+                    <span id="opponentCardCount" class="opponent-cards-count">0</span>
                 </div>
 
                 <!-- Текущий счет -->
@@ -81,11 +82,6 @@
             <div class="selection-message">
                 <span id="selectionText">Выберите карту</span>
             </div>
-        </div>
-
-        <!-- Индикатор режима -->
-        <div id="modeIndicator" class="mode-indicator">
-            <span id="modeText">Загрузка...</span>
         </div>
 
         <button id="partyReturnButton" class="party-return-btn hidden" type="button">Вернуться</button>

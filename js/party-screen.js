@@ -161,7 +161,6 @@ async function getOpponentDataFromDb(opponentId) {
  */
 function setScreenMode(mode) {
     const frame = document.querySelector('.party-frame');
-    const modeText = document.getElementById('modeText');
     const selectionOverlay = document.getElementById('selectionOverlay');
     const battleOverlay = document.getElementById('battleOverlay');
 
@@ -177,19 +176,6 @@ function setScreenMode(mode) {
     );
 
     partyScreenState.mode = mode;
-
-    const modeTexts = {
-        [PartyScreenMode.LOADING]: 'Загрузка...',
-        [PartyScreenMode.EVENTS]: 'Обработка событий',
-        [PartyScreenMode.PLAYER_TURN]: 'Ваш ход',
-        [PartyScreenMode.SELECT_ATTACK]: 'Выбор карты',
-        [PartyScreenMode.SELECT_WINNER]: 'Выбор карты',
-        [PartyScreenMode.BATTLE]: 'Бой!',
-        [PartyScreenMode.OWNERSHIP_CHANGE]: 'Смена владельца',
-        [PartyScreenMode.GAME_END]: 'Партия завершена'
-    };
-
-    modeText.textContent = modeTexts[mode] || mode;
 
     switch (mode) {
         case PartyScreenMode.LOADING:
@@ -266,24 +252,14 @@ function updateOpponentDisplay() {
 }
 
 /**
- * Отрисовка карт оппонента (рубашками вверх)
+ * Отрисовка информации о картах оппонента (количество оставшихся)
  */
 function renderOpponentHand() {
-    const container = document.getElementById('opponentHandContainer');
-    container.innerHTML = '';
-
-    partyScreenState.opponentHand.forEach((card, index) => {
-        const cardBack = document.createElement('div');
-        cardBack.className = 'opponent-card-back';
-        cardBack.dataset.cardIndex = index;
-        cardBack.dataset.cardId = card.id;
-
-        if (card.used) {
-            cardBack.classList.add('used');
-        }
-
-        container.appendChild(cardBack);
-    });
+    const countEl = document.getElementById('opponentCardCount');
+    if (countEl) {
+        const remainingCards = partyScreenState.opponentHand.filter(c => !c.used).length;
+        countEl.textContent = remainingCards;
+    }
 }
 
 /**
@@ -333,6 +309,60 @@ function renderPlayerHand() {
 
         container.appendChild(cardWrapper);
     });
+
+    // Масштабируем карты в руке под доступное пространство
+    scalePlayerHandToFit();
+}
+
+/**
+ * Масштабирование карт в руке игрока, чтобы все помещались без прокрутки.
+ * Автоматически выбирает оптимальное число колонок и масштаб (max 0.85).
+ */
+function scalePlayerHandToFit() {
+    const container = document.getElementById('playerHandContainer');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('.player-hand-card');
+    if (cards.length === 0) return;
+
+    const containerHeight = container.clientHeight;
+    const containerWidth = container.clientWidth;
+    if (containerHeight === 0 || containerWidth === 0) return;
+
+    const gap = 4;
+    const maxScale = 0.85;
+
+    // Перебираем варианты колонок (1, 2, 3) и выбираем тот, что даёт максимальный масштаб
+    let bestScale = 0;
+    let bestColumns = 2;
+
+    for (let cols = 1; cols <= 3; cols++) {
+        const rows = Math.ceil(cards.length / cols);
+        const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
+        const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
+        const s = Math.min(scaleH, scaleW, maxScale);
+        if (s > bestScale) {
+            bestScale = s;
+            bestColumns = cols;
+        }
+    }
+
+    const scale = bestScale;
+    const cardWidth = Math.floor(200 * scale);
+    const cardHeight = Math.floor(280 * scale);
+
+    // Устанавливаем число колонок в гриде
+    container.style.gridTemplateColumns = `repeat(${bestColumns}, ${cardWidth}px)`;
+
+    cards.forEach(card => {
+        card.style.width = `${cardWidth}px`;
+        card.style.height = `${cardHeight}px`;
+
+        const gameCard = card.querySelector('.game-card');
+        if (gameCard) {
+            gameCard.style.transform = `scale(${scale})`;
+        }
+    });
 }
 
 /**
@@ -341,12 +371,12 @@ function renderPlayerHand() {
 function initGameField() {
     const container = document.getElementById('gameFieldContainer');
 
-    // Генерируем поле через gameFieldRenderer
+    // Генерируем поле с ячейками 170×238 (соответствует scale 0.85 карты 200×280)
     const fieldData = gameFieldRenderer.renderField({
         unavailableCount: null, // случайное количество 0-6
-        cellWidth: 100,
-        cellHeight: 140,
-        cellGap: 5
+        cellWidth: 170,
+        cellHeight: 238,
+        cellGap: 6
     });
 
     // Сохраняем данные поля
@@ -357,6 +387,9 @@ function initGameField() {
     // Добавляем поле в контейнер
     container.innerHTML = '';
     container.appendChild(fieldData.element);
+
+    // Масштабируем поле под доступное пространство
+    scaleFieldToFit();
 
     // Настраиваем обработчики для ячеек
     fieldData.cells.forEach(cellData => {
@@ -371,9 +404,52 @@ function initGameField() {
         }
     });
 
+    // Пересчитываем масштаб при изменении размера окна
+    window.addEventListener('resize', () => {
+        scaleFieldToFit();
+        scalePlayerHandToFit();
+    });
+
     console.log(`PartyScreen: Игровое поле создано. Заблокированных ячеек: ${fieldData.unavailableCount}`);
 
     return fieldData;
+}
+
+/**
+ * Масштабирование игрового поля под доступную высоту.
+ * Поле прижимается к top-left, секция обтягивает поле по ширине.
+ */
+function scaleFieldToFit() {
+    const wrapper = document.getElementById('gameFieldContainer');
+    const field = wrapper ? wrapper.querySelector('.game-field') : null;
+    if (!field || !wrapper) return;
+
+    const section = wrapper.closest('.party-field-section');
+
+    // Сбрасываем масштаб и ширину секции для точного измерения
+    field.style.transform = 'none';
+    if (section) {
+        section.style.width = '';
+    }
+
+    const fieldWidth = field.scrollWidth;
+    const fieldHeight = field.scrollHeight;
+    if (fieldWidth === 0 || fieldHeight === 0) return;
+
+    // Масштабируем только по высоте (ширина секции подстроится)
+    const wrapperHeight = wrapper.clientHeight;
+    const scale = Math.min(wrapperHeight / fieldHeight, 1);
+
+    field.style.transform = `scale(${scale})`;
+    field.style.transformOrigin = 'top left';
+
+    // Обтягиваем секцию по фактической ширине масштабированного поля
+    if (section) {
+        const padding = parseFloat(getComputedStyle(section).paddingLeft) +
+                         parseFloat(getComputedStyle(section).paddingRight);
+        const scaledWidth = fieldWidth * scale + padding;
+        section.style.width = `${scaledWidth}px`;
+    }
 }
 
 /**
