@@ -1242,7 +1242,6 @@ h2 {
 /* Секция карт игрока (правая) */
 .party-player-section {
     flex: 0 0 auto;
-    width: 190px;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 6px;
@@ -1251,24 +1250,21 @@ h2 {
     flex-direction: column;
 }
 
-/* Контейнер карт игрока - одна колонка */
+/* Контейнер карт игрока - сетка 2 колонки */
 .player-hand-container {
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
     gap: 4px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     padding: 4px;
-    align-items: center;
+    align-content: start;
+    justify-content: center;
 }
 
 /* Карта игрока в руке */
 .player-hand-card {
-    width: 170px; /* 200 * 0.85 */
-    height: 238px; /* 280 * 0.85 */
-    flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -1289,12 +1285,10 @@ h2 {
 }
 
 .player-hand-card .game-card {
-    transform: scale(0.85);
-    transform-origin: top center;
+    transform-origin: top left;
     position: absolute;
     top: 0;
-    left: 50%;
-    margin-left: -100px;
+    left: 0;
 }
 
 .player-hand-card.used {
@@ -1778,10 +1772,6 @@ h2 {
 
     .player-hand-card {
         width: auto;
-    }
-
-    .player-hand-card .game-card {
-        transform: scale(0.45);
     }
 }
 

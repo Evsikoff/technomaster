@@ -323,6 +323,59 @@ function renderPlayerHand() {
 
         container.appendChild(cardWrapper);
     });
+
+    // Масштабируем карты в руке под доступное пространство
+    scalePlayerHandToFit();
+}
+
+/**
+ * Масштабирование карт в руке игрока, чтобы все помещались без прокрутки.
+ * Сетка 2 колонки, карты масштабируются до max 0.85 (как в модальном окне колоды).
+ */
+function scalePlayerHandToFit() {
+    const container = document.getElementById('playerHandContainer');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('.player-hand-card');
+    if (cards.length === 0) return;
+
+    const containerHeight = container.clientHeight;
+    const containerWidth = container.clientWidth;
+    if (containerHeight === 0 || containerWidth === 0) return;
+
+    const columns = 2;
+    const gap = 4;
+    const numRows = Math.ceil(cards.length / columns);
+
+    // Вычисляем максимальный масштаб, при котором все строки помещаются по высоте
+    const availableHeightPerRow = (containerHeight - (numRows - 1) * gap) / numRows;
+    const scaleByHeight = availableHeightPerRow / 280;
+
+    // Также проверяем ширину: 2 карты + gap должны поместиться
+    const availableWidthPerCard = (containerWidth - (columns - 1) * gap) / columns;
+    const scaleByWidth = availableWidthPerCard / 200;
+
+    const scale = Math.min(scaleByHeight, scaleByWidth, 0.85);
+
+    const cardWidth = Math.floor(200 * scale);
+    const cardHeight = Math.floor(280 * scale);
+
+    cards.forEach(card => {
+        card.style.width = `${cardWidth}px`;
+        card.style.height = `${cardHeight}px`;
+
+        const gameCard = card.querySelector('.game-card');
+        if (gameCard) {
+            gameCard.style.transform = `scale(${scale})`;
+        }
+    });
+
+    // Обновляем ширину секции игрока под фактический размер сетки
+    const section = container.closest('.party-player-section');
+    if (section) {
+        const totalWidth = columns * cardWidth + (columns - 1) * gap + 8 + 12; // gap + padding
+        section.style.width = `${totalWidth}px`;
+    }
 }
 
 /**
@@ -365,7 +418,10 @@ function initGameField() {
     });
 
     // Пересчитываем масштаб при изменении размера окна
-    window.addEventListener('resize', scaleFieldToFit);
+    window.addEventListener('resize', () => {
+        scaleFieldToFit();
+        scalePlayerHandToFit();
+    });
 
     console.log(`PartyScreen: Игровое поле создано. Заблокированных ячеек: ${fieldData.unavailableCount}`);
 
