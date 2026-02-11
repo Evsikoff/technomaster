@@ -1185,10 +1185,10 @@ const partyGameOrchestrator = (() => {
             state.playerHand.filter(c => c.used).map(c => c.id)
         );
 
-        // Находим карты игрока, захваченные соперником на поле
+        // Находим все карты игрока на поле (ИИ забирает лучшую)
         const candidateCards = [];
         state.fieldState?.cells?.forEach(cell => {
-            if (cell.card && usedPlayerCardIds.has(cell.card.id) && getCardOwner(cell.card) === 'opponent') {
+            if (cell.card && usedPlayerCardIds.has(cell.card.id)) {
                 candidateCards.push({
                     ...cell.card,
                     cellIndex: cell.index
