@@ -63,7 +63,7 @@ const aiRewardSelector = (() => {
         }
 
         return {
-            totalValue: statScore + arrowScore + typeBonus,
+            totalValue: statScore + arrowScore * 0.5 + typeBonus * 0.2,
             attack
         };
     }
