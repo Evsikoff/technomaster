@@ -147,6 +147,12 @@ function createBlisterCard(blister) {
     name.textContent = blister.blister_name;
     card.appendChild(name);
 
+    // Количество карт
+    const cardCount = document.createElement('div');
+    cardCount.className = 'shop-blister-count';
+    cardCount.textContent = blister.deck_size + ' карт';
+    card.appendChild(cardCount);
+
     // Кнопка цены
     const priceBtn = document.createElement('button');
     priceBtn.className = 'shop-price-btn ' + getPriceBtnClass(blister.blister_price);
@@ -216,7 +222,10 @@ function openProductModal(blister) {
     // Текстовые данные
     nameEl.textContent = blister.blister_name;
     marketingEl.textContent = blister.blister_description || '';
-    techEl.textContent = blister.description || '';
+    var techParts = [];
+    techParts.push(blister.deck_size + ' карт');
+    if (blister.description) techParts.push(blister.description);
+    techEl.textContent = techParts.join(' \u2022 ');
 
     // CTA
     ctaBtn.textContent = getCtaLabel(blister.blister_price);

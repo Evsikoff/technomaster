@@ -2344,6 +2344,13 @@ h2 {
     white-space: nowrap;
 }
 
+.shop-blister-count {
+    font-size: clamp(10px, 1.2vw, 13px);
+    color: #87ceeb;
+    text-align: center;
+    font-weight: 500;
+}
+
 /* Кнопки цен */
 .shop-price-btn {
     padding: clamp(4px, 0.6vw, 8px) clamp(10px, 1.4vw, 18px);
