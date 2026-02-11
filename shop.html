@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕХНОМАСТЕР - Магазин</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+        (function() {
+            try {
+                var isInYandexIframe = (window !== window.top) &&
+                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
+                    window.location.hostname.endsWith('yandex.net');
+
+                if (!isInYandexIframe && !isYandexHost) {
+                    window.userDataStorage = 'localStorage';
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="shop-screen">
+    <div class="shop-screen-frame">
+        <header class="game-header">
+            <button class="back-btn" id="shopBackBtn" type="button">&#8592;</button>
+            <h1 class="game-title">ПОЛУЧИТЬ КАРТЫ</h1>
+        </header>
+
+        <main class="shop-main">
+            <div class="shop-grid" id="shopGrid">
+                <!-- Карточки блистеров будут добавлены динамически -->
+            </div>
+        </main>
+
+        <!-- Модальное окно товара -->
+        <div class="shop-product-modal hidden" id="shopProductModal">
+            <div class="shop-product-content">
+                <button class="shop-product-close" id="productCloseBtn" type="button">&#10005;</button>
+                <div class="shop-product-image-wrap" id="productImageWrap">
+                    <!-- Крупное изображение блистера -->
+                </div>
+                <div class="shop-product-info">
+                    <h2 class="shop-product-name" id="productName"></h2>
+                    <p class="shop-product-marketing" id="productMarketing"></p>
+                    <p class="shop-product-tech" id="productTech"></p>
+                    <button class="shop-product-cta" id="productCtaBtn" type="button"></button>
+                </div>
+                <!-- Спиннер загрузки -->
+                <div class="shop-spinner hidden" id="shopSpinner">
+                    <div class="shop-spinner-circle"></div>
+                    <p class="shop-spinner-text">Обработка...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/yandex-sdk.js"></script>
+    <script src="js/card-renderer.js"></script>
+    <script src="js/shop-screen.js"></script>
+</body>
+</html>

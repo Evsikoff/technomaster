@@ -508,8 +508,7 @@ function setupDeckEventHandlers() {
     const shopBtn = document.getElementById('deckShopBtn');
     if (shopBtn) {
         shopBtn.addEventListener('click', () => {
-            console.log('Открыть магазин - в разработке');
-            alert('Магазин скоро откроется!');
+            window.location.href = 'shop.html';
         });
     }
 
