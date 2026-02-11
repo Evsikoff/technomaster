@@ -57,7 +57,8 @@ const deckScreenState = {
     db: null,
     userData: null,
     cardTypesMap: new Map(),
-    groups: null
+    groups: null,
+    cardGroups: []
 };
 
 /**
@@ -121,6 +122,29 @@ function loadCardTypesFromDb(db) {
     }
 
     return map;
+}
+
+/**
+ * Загрузка групп карт из БД
+ * @param {object} db
+ * @returns {Array<{id:number,name:string,sequence:number}>}
+ */
+function loadCardGroupsFromDb(db) {
+    try {
+        const result = db.exec('SELECT id, name, sequence FROM card_groups ORDER BY sequence ASC, id ASC');
+        if (!result.length) {
+            return [];
+        }
+
+        return result[0].values.map(row => ({
+            id: row[0],
+            name: row[1],
+            sequence: row[2]
+        }));
+    } catch (error) {
+        console.error('DeckScreen: Ошибка загрузки групп карт:', error);
+        return [];
+    }
 }
 
 /**
@@ -361,6 +385,35 @@ function showCardDetail(card, meta) {
         descEl.style.display = 'none';
     }
 
+    // Группа карты
+    const currentGroup = deckScreenState.cardGroups.find(group => group.id === meta.groupId);
+    document.getElementById('ruleGroupValue').textContent = currentGroup?.name || `Группа #${meta.groupId || '?'}`;
+
+    const groupHintEl = document.getElementById('ruleGroupHint');
+    groupHintEl.innerHTML = '';
+
+    if (currentGroup) {
+        const currentLine = document.createElement('p');
+        currentLine.className = 'rule-hint rule-hint--current';
+        currentLine.textContent = `Текущая группа: ${currentGroup.name}.`;
+        groupHintEl.appendChild(currentLine);
+    }
+
+    const otherGroups = deckScreenState.cardGroups.filter(group => group.id !== meta.groupId);
+    if (otherGroups.length > 0) {
+        const otherTitle = document.createElement('p');
+        otherTitle.className = 'rule-hint rule-hint--other-title';
+        otherTitle.textContent = 'Другие группы в игре:';
+        groupHintEl.appendChild(otherTitle);
+
+        otherGroups.forEach(group => {
+            const line = document.createElement('p');
+            line.className = 'rule-hint';
+            line.textContent = group.name;
+            groupHintEl.appendChild(line);
+        });
+    }
+
     // Атака
     const attackVal = parseInt(card.attackLevel, 10) || 0;
     const attackMax = getAttackMaxValue(attackVal);
@@ -467,8 +520,9 @@ async function initDeckScreen() {
 
         deckScreenState.db = db;
 
-        // Загружаем справочник типов карт
+        // Загружаем справочники из БД
         deckScreenState.cardTypesMap = loadCardTypesFromDb(db);
+        deckScreenState.cardGroups = loadCardGroupsFromDb(db);
 
         // Получаем данные пользователя
         const userData = await window.userCards.getUserData();
