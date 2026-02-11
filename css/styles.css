@@ -2667,6 +2667,9 @@ h2 {
 .shop-received-card:nth-child(3) { animation-delay: 0.4s; }
 .shop-received-card:nth-child(4) { animation-delay: 0.55s; }
 .shop-received-card:nth-child(5) { animation-delay: 0.7s; }
+.shop-received-card:nth-child(6) { animation-delay: 0.85s; }
+.shop-received-card:nth-child(7) { animation-delay: 1.0s; }
+.shop-received-card:nth-child(8) { animation-delay: 1.15s; }
 
 .shop-received-close-btn {
     padding: clamp(10px, 1.5vw, 16px) clamp(30px, 5vw, 60px);
