@@ -146,7 +146,7 @@ const aiMoveCalculator = (() => {
     }
 
     function calculateComboPotential(startIndex, fieldState, aiOwner, depth, virtualOwners) {
-        if (depth > 3) {
+        if (depth > 5) {
             return 0;
         }
 
@@ -179,17 +179,19 @@ const aiMoveCalculator = (() => {
                 ? calculateWinProbability(startCell.card, cell.card)
                 : 1;
 
-            if (relation === 'battle' && winChance < 0.5) {
+            if (relation === 'battle' && winChance < 0.3) {
                 return;
             }
 
             if (depth === 2) {
-                score += 50;
+                score += 60;
             } else if (depth === 3) {
-                score += 70;
+                score += 80;
+            } else if (depth >= 4) {
+                score += 100;
             }
 
-            if (depth < 3) {
+            if (depth < 5) {
                 const nextVirtual = new Map(virtualOwners || []);
                 nextVirtual.set(cell.index, aiOwner);
                 score += calculateComboPotential(cell.index, fieldState, aiOwner, depth + 1, nextVirtual);
@@ -252,8 +254,8 @@ const aiMoveCalculator = (() => {
                 const winChance = calculateWinProbability(card, neighborCell.card);
                 score += winChance * 100;
 
-                if (winChance < 0.4) {
-                    score -= 50;
+                if (winChance < 0.2) {
+                    score -= 30;
                 }
 
                 if (winChance >= 0.5) {
@@ -287,10 +289,9 @@ const aiMoveCalculator = (() => {
         });
 
         // StrategicBonus
-        const maxStrength = context.maxStrength || 0;
         const cardStrength = getCardStrength(card);
-        if (captureCount <= 1 && cardStrength === maxStrength) {
-            score -= cardStrength / 10;
+        if (captureCount >= 2) {
+            score += cardStrength / 10;
         }
 
         if (cornerIndices.has(currentCell.index)) {
@@ -330,9 +331,8 @@ const aiMoveCalculator = (() => {
                     opponentHand
                 });
 
-                const randomizedScore = score + (Math.random() * 5);
-                if (randomizedScore > maxScore) {
-                    maxScore = randomizedScore;
+                if (score > maxScore) {
+                    maxScore = score;
                     bestMove = { cardId: card.id, cellIndex: cell.index };
                 }
             });

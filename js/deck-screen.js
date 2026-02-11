@@ -42,14 +42,12 @@ const ATTACK_TYPE_DESCRIPTIONS = {
 
 /**
  * Вычисляет реальный верхний предел силы атаки.
- * Формула из party-game-orchestrator: getStatValue(level) = level * 16,
- * затем бросок Math.floor(Math.random() * max), т.е. от 0 до (level * 16 - 1).
+ * Бросок от 0 до level.
  * @param {number} level
  * @returns {number}
  */
 function getAttackMaxValue(level) {
-    const n = parseInt(level, 10) || 0;
-    return Math.max(0, n * 16 - 1);
+    return parseInt(level, 10) || 0;
 }
 
 /**
