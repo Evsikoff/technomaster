@@ -44,7 +44,7 @@ function getPriceLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Бесплатно';
     if (type === TRANSACTION_TYPE.REWARDED) return 'За видео';
-    return price + ' YAN';
+    return price + ' \uD83E\uDE99';
 }
 
 /**
@@ -68,7 +68,7 @@ function getCtaLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Смотреть рекламу';
     if (type === TRANSACTION_TYPE.REWARDED) return 'Смотреть видео';
-    return 'Купить за ' + price + ' YAN';
+    return 'Купить за ' + price + ' \uD83E\uDE99';
 }
 
 // ========================================
