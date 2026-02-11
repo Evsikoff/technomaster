@@ -17,25 +17,13 @@ const aiRewardSelector = (() => {
 
     function getRealStatValue(value) {
         if (typeof value === 'number' && Number.isFinite(value)) {
-            if (Number.isInteger(value) && value >= 0 && value <= 15) {
-                return value * 16;
-            }
             return value;
         }
 
         if (typeof value === 'string') {
             const trimmed = value.trim();
-            if (/^[0-9a-f]$/i.test(trimmed)) {
-                return parseInt(trimmed, 16) * 16;
-            }
-            if (/^0x[0-9a-f]+$/i.test(trimmed)) {
-                return parseInt(trimmed, 16);
-            }
             const parsed = Number.parseFloat(trimmed);
             if (Number.isFinite(parsed)) {
-                if (Number.isInteger(parsed) && parsed >= 0 && parsed <= 15) {
-                    return parsed * 16;
-                }
                 return parsed;
             }
         }
