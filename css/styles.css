@@ -1201,31 +1201,30 @@ h2 {
     color: #888;
 }
 
-/* Секция игрового поля (центр) */
+/* Секция игрового поля (центр) — обтягивает поле без лишних пустот */
 .party-field-section {
-    flex: 1;
-    min-width: 0;
+    flex: 0 0 auto;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     padding: clamp(4px, 0.5vw, 8px);
     overflow: hidden;
+    height: 100%;
 }
 
 .game-field-wrapper {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-start;
     height: 100%;
 }
 
 /* Адаптивное игровое поле для экрана партии */
 .party-field-section .game-field {
     padding: 4px;
-    transform-origin: center center;
+    transform-origin: top left;
 }
 
 /* Карта на поле - масштабируем карту 200x280 в ячейку */
@@ -1239,9 +1238,10 @@ h2 {
     margin-top: -140px;
 }
 
-/* Секция карт игрока (правая) */
+/* Секция карт игрока (правая) — занимает всё оставшееся место */
 .party-player-section {
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 0;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 6px;
@@ -1537,23 +1537,7 @@ h2 {
 }
 
 /* Индикатор режима */
-.mode-indicator {
-    position: absolute;
-    bottom: clamp(8px, 1.5vw, 16px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    padding: clamp(4px, 0.8vw, 8px) clamp(12px, 2vw, 24px);
-    border-radius: 20px;
-    border: 1px solid rgba(135, 206, 235, 0.3);
-}
-
-#modeText {
-    font-size: clamp(10px, 1.4vw, 14px);
-    color: #87ceeb;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+/* mode-indicator убран из разметки */
 
 .party-return-btn {
     position: absolute;
@@ -1586,14 +1570,6 @@ h2 {
 /* Режимы экрана */
 .party-frame.mode-locked {
     pointer-events: none;
-}
-
-.party-frame.mode-locked .mode-indicator {
-    border-color: rgba(255, 152, 0, 0.5);
-}
-
-.party-frame.mode-locked #modeText {
-    color: #ff9800;
 }
 
 .party-frame.mode-player-turn .player-hand-card:not(.used) {
@@ -1646,21 +1622,6 @@ h2 {
 
 .battle-arrow span {
     animation: valueCount 0.3s ease-out;
-}
-
-/* Скроллбар для контейнера карт */
-.player-hand-container::-webkit-scrollbar {
-    width: 4px;
-}
-
-.player-hand-container::-webkit-scrollbar-track {
-    background: rgba(20, 30, 50, 0.6);
-    border-radius: 999px;
-}
-
-.player-hand-container::-webkit-scrollbar-thumb {
-    background: rgba(76, 175, 80, 0.6);
-    border-radius: 999px;
 }
 
 /* Занятая ячейка поля */

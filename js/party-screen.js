@@ -161,7 +161,6 @@ async function getOpponentDataFromDb(opponentId) {
  */
 function setScreenMode(mode) {
     const frame = document.querySelector('.party-frame');
-    const modeText = document.getElementById('modeText');
     const selectionOverlay = document.getElementById('selectionOverlay');
     const battleOverlay = document.getElementById('battleOverlay');
 
@@ -177,19 +176,6 @@ function setScreenMode(mode) {
     );
 
     partyScreenState.mode = mode;
-
-    const modeTexts = {
-        [PartyScreenMode.LOADING]: 'Загрузка...',
-        [PartyScreenMode.EVENTS]: 'Обработка событий',
-        [PartyScreenMode.PLAYER_TURN]: 'Ваш ход',
-        [PartyScreenMode.SELECT_ATTACK]: 'Выбор карты',
-        [PartyScreenMode.SELECT_WINNER]: 'Выбор карты',
-        [PartyScreenMode.BATTLE]: 'Бой!',
-        [PartyScreenMode.OWNERSHIP_CHANGE]: 'Смена владельца',
-        [PartyScreenMode.GAME_END]: 'Партия завершена'
-    };
-
-    modeText.textContent = modeTexts[mode] || mode;
 
     switch (mode) {
         case PartyScreenMode.LOADING:
@@ -330,7 +316,7 @@ function renderPlayerHand() {
 
 /**
  * Масштабирование карт в руке игрока, чтобы все помещались без прокрутки.
- * Сетка 2 колонки, карты масштабируются до max 0.85 (как в модальном окне колоды).
+ * Автоматически выбирает оптимальное число колонок и масштаб (max 0.85).
  */
 function scalePlayerHandToFit() {
     const container = document.getElementById('playerHandContainer');
@@ -343,22 +329,30 @@ function scalePlayerHandToFit() {
     const containerWidth = container.clientWidth;
     if (containerHeight === 0 || containerWidth === 0) return;
 
-    const columns = 2;
     const gap = 4;
-    const numRows = Math.ceil(cards.length / columns);
+    const maxScale = 0.85;
 
-    // Вычисляем максимальный масштаб, при котором все строки помещаются по высоте
-    const availableHeightPerRow = (containerHeight - (numRows - 1) * gap) / numRows;
-    const scaleByHeight = availableHeightPerRow / 280;
+    // Перебираем варианты колонок (1, 2, 3) и выбираем тот, что даёт максимальный масштаб
+    let bestScale = 0;
+    let bestColumns = 2;
 
-    // Также проверяем ширину: 2 карты + gap должны поместиться
-    const availableWidthPerCard = (containerWidth - (columns - 1) * gap) / columns;
-    const scaleByWidth = availableWidthPerCard / 200;
+    for (let cols = 1; cols <= 3; cols++) {
+        const rows = Math.ceil(cards.length / cols);
+        const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
+        const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
+        const s = Math.min(scaleH, scaleW, maxScale);
+        if (s > bestScale) {
+            bestScale = s;
+            bestColumns = cols;
+        }
+    }
 
-    const scale = Math.min(scaleByHeight, scaleByWidth, 0.85);
-
+    const scale = bestScale;
     const cardWidth = Math.floor(200 * scale);
     const cardHeight = Math.floor(280 * scale);
+
+    // Устанавливаем число колонок в гриде
+    container.style.gridTemplateColumns = `repeat(${bestColumns}, ${cardWidth}px)`;
 
     cards.forEach(card => {
         card.style.width = `${cardWidth}px`;
@@ -369,13 +363,6 @@ function scalePlayerHandToFit() {
             gameCard.style.transform = `scale(${scale})`;
         }
     });
-
-    // Обновляем ширину секции игрока под фактический размер сетки
-    const section = container.closest('.party-player-section');
-    if (section) {
-        const totalWidth = columns * cardWidth + (columns - 1) * gap + 8 + 12; // gap + padding
-        section.style.width = `${totalWidth}px`;
-    }
 }
 
 /**
@@ -429,28 +416,40 @@ function initGameField() {
 }
 
 /**
- * Масштабирование игрового поля под доступное пространство контейнера
+ * Масштабирование игрового поля под доступную высоту.
+ * Поле прижимается к top-left, секция обтягивает поле по ширине.
  */
 function scaleFieldToFit() {
     const wrapper = document.getElementById('gameFieldContainer');
     const field = wrapper ? wrapper.querySelector('.game-field') : null;
     if (!field || !wrapper) return;
 
-    // Сбрасываем масштаб для точного измерения
-    field.style.transform = 'none';
+    const section = wrapper.closest('.party-field-section');
 
-    const wrapperRect = wrapper.getBoundingClientRect();
+    // Сбрасываем масштаб и ширину секции для точного измерения
+    field.style.transform = 'none';
+    if (section) {
+        section.style.width = '';
+    }
+
     const fieldWidth = field.scrollWidth;
     const fieldHeight = field.scrollHeight;
-
     if (fieldWidth === 0 || fieldHeight === 0) return;
 
-    const scaleX = wrapperRect.width / fieldWidth;
-    const scaleY = wrapperRect.height / fieldHeight;
-    const scale = Math.min(scaleX, scaleY, 1); // не увеличиваем больше 1
+    // Масштабируем только по высоте (ширина секции подстроится)
+    const wrapperHeight = wrapper.clientHeight;
+    const scale = Math.min(wrapperHeight / fieldHeight, 1);
 
     field.style.transform = `scale(${scale})`;
-    field.style.transformOrigin = 'center center';
+    field.style.transformOrigin = 'top left';
+
+    // Обтягиваем секцию по фактической ширине масштабированного поля
+    if (section) {
+        const padding = parseFloat(getComputedStyle(section).paddingLeft) +
+                         parseFloat(getComputedStyle(section).paddingRight);
+        const scaledWidth = fieldWidth * scale + padding;
+        section.style.width = `${scaledWidth}px`;
+    }
 }
 
 /**
