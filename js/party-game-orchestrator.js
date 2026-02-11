@@ -8,7 +8,7 @@
 const partyGameOrchestrator = (() => {
     // === Константы ===
     const PLAYER_CARDHOLDER_ID = 1;
-    const LEVEL_UP_CHANCE = 0.3;
+    const LEVEL_UP_CHANCE = 0.1;
     const MAX_CARD_LEVEL = 2;
     const AI_MOVE_DELAY_MIN = 1000;
     const AI_MOVE_DELAY_MAX = 1500;
@@ -1043,6 +1043,20 @@ const partyGameOrchestrator = (() => {
     async function processLevelUp() {
         const leveledUpCards = [];
 
+        if (!window.cardRenderer?.generateCardParams) {
+            console.warn('PartyGameOrchestrator: cardRenderer недоступен, прокачка по БД пропущена');
+            return leveledUpCards;
+        }
+
+        try {
+            if (window.cardRenderer?.init) {
+                await window.cardRenderer.init();
+            }
+        } catch (error) {
+            console.warn('PartyGameOrchestrator: не удалось инициализировать cardRenderer для прокачки', error);
+            return leveledUpCards;
+        }
+
         // Только карты игрока, которые были использованы
         const usedPlayerCards = state.playerHand.filter(c => c.used);
 
@@ -1057,14 +1071,26 @@ const partyGameOrchestrator = (() => {
             if (roll < LEVEL_UP_CHANCE) {
                 const newLevel = currentLevel + 1;
 
-                // Генерируем новые статы для повышенного уровня
-                const upgradedStats = generateLevelUpStats(card, newLevel);
+                // Генерируем новые параметры по тем же правилам, что и в userCards.processCardLevelUp
+                const upgradedStats = generateLevelUpStats(card.cardTypeId, newLevel);
+                if (!upgradedStats) {
+                    continue;
+                }
 
                 // Обновляем карту
                 card.cardLevel = newLevel;
                 card.attackLevel = upgradedStats.attackLevel;
+                card.attackType = upgradedStats.attackType;
                 card.mechanicalDefense = upgradedStats.mechanicalDefense;
                 card.electricalDefense = upgradedStats.electricalDefense;
+                card.arrowTopLeft = upgradedStats.arrowTopLeft;
+                card.arrowTop = upgradedStats.arrowTop;
+                card.arrowTopRight = upgradedStats.arrowTopRight;
+                card.arrowRight = upgradedStats.arrowRight;
+                card.arrowBottomRight = upgradedStats.arrowBottomRight;
+                card.arrowBottom = upgradedStats.arrowBottom;
+                card.arrowBottomLeft = upgradedStats.arrowBottomLeft;
+                card.arrowLeft = upgradedStats.arrowLeft;
 
                 leveledUpCards.push({
                     id: card.id,
@@ -1088,20 +1114,13 @@ const partyGameOrchestrator = (() => {
     /**
      * Генерация новых статов при повышении уровня
      */
-    function generateLevelUpStats(card, newLevel) {
-        // Простое увеличение статов на 1-2 единицы
-        const currentAttack = typeof card.attackLevel === 'number' ? card.attackLevel : parseInt(card.attackLevel, 16) || 0;
-        const currentMechDef = typeof card.mechanicalDefense === 'number' ? card.mechanicalDefense : parseInt(card.mechanicalDefense, 16) || 0;
-        const currentElecDef = typeof card.electricalDefense === 'number' ? card.electricalDefense : parseInt(card.electricalDefense, 16) || 0;
-
-        // Увеличиваем на 1-2
-        const boost = () => 1 + Math.floor(Math.random() * 2);
-
-        return {
-            attackLevel: Math.min(15, currentAttack + boost()),
-            mechanicalDefense: Math.min(15, currentMechDef + boost()),
-            electricalDefense: Math.min(15, currentElecDef + boost())
-        };
+    function generateLevelUpStats(cardTypeId, newLevel) {
+        try {
+            return window.cardRenderer.generateCardParams(cardTypeId, newLevel);
+        } catch (error) {
+            console.warn('PartyGameOrchestrator: ошибка генерации параметров level up через cardRenderer', error);
+            return null;
+        }
     }
 
     /**
@@ -1272,8 +1291,17 @@ const partyGameOrchestrator = (() => {
                 if (userCard) {
                     userCard.cardLevel = card.cardLevel;
                     userCard.attackLevel = card.attackLevel;
+                    userCard.attackType = card.attackType;
                     userCard.mechanicalDefense = card.mechanicalDefense;
                     userCard.electricalDefense = card.electricalDefense;
+                    userCard.arrowTopLeft = card.arrowTopLeft;
+                    userCard.arrowTop = card.arrowTop;
+                    userCard.arrowTopRight = card.arrowTopRight;
+                    userCard.arrowRight = card.arrowRight;
+                    userCard.arrowBottomRight = card.arrowBottomRight;
+                    userCard.arrowBottom = card.arrowBottom;
+                    userCard.arrowBottomLeft = card.arrowBottomLeft;
+                    userCard.arrowLeft = card.arrowLeft;
                 }
             }
 
