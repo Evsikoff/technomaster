@@ -1113,6 +1113,10 @@ h2 {
 
 .hand-setup-frame .hand-slot .card-wrapper {
     width: calc((100% - 4px) / 0.42);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .slot-placeholder {
