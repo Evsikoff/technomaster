@@ -1265,11 +1265,11 @@ h2 {
     width: 360px; /* 2×170 карта + 4 gap + 8 padding контейнера + 12 padding секции + запас */
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
-    padding: 6px;
+    padding: 2px 6px 6px 6px;
     border: 1px solid rgba(46, 125, 50, 0.4);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 /* Контейнер карт игрока - сетка 2 колонки по 170px */
