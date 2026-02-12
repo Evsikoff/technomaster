@@ -1050,13 +1050,21 @@ h2 {
     display: flex;
     flex-direction: column;
     padding: clamp(4px, 0.8vw, 10px);
-    gap: 0;
+    gap: clamp(2px, 0.3vw, 4px);
     position: relative;
 }
 
-/* Панель сообщений (внутри секции игрока) */
-.party-messages-panel {
+/* Контейнер панели сообщений — фиксированная высота, выровнен вправо */
+.party-message-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
     width: 100%;
+}
+
+/* Панель сообщений — ширина совпадает с секцией игрока */
+.party-messages-panel {
+    width: 360px;
     background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
     border-radius: 8px;
     padding: clamp(4px, 0.6vw, 8px) clamp(6px, 1vw, 12px);
