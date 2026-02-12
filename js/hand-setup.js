@@ -258,6 +258,9 @@ function handleDragLeave(e) {
  * @param {number} cardId
  */
 async function moveCardToHand(cardId) {
+    // Check if card is already in hand
+    if (handSetupState.handCards.some(c => c.id === cardId)) return;
+
     if (handSetupState.handCards.length >= HAND_SIZE) {
         console.warn('Рука уже заполнена');
         return;
@@ -560,22 +563,22 @@ function setupDragAndDrop() {
 function setupClickMechanics() {
     const deckContainer = document.getElementById('deckContainer');
     if (deckContainer) {
-        deckContainer.addEventListener('click', (e) => {
+        deckContainer.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
-                moveCardToHand(cardId);
+                await moveCardToHand(cardId);
             }
         });
     }
 
     const handSlots = document.getElementById('handSlots');
     if (handSlots) {
-        handSlots.addEventListener('click', (e) => {
+        handSlots.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
-                moveCardToDeck(cardId);
+                await moveCardToDeck(cardId);
             }
         });
     }

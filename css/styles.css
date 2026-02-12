@@ -921,8 +921,12 @@ h2 {
 }
 
 .hand-slot .game-card {
-    transform: scale(0.45);
+    transform: scale(0.42);
     transform-origin: center;
+}
+
+.hand-setup-frame .hand-slot .card-wrapper {
+    width: 206px;
 }
 
 .slot-placeholder {
