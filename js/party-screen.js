@@ -325,13 +325,23 @@ function scalePlayerHandToFit() {
     const cards = container.querySelectorAll('.player-hand-card');
     if (cards.length === 0) return;
 
-    // Фиксированный масштаб 0.85 — как в deck-detail-modal
-    const scale = 0.85;
-    const cardWidth = Math.floor(200 * scale);   // 170
-    const cardHeight = Math.floor(280 * scale);   // 238
+    const containerHeight = container.clientHeight;
+    const containerWidth = container.clientWidth;
+    if (containerHeight === 0 || containerWidth === 0) return;
 
-    // Всегда 2 колонки
-    container.style.gridTemplateColumns = `repeat(2, ${cardWidth}px)`;
+    const gap = 4;
+    const cols = 2;
+    const rows = Math.ceil(cards.length / cols);
+
+    // Предпочтительный масштаб 0.85 (как в deck-detail-modal), но уменьшаем если не влезает
+    const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
+    const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
+    const scale = Math.min(0.85, scaleW, scaleH);
+
+    const cardWidth = Math.floor(200 * scale);
+    const cardHeight = Math.floor(280 * scale);
+
+    container.style.gridTemplateColumns = `repeat(${cols}, ${cardWidth}px)`;
 
     cards.forEach(card => {
         card.style.width = `${cardWidth}px`;
