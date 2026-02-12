@@ -763,9 +763,10 @@ h2 {
     flex: 1;
 }
 
-.hand-setup-frame .deck-section .draggable-card:hover {
-    transform: none;
+.hand-setup-frame .draggable-card:hover {
+    transform: none !important;
     box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.6);
+    z-index: 100;
 }
 
 .hand-setup-frame .actions-section {
@@ -931,7 +932,7 @@ h2 {
 }
 
 .hand-setup-frame .hand-slot .card-wrapper {
-    width: 206px;
+    width: calc((100% - 4px) / 0.42);
 }
 
 .slot-placeholder {

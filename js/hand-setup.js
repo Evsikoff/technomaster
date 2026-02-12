@@ -15,7 +15,7 @@ const handSetupState = {
     deckRuleData: null,
     playerCards: [],
     deckCards: [],
-    handCards: [],
+    handCards: Array(HAND_SIZE).fill(null),
     db: null,
     draggedCard: null,
     draggedFromHand: false
@@ -256,14 +256,31 @@ function handleDragLeave(e) {
 /**
  * Перемещает карту из колоды в руку
  * @param {number} cardId
+ * @param {number|null} slotIndex - Индекс конкретного слота (для drag-and-drop)
  */
-async function moveCardToHand(cardId) {
+async function moveCardToHand(cardId, slotIndex = null) {
     // Проверяем, не находится ли карта уже в руке
-    if (handSetupState.handCards.some(c => c.id === cardId)) return;
+    if (handSetupState.handCards.some(c => c && c.id === cardId)) return;
 
-    if (handSetupState.handCards.length >= HAND_SIZE) {
-        console.warn('Рука уже заполнена');
+    // Определяем целевой индекс
+    let targetIndex = slotIndex;
+    if (targetIndex === null) {
+        targetIndex = handSetupState.handCards.findIndex(slot => slot === null);
+    }
+
+    if (targetIndex === -1 || targetIndex === null || targetIndex >= HAND_SIZE) {
+        console.warn('Нет свободных слотов');
         return;
+    }
+
+    // Если целевой слот занят, ищем первый свободный (только для клика)
+    if (handSetupState.handCards[targetIndex] !== null) {
+        if (slotIndex !== null) {
+            console.warn('Слот уже занят');
+            return;
+        }
+        targetIndex = handSetupState.handCards.findIndex(slot => slot === null);
+        if (targetIndex === -1) return;
     }
 
     // Находим карту в колоде
@@ -275,7 +292,7 @@ async function moveCardToHand(cardId) {
     // Перемещаем карту из колоды в руку
     handSetupState.deckCards.splice(cardIndex, 1);
     card.inHand = true;
-    handSetupState.handCards.push(card);
+    handSetupState.handCards[targetIndex] = card;
 
     // Обновляем хранилище
     await saveCardInHandState(card.id, true);
@@ -292,13 +309,13 @@ async function moveCardToHand(cardId) {
  */
 async function moveCardToDeck(cardId) {
     // Находим карту в руке
-    const cardIndex = handSetupState.handCards.findIndex(c => c.id === cardId);
+    const cardIndex = handSetupState.handCards.findIndex(c => c && c.id === cardId);
     if (cardIndex === -1) return;
 
     const card = handSetupState.handCards[cardIndex];
 
     // Перемещаем карту из руки в колоду
-    handSetupState.handCards.splice(cardIndex, 1);
+    handSetupState.handCards[cardIndex] = null;
     card.inHand = false;
     handSetupState.deckCards.push(card);
 
@@ -323,18 +340,22 @@ async function handleSlotDrop(e) {
     const cardId = parseInt(e.dataTransfer.getData('text/plain'), 10);
     if (!cardId) return;
 
+    const slotIndex = parseInt(slot.dataset.slotIndex, 10);
+
     // Если карта уже в руке и перетаскивается в другой слот
     if (handSetupState.draggedFromHand) {
-        // Просто переместить визуально - не меняем состояние
+        const oldIndex = handSetupState.handCards.findIndex(c => c && c.id === cardId);
+        if (oldIndex !== -1 && oldIndex !== slotIndex) {
+            // Меняем местами карты в слотах
+            const targetCard = handSetupState.handCards[slotIndex];
+            handSetupState.handCards[slotIndex] = handSetupState.handCards[oldIndex];
+            handSetupState.handCards[oldIndex] = targetCard;
+            renderHandCards();
+        }
         return;
     }
 
-    // Проверяем, что слот пустой
-    if (!slot.classList.contains('empty')) {
-        return;
-    }
-
-    await moveCardToHand(cardId);
+    await moveCardToHand(cardId, slotIndex);
 }
 
 /**
@@ -404,28 +425,22 @@ function renderHandCards() {
     const slotsContainer = document.getElementById('handSlots');
     if (!slotsContainer) return;
 
-    // Очищаем слоты
     const slots = slotsContainer.querySelectorAll('.hand-slot');
+
     slots.forEach((slot, index) => {
+        const card = handSetupState.handCards[index];
         slot.innerHTML = '';
-        slot.classList.add('empty');
 
-        // Добавляем placeholder
-        const placeholder = document.createElement('span');
-        placeholder.className = 'slot-placeholder';
-        placeholder.textContent = `Слот ${index + 1}`;
-        slot.appendChild(placeholder);
-    });
-
-    // Заполняем слоты картами из руки
-    handSetupState.handCards.forEach((card, index) => {
-        if (index < slots.length) {
-            const slot = slots[index];
-            slot.innerHTML = '';
+        if (card) {
             slot.classList.remove('empty');
-
             const cardElement = createCardElement(card, true);
             slot.appendChild(cardElement);
+        } else {
+            slot.classList.add('empty');
+            const placeholder = document.createElement('span');
+            placeholder.className = 'slot-placeholder';
+            placeholder.textContent = `Слот ${index + 1}`;
+            slot.appendChild(placeholder);
         }
     });
 
@@ -437,9 +452,10 @@ function renderHandCards() {
  * Обновляет счетчик карт в руке
  */
 function updateHandCounter() {
+    const handCount = handSetupState.handCards.filter(c => c !== null).length;
     const counter = document.getElementById('handCounter');
     if (counter) {
-        counter.textContent = `(${handSetupState.handCards.length}/${HAND_SIZE})`;
+        counter.textContent = `(${handCount}/${HAND_SIZE})`;
     }
 }
 
@@ -447,9 +463,10 @@ function updateHandCounter() {
  * Обновляет состояние кнопки "Начать игру"
  */
 function updateStartButtonState() {
+    const handCount = handSetupState.handCards.filter(c => c !== null).length;
     const startBtn = document.getElementById('startGameBtn');
     if (startBtn) {
-        startBtn.disabled = handSetupState.handCards.length !== HAND_SIZE;
+        startBtn.disabled = handCount !== HAND_SIZE;
     }
 }
 
@@ -460,7 +477,8 @@ async function handleAutoCollect() {
     console.log('AutoCollect: Запуск автоматического сбора руки...');
 
     // Получаем все карты игрока (объединяем колоду и руку)
-    const allCards = [...handSetupState.deckCards, ...handSetupState.handCards];
+    const currentHandCards = handSetupState.handCards.filter(c => c !== null);
+    const allCards = [...handSetupState.deckCards, ...currentHandCards];
 
     if (allCards.length < HAND_SIZE) {
         console.warn(`AutoCollect: Недостаточно карт (${allCards.length} < ${HAND_SIZE})`);
@@ -475,21 +493,21 @@ async function handleAutoCollect() {
     // Получаем id выбранных карт
     const selectedIds = new Set(result.map(r => r.id));
 
-    // Обновляем состояние: разделяем карты на руку и колоду
-    const newHandCards = [];
+    // Обновляем состояние
+    handSetupState.handCards = Array(HAND_SIZE).fill(null);
     const newDeckCards = [];
 
     allCards.forEach(card => {
         if (selectedIds.has(card.id)) {
             card.inHand = true;
-            newHandCards.push(card);
+            const firstNull = handSetupState.handCards.indexOf(null);
+            if (firstNull !== -1) handSetupState.handCards[firstNull] = card;
         } else {
             card.inHand = false;
             newDeckCards.push(card);
         }
     });
 
-    handSetupState.handCards = newHandCards;
     handSetupState.deckCards = newDeckCards;
 
     // Сохраняем в хранилище
@@ -515,12 +533,13 @@ async function handleAutoCollect() {
  * @returns {Array<number>} - Список идентификаторов карт из руки
  */
 function handleStartGame() {
-    if (handSetupState.handCards.length !== HAND_SIZE) {
+    const validHandCards = handSetupState.handCards.filter(c => c !== null);
+    if (validHandCards.length !== HAND_SIZE) {
         console.warn('Нельзя начать игру: рука не заполнена');
         return [];
     }
 
-    const handCardIds = handSetupState.handCards.map(card => card.id);
+    const handCardIds = validHandCards.map(card => card.id);
     console.log('Начало игры с картами:', handCardIds);
 
     if (isPartyFlow() && window.partyOrchestrator?.finish) {
@@ -540,7 +559,8 @@ function handleStartGame() {
 function setupDragAndDrop() {
     // Настраиваем слоты руки
     const slots = document.querySelectorAll('.hand-slot');
-    slots.forEach(slot => {
+    slots.forEach((slot, index) => {
+        slot.dataset.slotIndex = index;
         slot.addEventListener('dragover', handleDragOver);
         slot.addEventListener('dragenter', handleDragEnter);
         slot.addEventListener('dragleave', handleDragLeave);
@@ -565,7 +585,6 @@ function setupClickMechanics() {
     if (deckContainer) {
         deckContainer.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
-            // Если кликнули по карте и она не перетаскивается в данный момент
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
                 await moveCardToHand(cardId);
@@ -577,7 +596,6 @@ function setupClickMechanics() {
     if (handSlots) {
         handSlots.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
-            // Если кликнули по карте и она не перетаскивается в данный момент
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
                 await moveCardToDeck(cardId);
@@ -621,7 +639,6 @@ function setupButtonHandlers() {
 async function initHandSetupScreen() {
     console.log('HandSetup: Инициализация экрана настройки руки...');
 
-    // Получаем id оппонента из URL
     handSetupState.opponentId = getOpponentIdFromUrl();
 
     if (!handSetupState.opponentId) {
@@ -630,22 +647,13 @@ async function initHandSetupScreen() {
         return;
     }
 
-    console.log(`HandSetup: Идентификатор оппонента: ${handSetupState.opponentId}`);
-
     try {
-        // Ждем инициализации контроллера хранилища
         if (window.userCards?.whenReady) {
             await window.userCards.whenReady();
         }
 
-        const userDataSnapshot = await window.userCards?.getUserData?.();
-        console.log('HandSetup: Структура данных из хранилища:');
-        console.log(JSON.stringify(userDataSnapshot, null, 2));
-
-        // Инициализируем рендерер карт
         await window.cardRenderer.init();
 
-        // Загружаем данные параллельно
         const [opponentData, deckRuleData, playerCards] = await Promise.all([
             getOpponentData(handSetupState.opponentId),
             getDeckRuleData(handSetupState.opponentId),
@@ -658,17 +666,23 @@ async function initHandSetupScreen() {
 
         // Разделяем карты на руку и колоду
         handSetupState.deckCards = playerCards.filter(c => !c.inHand);
-        handSetupState.handCards = playerCards.filter(c => c.inHand);
+        const inHandCards = playerCards.filter(c => c.inHand);
 
-        console.log(`HandSetup: Загружено карт - колода: ${handSetupState.deckCards.length}, рука: ${handSetupState.handCards.length}`);
+        handSetupState.handCards = Array(HAND_SIZE).fill(null);
+        inHandCards.forEach((card, i) => {
+            if (i < HAND_SIZE) {
+                handSetupState.handCards[i] = card;
+            } else {
+                card.inHand = false;
+                handSetupState.deckCards.push(card);
+            }
+        });
 
-        // Обновляем отображение
         updateOpponentInfoDisplay();
         renderDeckCards();
         renderHandCards();
         updateStartButtonState();
 
-        // Настраиваем drag-and-drop, клики и кнопки
         setupDragAndDrop();
         setupClickMechanics();
         setupButtonHandlers();
@@ -686,7 +700,7 @@ async function initHandSetupScreen() {
 // Экспортируем функции в глобальную область
 window.handSetup = {
     init: initHandSetupScreen,
-    getHandCardIds: () => handSetupState.handCards.map(c => c.id),
+    getHandCardIds: () => handSetupState.handCards.filter(c => c !== null).map(c => c.id),
     getState: () => ({ ...handSetupState }),
     autoCollect: handleAutoCollect,
     startGame: handleStartGame
