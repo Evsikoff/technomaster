@@ -1282,6 +1282,36 @@ async function initPartyScreen() {
         });
     }
 
+    const guideButton = document.getElementById('partyGuideButton');
+    const guideModal = document.getElementById('guideModal');
+    const guideModalClose = document.getElementById('guideModalClose');
+
+    if (guideButton && guideModal && guideModalClose) {
+        const openGuideModal = () => {
+            guideModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeGuideModal = () => {
+            guideModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        guideButton.addEventListener('click', openGuideModal);
+        guideModalClose.addEventListener('click', closeGuideModal);
+        guideModal.addEventListener('click', event => {
+            if (event.target === guideModal) {
+                closeGuideModal();
+            }
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !guideModal.classList.contains('hidden')) {
+                closeGuideModal();
+            }
+        });
+    }
+
     try {
         // Получаем данные партии
         const payload = getPartyPayload();
