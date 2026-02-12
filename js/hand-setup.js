@@ -254,28 +254,10 @@ function handleDragLeave(e) {
 }
 
 /**
- * Обработчик сброса карты в слот руки
- * @param {DragEvent} e
+ * Перемещает карту из колоды в руку
+ * @param {number} cardId
  */
-async function handleSlotDrop(e) {
-    e.preventDefault();
-    const slot = e.currentTarget;
-    slot.classList.remove('drag-over');
-
-    const cardId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (!cardId) return;
-
-    // Если карта уже в руке и перетаскивается в другой слот
-    if (handSetupState.draggedFromHand) {
-        // Просто переместить визуально - не меняем состояние
-        return;
-    }
-
-    // Проверяем, что слот пустой и в руке меньше 5 карт
-    if (!slot.classList.contains('empty')) {
-        return;
-    }
-
+async function moveCardToHand(cardId) {
     if (handSetupState.handCards.length >= HAND_SIZE) {
         console.warn('Рука уже заполнена');
         return;
@@ -302,22 +284,10 @@ async function handleSlotDrop(e) {
 }
 
 /**
- * Обработчик сброса карты обратно в колоду
- * @param {DragEvent} e
+ * Перемещает карту из руки обратно в колоду
+ * @param {number} cardId
  */
-async function handleDeckDrop(e) {
-    e.preventDefault();
-    const container = e.currentTarget;
-    container.classList.remove('drag-over');
-
-    const cardId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (!cardId) return;
-
-    // Если карта из колоды - ничего не делаем
-    if (!handSetupState.draggedFromHand) {
-        return;
-    }
-
+async function moveCardToDeck(cardId) {
     // Находим карту в руке
     const cardIndex = handSetupState.handCards.findIndex(c => c.id === cardId);
     if (cardIndex === -1) return;
@@ -336,6 +306,52 @@ async function handleDeckDrop(e) {
     renderDeckCards();
     renderHandCards();
     updateStartButtonState();
+}
+
+/**
+ * Обработчик сброса карты в слот руки
+ * @param {DragEvent} e
+ */
+async function handleSlotDrop(e) {
+    e.preventDefault();
+    const slot = e.currentTarget;
+    slot.classList.remove('drag-over');
+
+    const cardId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!cardId) return;
+
+    // Если карта уже в руке и перетаскивается в другой слот
+    if (handSetupState.draggedFromHand) {
+        // Просто переместить визуально - не меняем состояние
+        return;
+    }
+
+    // Проверяем, что слот пустой
+    if (!slot.classList.contains('empty')) {
+        return;
+    }
+
+    await moveCardToHand(cardId);
+}
+
+/**
+ * Обработчик сброса карты обратно в колоду
+ * @param {DragEvent} e
+ */
+async function handleDeckDrop(e) {
+    e.preventDefault();
+    const container = e.currentTarget;
+    container.classList.remove('drag-over');
+
+    const cardId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!cardId) return;
+
+    // Если карта из колоды - ничего не делаем
+    if (!handSetupState.draggedFromHand) {
+        return;
+    }
+
+    await moveCardToDeck(cardId);
 }
 
 /**
@@ -539,6 +555,33 @@ function setupDragAndDrop() {
 }
 
 /**
+ * Настраивает клик-механику для карт (быстрый перенос)
+ */
+function setupClickMechanics() {
+    const deckContainer = document.getElementById('deckContainer');
+    if (deckContainer) {
+        deckContainer.addEventListener('click', (e) => {
+            const cardEl = e.target.closest('.game-card');
+            if (cardEl && !cardEl.classList.contains('dragging')) {
+                const cardId = parseInt(cardEl.dataset.cardId, 10);
+                moveCardToHand(cardId);
+            }
+        });
+    }
+
+    const handSlots = document.getElementById('handSlots');
+    if (handSlots) {
+        handSlots.addEventListener('click', (e) => {
+            const cardEl = e.target.closest('.game-card');
+            if (cardEl && !cardEl.classList.contains('dragging')) {
+                const cardId = parseInt(cardEl.dataset.cardId, 10);
+                moveCardToDeck(cardId);
+            }
+        });
+    }
+}
+
+/**
  * Настраивает обработчики кнопок
  */
 function setupButtonHandlers() {
@@ -620,8 +663,9 @@ async function initHandSetupScreen() {
         renderHandCards();
         updateStartButtonState();
 
-        // Настраиваем drag-and-drop и кнопки
+        // Настраиваем drag-and-drop, клики и кнопки
         setupDragAndDrop();
+        setupClickMechanics();
         setupButtonHandlers();
 
         console.log('HandSetup: Инициализация завершена');

@@ -728,6 +728,20 @@ h2 {
     gap: clamp(6px, 1vw, 12px);
 }
 
+.hand-setup-frame .game-header {
+    line-height: 1;
+    padding: clamp(4px, 0.75vw, 8px) 0;
+    margin-bottom: clamp(8px, 1.5vw, 16px);
+}
+
+.hand-setup-frame .game-title {
+    font-size: clamp(14px, 2.5vw, 28px);
+}
+
+.hand-setup-frame .deck-section {
+    flex: 1;
+}
+
 .hand-setup-main {
     flex: 1;
     min-height: 0;
