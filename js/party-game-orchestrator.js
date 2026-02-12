@@ -53,6 +53,9 @@ const partyGameOrchestrator = (() => {
         currentMoveBattles: [],
         pendingCaptures: [],
 
+        // Режим игры
+        gameMode: 'standard',
+
         // Ссылка на экран
         screenApi: null
     };
@@ -215,6 +218,8 @@ const partyGameOrchestrator = (() => {
             state.opponentId = payload.opponentId;
             state.playerHand = payload.playerHand || [];
             state.opponentHand = payload.opponentHand || [];
+            state.gameMode = payload.gameMode || 'standard';
+            console.log('PartyGameOrchestrator: Режим игры -', state.gameMode);
         }
 
         // Получаем данные оппонента
@@ -229,13 +234,22 @@ const partyGameOrchestrator = (() => {
         state.isGameActive = true;
         state.turnNumber = 0;
 
-        // Определяем первый ход случайным образом (50/50)
-        const coinFlip = Math.random() < 0.5;
-        state.currentTurn = coinFlip ? 'player' : 'rival';
+        // Определяем первый ход
+        let coinFlip;
+        let firstTurnMessage;
 
-        const firstTurnMessage = coinFlip
-            ? 'Орёл или Решка? Первый ход за Вами!'
-            : 'Орёл или Решка? Первый ход за Соперником!';
+        if (state.gameMode === 'hardcore') {
+            coinFlip = true; // Игрок всегда первый в хардкоре
+            state.currentTurn = 'player';
+            firstTurnMessage = 'Режим ХАРДКОР: Вы всегда ходите первым!';
+        } else {
+            // Определяем первый ход случайным образом (50/50)
+            coinFlip = Math.random() < 0.5;
+            state.currentTurn = coinFlip ? 'player' : 'rival';
+            firstTurnMessage = coinFlip
+                ? 'Орёл или Решка? Первый ход за Вами!'
+                : 'Орёл или Решка? Первый ход за Соперником!';
+        }
 
         addSystemMessage(firstTurnMessage);
 
@@ -531,9 +545,19 @@ const partyGameOrchestrator = (() => {
             }
 
             // Теперь запускаем комбо для всех захваченных карт
-            const allCapturedCells = [...battleCapturedCells, ...instantCapturedCells];
-            if (allCapturedCells.length > 0) {
-                await processComboChain(allCapturedCells, owner);
+            // В сложном режиме удары в спину (instantCapturedCells) не вызывают комбо
+            let comboStarters = [];
+            if (state.gameMode === 'hard') {
+                comboStarters = [...battleCapturedCells];
+                if (instantCapturedCells.length > 0) {
+                    console.log('PartyGameOrchestrator: Сложный режим - удары в спину не вызывают комбо');
+                }
+            } else {
+                comboStarters = [...battleCapturedCells, ...instantCapturedCells];
+            }
+
+            if (comboStarters.length > 0) {
+                await processComboChain(comboStarters, owner);
             }
         }
 
@@ -900,7 +924,10 @@ const partyGameOrchestrator = (() => {
             syncFieldState();
 
             // Рекурсивно продолжаем комбо
-            await processComboChain(newCaptures, newOwner, processedCells);
+            // В сложном режиме комбо не распространяется на карты, захваченные не в битве (удары в спину)
+            if (state.gameMode !== 'hard') {
+                await processComboChain(newCaptures, newOwner, processedCells);
+            }
         }
     }
 
@@ -1276,13 +1303,25 @@ const partyGameOrchestrator = (() => {
                 userData.parties = [];
             }
 
-            userData.parties.push({
-                id: Date.now(),
-                opponent_id: state.opponentId,
-                win: winner === 'player',
-                opponent_power: state.opponentData?.sequence || 1,
-                date: new Date().toISOString()
-            });
+            // Используем новую функцию recordPartyResult для консистентности
+            if (window.userCards?.recordPartyResult) {
+                await window.userCards.recordPartyResult(
+                    state.opponentId,
+                    winner === 'player',
+                    state.opponentData?.sequence || 1,
+                    state.gameMode
+                );
+            } else {
+                // Фоллбэк если функция не найдена (не должно случаться)
+                userData.parties.push({
+                    id: Date.now(),
+                    opponent_id: state.opponentId,
+                    win: winner === 'player',
+                    opponent_power: state.opponentData?.sequence || 1,
+                    gameMode: state.gameMode,
+                    date: new Date().toISOString()
+                });
+            }
 
             // 2. Применяем прокачку карт
             const leveledUpCards = state.playerHand.filter(c => c.used && c.leveledUp);

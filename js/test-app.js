@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userCardCount = await window.userCards.getUserCardCount();
     console.log(`Определено количество карт пользователя: ${userCardCount}`);
     const maxOpponentCoolness = await window.userCards.getMaxOpponentCoolness();
-    console.log(`Максимальный уровень крутости побежденного соперника: ${maxOpponentCoolness}`);
+    console.log('Максимальный уровень крутости побежденного соперника:', maxOpponentCoolness);
 
     // Показываем загрузку
     cardContainer.innerHTML = '<div class="loading">Загрузка базы данных...</div>';

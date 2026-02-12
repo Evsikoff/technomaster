@@ -468,36 +468,46 @@ async function getUserCardCount() {
 }
 
 /**
- * Получает максимальный уровень крутости (opponent_power) побеждённого оппонента.
+ * Получает максимальный уровень крутости (opponent_power) побеждённого оппонента для каждого режима.
  * Находит максимальный opponent_power среди партий, где win = true.
- * @returns {Promise<number>}
+ * @returns {Promise<{standard: number, hard: number, hardcore: number}>}
  */
 async function getMaxOpponentCoolness() {
     const userData = await getUserData();
+    const result = { standard: 0, hard: 0, hardcore: 0 };
 
     if (!userData || !isValidUserDataStructure(userData)) {
-        console.log('getMaxOpponentCoolness: структура данных не найдена, возвращаю 0.');
-        return 0;
+        console.log('getMaxOpponentCoolness: структура данных не найдена.');
+        return result;
     }
 
     // Находим все выигранные партии
     const wonParties = userData.parties.filter(party => party.win === true);
 
     if (wonParties.length === 0) {
-        console.log('getMaxOpponentCoolness: выигранных партий не найдено, возвращаю 0.');
-        return 0;
+        console.log('getMaxOpponentCoolness: выигранных партий не найдено.');
+        return result;
     }
 
-    // Находим максимальный opponent_power среди выигранных партий
-    let maxCoolness = 0;
+    // Находим максимальный opponent_power среди выигранных партий для каждого режима
     for (const party of wonParties) {
-        if (typeof party.opponent_power === 'number' && party.opponent_power > maxCoolness) {
-            maxCoolness = party.opponent_power;
+        const mode = party.gameMode || 'standard';
+        const power = typeof party.opponent_power === 'number' ? party.opponent_power : 0;
+
+        if (result[mode] !== undefined) {
+            if (power > result[mode]) {
+                result[mode] = power;
+            }
+        } else {
+            // Если режим неизвестен, считаем его стандартным для совместимости
+            if (power > result.standard) {
+                result.standard = power;
+            }
         }
     }
 
-    console.log(`getMaxOpponentCoolness: максимальный уровень побеждённого оппонента: ${maxCoolness}`);
-    return maxCoolness;
+    console.log('getMaxOpponentCoolness:', result);
+    return result;
 }
 
 // ========================================
@@ -581,9 +591,10 @@ async function saveUserDeck(cards) {
  * @param {number} opponentId - ID оппонента
  * @param {boolean} win - Победа или поражение
  * @param {number} opponentPower - Уровень крутости оппонента
+ * @param {string} gameMode - Режим игры ('standard', 'hard', 'hardcore')
  * @returns {Promise<boolean>}
  */
-async function recordPartyResult(opponentId, win, opponentPower) {
+async function recordPartyResult(opponentId, win, opponentPower, gameMode = 'standard') {
     let userData = await getUserData();
 
     if (!userData || !isValidUserDataStructure(userData)) {
@@ -597,7 +608,9 @@ async function recordPartyResult(opponentId, win, opponentPower) {
         id: maxPartyId + 1,
         opponent_id: opponentId,
         win: win,
-        opponent_power: opponentPower
+        opponent_power: opponentPower,
+        gameMode: gameMode,
+        date: new Date().toISOString()
     };
 
     userData.parties.push(newParty);
@@ -605,7 +618,7 @@ async function recordPartyResult(opponentId, win, opponentPower) {
     const saved = await saveUserData(userData);
 
     if (saved) {
-        console.log(`recordPartyResult: записана партия #${newParty.id}, победа: ${win}, крутость оппонента: ${opponentPower}`);
+        console.log(`recordPartyResult: записана партия #${newParty.id}, победа: ${win}, крутость оппонента: ${opponentPower}, режим: ${gameMode}`);
     }
 
     return saved;
