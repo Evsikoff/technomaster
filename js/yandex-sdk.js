@@ -809,6 +809,70 @@ async function processCardLevelUpAndSave(oldCardId, cardGenerator) {
 }
 
 // Экспорт в глобальную область видимости
+/**
+ * Инициализирует глобальные блокировки UI (ПКМ, выделение, перетаскивание).
+ */
+function initGlobalUIBlocking() {
+    // Блокировка контекстного меню (ПКМ и долгий тап на мобильных)
+    window.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    }, false);
+
+    // Блокировка выделения текста (дополнительно к CSS)
+    window.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+    }, false);
+
+    // Блокировка перетаскивания изображений
+    window.addEventListener('dragstart', (e) => {
+        // Разрешаем перетаскивание только для игровых карт
+        if (e.target.closest('.player-hand-card') || e.target.closest('.draggable-card')) {
+            return;
+        }
+        if (e.target.tagName === 'IMG' || e.target.closest('img')) {
+            e.preventDefault();
+        }
+    }, false);
+}
+
+const GAMEPLAY_ACTIVE_KEY = 'technomaster.gameplay.active';
+
+/**
+ * Запускает сессию GameplayAPI, если она еще не активна.
+ */
+function startGameplay() {
+    const isYandex = isRunningInYandexGames();
+    const ysdk = getCachedYsdk();
+
+    if (isYandex && ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+        const isActive = sessionStorage.getItem(GAMEPLAY_ACTIVE_KEY) === '1';
+        if (!isActive) {
+            console.log('Yandex Games: GameplayAPI.start()');
+            ysdk.features.GameplayAPI.start();
+            sessionStorage.setItem(GAMEPLAY_ACTIVE_KEY, '1');
+        }
+    }
+}
+
+/**
+ * Останавливает сессию GameplayAPI.
+ */
+function stopGameplay() {
+    const isYandex = isRunningInYandexGames();
+    const ysdk = getCachedYsdk();
+
+    if (isYandex && ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+        console.log('Yandex Games: GameplayAPI.stop()');
+        ysdk.features.GameplayAPI.stop();
+        sessionStorage.removeItem(GAMEPLAY_ACTIVE_KEY);
+    }
+}
+
+// Инициализация блокировок при загрузке
+if (typeof window !== 'undefined') {
+    initGlobalUIBlocking();
+}
+
 window.userCards = {
     // Основные функции
     initUserDataStorageController,
@@ -828,6 +892,10 @@ window.userCards = {
     // Функции повышения уровня карты
     processCardLevelUp,
     processCardLevelUpAndSave,
+
+    // GameplayAPI
+    startGameplay,
+    stopGameplay,
 
     // Утилиты
     checkYandexGamesEnvironment,

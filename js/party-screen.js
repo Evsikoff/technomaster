@@ -1275,6 +1275,10 @@ async function initPartyScreen() {
     const returnButton = document.getElementById('partyReturnButton');
     if (returnButton) {
         returnButton.addEventListener('click', () => {
+            // Остановка GameplayAPI при нажатии "Вернуться"
+            if (window.userCards?.stopGameplay) {
+                window.userCards.stopGameplay();
+            }
             clearPartyPayload();
             window.location.href = 'index.html';
         });
@@ -1349,6 +1353,11 @@ async function initPartyScreen() {
 
         // Помечаем готовность
         partyScreenState.isReady = true;
+
+        // Запускаем GameplayAPI сессию (если еще не запущена на экране настройки руки)
+        if (window.userCards?.startGameplay) {
+            window.userCards.startGameplay();
+        }
 
         console.log('PartyScreen: Инициализация завершена');
 

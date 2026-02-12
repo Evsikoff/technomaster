@@ -9,6 +9,10 @@ body {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     min-height: 100vh;
     color: #e0e0e0;
+    overscroll-behavior-y: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .start-screen {
@@ -570,6 +574,11 @@ h2 {
     object-fit: fill;
     z-index: 3;
     pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+img {
+    -webkit-user-drag: none;
 }
 
 /* Card Data Frame */
