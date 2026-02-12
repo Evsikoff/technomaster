@@ -18,9 +18,10 @@ const aiMoveCalculator = (() => {
     const cornerIndices = new Set([0, 3, 12, 15]);
 
     function getStatValue(value) {
+        const multiplier = window.GameConfig?.statMultiplier ?? 16;
         if (typeof value === 'number' && Number.isFinite(value)) {
             if (Number.isInteger(value) && value >= 0 && value <= 15) {
-                return value * 16;
+                return value * multiplier;
             }
             return value;
         }
@@ -28,7 +29,7 @@ const aiMoveCalculator = (() => {
         if (typeof value === 'string') {
             const trimmed = value.trim();
             if (/^[0-9a-f]$/i.test(trimmed)) {
-                return parseInt(trimmed, 16) * 16;
+                return parseInt(trimmed, 16) * multiplier;
             }
             if (/^0x[0-9a-f]+$/i.test(trimmed)) {
                 return parseInt(trimmed, 16);
@@ -36,7 +37,7 @@ const aiMoveCalculator = (() => {
             const parsed = Number.parseFloat(trimmed);
             if (Number.isFinite(parsed)) {
                 if (Number.isInteger(parsed) && parsed >= 0 && parsed <= 15) {
-                    return parsed * 16;
+                    return parsed * multiplier;
                 }
                 return parsed;
             }
