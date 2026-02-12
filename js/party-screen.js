@@ -387,13 +387,19 @@ function syncPartyLayoutDimensions() {
         return;
     }
 
-    const messageHeight = messagesPanel.getBoundingClientRect().height;
+    const panelRect = messagesPanel.getBoundingClientRect();
+    const messageHeight = panelRect.height;
     const handHeight = handContainer.getBoundingClientRect().height;
     const targetHeight = Math.max(0, Math.round(messageHeight + handHeight));
+    const frame = document.querySelector('.party-frame');
 
-    messageBar.style.width = `${Math.round(messagesPanel.getBoundingClientRect().width)}px`;
+    messageBar.style.width = `${Math.round(panelRect.width)}px`;
     fieldContainer.style.height = `${targetHeight}px`;
     opponentSection.style.height = `${targetHeight}px`;
+
+    if (frame) {
+        frame.style.setProperty('--party-message-panel-height', `${Math.round(messageHeight)}px`);
+    }
 }
 
 /**

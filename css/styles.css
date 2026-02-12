@@ -1114,6 +1114,12 @@ h2 {
     align-self: flex-start;
 }
 
+
+.party-frame.mode-player-turn .party-opponent-section,
+.party-frame.mode-player-turn .party-field-section {
+    margin-top: calc(-1 * var(--party-message-panel-height, 0px));
+}
+
 /* Профиль оппонента */
 .opponent-profile {
     display: flex;
