@@ -326,6 +326,10 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+.guide-modal__image--small {
+    width: min(434px, 70%);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -1403,6 +1407,24 @@ h2 {
 .score-separator {
     font-size: clamp(10px, 1.2vw, 14px);
     color: #888;
+}
+
+.party-guide-button {
+    width: 100%;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    border-radius: 8px;
+    padding: 6px 4px;
+    font-size: clamp(8px, 0.85vw, 11px);
+    font-weight: 700;
+    color: #ffe89a;
+    background: rgba(10, 16, 31, 0.75);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.party-guide-button:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-1px);
 }
 
 /* Секция игрового поля (центр) — расширяется на доступное пространство */
