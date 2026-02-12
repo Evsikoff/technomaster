@@ -279,6 +279,19 @@ async function initStartScreen() {
         if (window.userCards?.getCachedYsdk) {
             const ysdk = window.userCards.getCachedYsdk();
             if (ysdk) {
+                // Автоматический переход в полноэкранный режим при первом клике
+                if (ysdk.screen && ysdk.screen.fullscreen) {
+                    const requestFullscreen = () => {
+                        const fs = ysdk.screen.fullscreen;
+                        if (fs.status === fs.STATUS_OFF) {
+                            fs.request()
+                                .then(() => console.log('Yandex Games: Fullscreen activated'))
+                                .catch(e => console.warn('Yandex Games: Fullscreen request failed', e));
+                        }
+                    };
+                    window.addEventListener('click', requestFullscreen, { once: true });
+                }
+
                 if (ysdk.features?.LoadingAPI) {
                     ysdk.features.LoadingAPI.ready();
                 }
