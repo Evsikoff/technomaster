@@ -58,9 +58,7 @@ const collectorState = {
  * @returns {Promise<object>}
  */
 async function initCollectorDatabase() {
-    const SQL = await initSqlJs({
-        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-    });
+    const SQL = await SqlLoader.init();
 
     const response = await fetch(COLLECTOR_DB_PATH);
     const buffer = await response.arrayBuffer();

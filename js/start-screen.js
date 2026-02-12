@@ -68,9 +68,7 @@ function createOpponentBadge(opponent, isLocked) {
  * @returns {Promise<Array<{id: number, sequence: number, name: string, avatar: string}>>}
  */
 async function loadOpponentsFromDb() {
-    const SQL = await initSqlJs({
-        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-    });
+    const SQL = await SqlLoader.init();
 
     const response = await fetch(OPPONENTS_DB_PATH);
     const buffer = await response.arrayBuffer();

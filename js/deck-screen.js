@@ -66,9 +66,7 @@ const deckScreenState = {
  * @returns {Promise<object>}
  */
 async function initDeckDatabase() {
-    const SQL = await initSqlJs({
-        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-    });
+    const SQL = await SqlLoader.init();
 
     const response = await fetch(DECK_DB_PATH);
     const buffer = await response.arrayBuffer();
