@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЕХНОМАСТЕР - Уровень коллекционера</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+        (function() {
+            try {
+                var isInYandexIframe = (window !== window.top) &&
+                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
+                    window.location.hostname.endsWith('yandex.net');
+
+                if (!isInYandexIframe && !isYandexHost) {
+                    window.userDataStorage = 'localStorage';
+                }
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="collector-screen">
+    <div class="collector-screen-frame">
+        <header class="game-header">
+            <button class="back-btn" id="collectorBackBtn" type="button">&#8592;</button>
+            <h1 class="game-title">УРОВЕНЬ КОЛЛЕКЦИОНЕРА</h1>
+        </header>
+
+        <div class="collector-header">
+            <div class="collector-rank-title" id="collectorRankTitle">Новичок</div>
+            <div class="collector-rank-score" id="collectorRankScore">Очки: 0</div>
+            <div class="collector-progress-bar">
+                <div class="collector-progress-fill" id="collectorProgressFill"></div>
+            </div>
+            <div class="collector-progress-label" id="collectorProgressLabel"></div>
+        </div>
+
+        <main class="collector-main">
+            <div class="collector-body" id="collectorBody">
+                <!-- Секции групп карт будут добавлены динамически -->
+            </div>
+        </main>
+    </div>
+
+    <script src="js/yandex-sdk.js"></script>
+    <script src="js/collector-screen.js"></script>
+</body>
+</html>
