@@ -730,16 +730,46 @@ h2 {
 
 .hand-setup-frame .game-header {
     line-height: 1;
-    padding: clamp(4px, 0.75vw, 8px) 0;
-    margin-bottom: clamp(8px, 1.5vw, 16px);
+    padding: clamp(2px, 0.4vw, 4px) 0;
+    margin-bottom: clamp(4px, 0.8vw, 8px);
 }
 
 .hand-setup-frame .game-title {
-    font-size: clamp(14px, 2.5vw, 28px);
+    font-size: clamp(12px, 2vw, 24px);
+}
+
+.hand-setup-frame .section-title {
+    font-size: clamp(14px, 2vw, 18px);
+    margin-bottom: 4px;
+}
+
+.hand-setup-frame .hand-setup-main {
+    gap: clamp(4px, 0.8vw, 8px);
+}
+
+.hand-setup-frame .opponent-info-section {
+    padding: clamp(4px, 0.8vw, 8px);
+}
+
+.hand-setup-frame .opponent-info {
+    gap: clamp(4px, 0.8vw, 8px);
+}
+
+.hand-setup-frame .cards-sections {
+    gap: clamp(4px, 0.8vw, 8px);
 }
 
 .hand-setup-frame .deck-section {
     flex: 1;
+}
+
+.hand-setup-frame .actions-section {
+    padding-top: 0;
+    gap: clamp(4px, 0.8vw, 8px);
+}
+
+.hand-setup-frame .action-btn {
+    padding: clamp(6px, 1vw, 10px) clamp(10px, 2vw, 20px);
 }
 
 .hand-setup-main {
