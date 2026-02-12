@@ -1112,6 +1112,7 @@ h2 {
     flex-direction: column;
     gap: 4px;
     align-self: flex-start;
+    box-sizing: border-box;
 }
 
 
@@ -1239,6 +1240,7 @@ h2 {
     padding: clamp(4px, 0.5vw, 8px);
     overflow: hidden;
     height: 100%;
+    box-sizing: border-box;
 }
 
 .game-field-wrapper {

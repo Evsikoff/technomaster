@@ -77,6 +77,23 @@ const partyScreenState = {
     orchestratorActive: false
 };
 
+let partyLayoutSyncFrameId = 0;
+
+/**
+ * Откладывает синхронизацию layout до следующего кадра, чтобы избежать "скакания".
+ */
+function schedulePartyLayoutSync() {
+    if (partyLayoutSyncFrameId) {
+        cancelAnimationFrame(partyLayoutSyncFrameId);
+    }
+
+    partyLayoutSyncFrameId = requestAnimationFrame(() => {
+        partyLayoutSyncFrameId = 0;
+        syncPartyLayoutDimensions();
+        scaleFieldToFit();
+    });
+}
+
 /**
  * Получение данных партии из sessionStorage
  */
@@ -241,10 +258,13 @@ function showMessage(text, duration = 0) {
         }
     }
 
+    schedulePartyLayoutSync();
+
     if (duration > 0) {
         setTimeout(() => {
             messageEl.textContent = '';
             messageEl.style.fontSize = '';
+            schedulePartyLayoutSync();
         }, duration);
     }
 }
@@ -338,11 +358,17 @@ function scalePlayerHandToFit() {
     if (!container) return;
 
     const cards = container.querySelectorAll('.player-hand-card');
-    if (cards.length === 0) return;
+    if (cards.length === 0) {
+        schedulePartyLayoutSync();
+        return;
+    }
 
     const containerHeight = container.clientHeight;
     const containerWidth = container.clientWidth;
-    if (containerHeight === 0 || containerWidth === 0) return;
+    if (containerHeight === 0 || containerWidth === 0) {
+        schedulePartyLayoutSync();
+        return;
+    }
 
     const gap = 4;
     const cols = 2;
@@ -368,7 +394,7 @@ function scalePlayerHandToFit() {
         }
     });
 
-    syncPartyLayoutDimensions();
+    schedulePartyLayoutSync();
 }
 
 /**
@@ -381,9 +407,10 @@ function syncPartyLayoutDimensions() {
     const messagesPanel = document.querySelector('.party-messages-panel');
     const handContainer = document.getElementById('playerHandContainer');
     const fieldContainer = document.getElementById('gameFieldContainer');
+    const fieldSection = document.querySelector('.party-field-section');
     const opponentSection = document.querySelector('.party-opponent-section');
 
-    if (!messageBar || !messagesPanel || !handContainer || !fieldContainer || !opponentSection) {
+    if (!messageBar || !messagesPanel || !handContainer || !fieldContainer || !fieldSection || !opponentSection) {
         return;
     }
 
@@ -395,6 +422,7 @@ function syncPartyLayoutDimensions() {
 
     messageBar.style.width = `${Math.round(panelRect.width)}px`;
     fieldContainer.style.height = `${targetHeight}px`;
+    fieldSection.style.height = `${targetHeight}px`;
     opponentSection.style.height = `${targetHeight}px`;
 
     if (frame) {
@@ -448,7 +476,7 @@ function initGameField() {
         scalePlayerHandToFit();
     });
 
-    syncPartyLayoutDimensions();
+    schedulePartyLayoutSync();
 
     // Инициализируем SVG-оверлей для предиктивных стрелок
     if (window.PredictionHelper) {
