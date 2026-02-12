@@ -367,6 +367,33 @@ function scalePlayerHandToFit() {
             gameCard.style.transform = `scale(${scale})`;
         }
     });
+
+    syncPartyLayoutDimensions();
+}
+
+/**
+ * Синхронизирует размеры контейнеров экрана партии.
+ * - Ширина panel bar = ширине панели сообщений.
+ * - Высота контейнеров поля и секции оппонента = высоте руки игрока + панели сообщений.
+ */
+function syncPartyLayoutDimensions() {
+    const messageBar = document.querySelector('.party-message-bar');
+    const messagesPanel = document.querySelector('.party-messages-panel');
+    const handContainer = document.getElementById('playerHandContainer');
+    const fieldContainer = document.getElementById('gameFieldContainer');
+    const opponentSection = document.querySelector('.party-opponent-section');
+
+    if (!messageBar || !messagesPanel || !handContainer || !fieldContainer || !opponentSection) {
+        return;
+    }
+
+    const messageHeight = messagesPanel.getBoundingClientRect().height;
+    const handHeight = handContainer.getBoundingClientRect().height;
+    const targetHeight = Math.max(0, Math.round(messageHeight + handHeight));
+
+    messageBar.style.width = `${Math.round(messagesPanel.getBoundingClientRect().width)}px`;
+    fieldContainer.style.height = `${targetHeight}px`;
+    opponentSection.style.height = `${targetHeight}px`;
 }
 
 /**
@@ -410,9 +437,12 @@ function initGameField() {
 
     // Пересчитываем масштаб при изменении размера окна
     window.addEventListener('resize', () => {
+        syncPartyLayoutDimensions();
         scaleFieldToFit();
         scalePlayerHandToFit();
     });
+
+    syncPartyLayoutDimensions();
 
     // Инициализируем SVG-оверлей для предиктивных стрелок
     if (window.PredictionHelper) {
@@ -452,9 +482,10 @@ function scaleFieldToFit() {
     field.style.transform = `scale(${scale})`;
     field.style.transformOrigin = 'top left';
 
-    // Устанавливаем wrapper размеры для центрирования
-    wrapper.style.width = `${fieldWidth * scale}px`;
-    wrapper.style.height = `${fieldHeight * scale}px`;
+    // Контейнер остаётся фиксированного размера, меняем только размер поля
+    wrapper.style.width = '100%';
+    field.style.width = `${fieldWidth}px`;
+    field.style.height = `${fieldHeight}px`;
 }
 
 /**
