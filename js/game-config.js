@@ -3,5 +3,5 @@
  */
 window.GameConfig = {
     /** Множитель статов при расчёте боя (по умолчанию 16) */
-    statMultiplier: 16
+    statMultiplier: 1
 };
