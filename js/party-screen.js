@@ -332,11 +332,11 @@ function scalePlayerHandToFit() {
     const gap = 4;
     const maxScale = 0.85;
 
-    // Перебираем варианты колонок (1, 2, 3) и выбираем тот, что даёт максимальный масштаб
+    // Перебираем варианты колонок (1, 2) и выбираем тот, что даёт максимальный масштаб
     let bestScale = 0;
     let bestColumns = 2;
 
-    for (let cols = 1; cols <= 3; cols++) {
+    for (let cols = 1; cols <= 2; cols++) {
         const rows = Math.ceil(cards.length / cols);
         const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
         const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
@@ -421,8 +421,8 @@ function initGameField() {
 }
 
 /**
- * Масштабирование игрового поля под доступную высоту.
- * Поле прижимается к top-left, секция обтягивает поле по ширине.
+ * Масштабирование игрового поля под доступное пространство секции.
+ * Поле масштабируется по обоим измерениям, центрируется в секции.
  */
 function scaleFieldToFit() {
     const wrapper = document.getElementById('gameFieldContainer');
@@ -431,30 +431,26 @@ function scaleFieldToFit() {
 
     const section = wrapper.closest('.party-field-section');
 
-    // Сбрасываем масштаб и ширину секции для точного измерения
+    // Сбрасываем масштаб для точного измерения натуральных размеров поля
     field.style.transform = 'none';
-    if (section) {
-        section.style.width = '';
-    }
 
     const fieldWidth = field.scrollWidth;
     const fieldHeight = field.scrollHeight;
     if (fieldWidth === 0 || fieldHeight === 0) return;
 
-    // Масштабируем только по высоте (ширина секции подстроится)
+    // Доступное пространство внутри wrapper
+    const wrapperWidth = wrapper.clientWidth;
     const wrapperHeight = wrapper.clientHeight;
-    const scale = Math.min(wrapperHeight / fieldHeight, 1);
+
+    // Масштабируем по обоим измерениям, выбирая минимальный масштаб
+    const scale = Math.min(wrapperWidth / fieldWidth, wrapperHeight / fieldHeight);
 
     field.style.transform = `scale(${scale})`;
     field.style.transformOrigin = 'top left';
 
-    // Обтягиваем секцию по фактической ширине масштабированного поля
-    if (section) {
-        const padding = parseFloat(getComputedStyle(section).paddingLeft) +
-                         parseFloat(getComputedStyle(section).paddingRight);
-        const scaledWidth = fieldWidth * scale + padding;
-        section.style.width = `${scaledWidth}px`;
-    }
+    // Устанавливаем wrapper размеры для центрирования
+    wrapper.style.width = `${fieldWidth * scale}px`;
+    wrapper.style.height = `${fieldHeight * scale}px`;
 }
 
 /**

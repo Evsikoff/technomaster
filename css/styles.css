@@ -1050,18 +1050,20 @@ h2 {
     display: flex;
     flex-direction: column;
     padding: clamp(4px, 0.8vw, 10px);
-    gap: clamp(4px, 0.5vw, 8px);
+    gap: 0;
     position: relative;
 }
 
-/* Панель сообщений */
+/* Панель сообщений (внутри секции игрока) */
 .party-messages-panel {
     width: 100%;
     background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
-    border-radius: 10px;
-    padding: clamp(6px, 1vw, 12px) clamp(10px, 2vw, 20px);
+    border-radius: 8px;
+    padding: clamp(4px, 0.6vw, 8px) clamp(6px, 1vw, 12px);
     border: 1px solid rgba(135, 206, 235, 0.3);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .message-content {
@@ -1081,7 +1083,7 @@ h2 {
     gap: clamp(4px, 0.5vw, 8px);
 }
 
-/* Секция оппонента (левая, компактная) */
+/* Секция оппонента (левая, компактная) — высота равна секции поля */
 .party-opponent-section {
     flex: 0 0 auto;
     width: clamp(60px, 7vw, 85px);
@@ -1092,6 +1094,7 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    align-self: stretch;
 }
 
 /* Профиль оппонента */
@@ -1201,12 +1204,13 @@ h2 {
     color: #888;
 }
 
-/* Секция игрового поля (центр) — обтягивает поле без лишних пустот */
+/* Секция игрового поля (центр) — расширяется на доступное пространство */
 .party-field-section {
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     padding: clamp(4px, 0.5vw, 8px);
@@ -1218,7 +1222,9 @@ h2 {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    width: 100%;
     height: 100%;
+    position: relative;
 }
 
 /* Адаптивное игровое поле для экрана партии */
@@ -1238,16 +1244,17 @@ h2 {
     margin-top: -140px;
 }
 
-/* Секция карт игрока (правая) — занимает всё оставшееся место */
+/* Секция карт игрока (правая) — фиксированная ширина на 2 карты */
 .party-player-section {
-    flex: 1;
-    min-width: 0;
+    flex: 0 0 auto;
+    width: clamp(140px, 16vw, 230px);
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 6px;
     border: 1px solid rgba(46, 125, 50, 0.4);
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 /* Контейнер карт игрока - сетка 2 колонки */
