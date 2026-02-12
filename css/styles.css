@@ -1270,6 +1270,7 @@ h2 {
 /* Секция карт игрока (правая) — фиксированная ширина на 2 карты 170px */
 .party-player-section {
     flex: 1;
+    position: relative;
     width: 100%;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
@@ -1573,8 +1574,9 @@ h2 {
 
 .party-return-btn {
     position: absolute;
-    top: clamp(8px, 1.5vw, 16px);
-    right: clamp(8px, 1.5vw, 16px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     padding: clamp(6px, 1vw, 10px) clamp(14px, 2vw, 22px);
     border: none;
     border-radius: 12px;
@@ -1590,7 +1592,7 @@ h2 {
 }
 
 .party-return-btn:hover {
-    transform: translateY(-2px);
+    transform: translate(-50%, calc(-50% - 2px));
     box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
 }
 
