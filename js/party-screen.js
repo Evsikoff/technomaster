@@ -410,6 +410,11 @@ function initGameField() {
         scalePlayerHandToFit();
     });
 
+    // Инициализируем SVG-оверлей для предиктивных стрелок
+    if (window.PredictionHelper) {
+        window.PredictionHelper.initOverlay();
+    }
+
     console.log(`PartyScreen: Игровое поле создано. Заблокированных ячеек: ${fieldData.unavailableCount}`);
 
     return fieldData;
@@ -520,6 +525,11 @@ function handleCardDragEnd(e) {
 
     // Убираем подсветку с ячеек
     disableDropTargets();
+
+    // Очищаем стрелки предсказания
+    if (window.PredictionHelper) {
+        window.PredictionHelper.clearArrows();
+    }
 }
 
 /**
@@ -556,6 +566,18 @@ function handleCellDragOver(e) {
 
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+
+    // Предиктивная визуализация
+    if (window.PredictionHelper && partyScreenState.draggedCardData) {
+        const fieldCells = partyScreenState.fieldCells.map(c => ({
+            index: c.index,
+            row: c.row,
+            col: c.col,
+            isAvailable: c.isAvailable,
+            card: partyScreenState.fieldCards.get(c.index) || null
+        }));
+        window.PredictionHelper.onCellHover(partyScreenState.draggedCardData, cellIndex, fieldCells);
+    }
 }
 
 /**
@@ -581,6 +603,11 @@ function handleCellDragLeave(e) {
     const cell = e.currentTarget;
     if (!cell.contains(e.relatedTarget)) {
         cell.classList.remove('drag-over');
+
+        // Очищаем стрелки предсказания
+        if (window.PredictionHelper) {
+            window.PredictionHelper.onCellLeave();
+        }
     }
 }
 
@@ -589,6 +616,11 @@ function handleCellDragLeave(e) {
  */
 async function handleCellDrop(e) {
     e.preventDefault();
+
+    // Очищаем стрелки предсказания перед реальным ходом
+    if (window.PredictionHelper) {
+        window.PredictionHelper.clearArrows();
+    }
 
     if (partyScreenState.mode !== PartyScreenMode.PLAYER_TURN) return;
 

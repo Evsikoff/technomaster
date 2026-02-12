@@ -2745,3 +2745,25 @@ h2 {
         transform: scale(0.5);
     }
 }
+
+/* ========== PREDICTION OVERLAY (Предиктивная визуализация хода) ========== */
+
+.prediction-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    overflow: visible;
+}
+
+.prediction-arrow line {
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+}
+
+.prediction-icon {
+    pointer-events: none;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+}
