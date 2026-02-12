@@ -1054,17 +1054,16 @@ h2 {
     position: relative;
 }
 
-/* Контейнер панели сообщений — фиксированная высота, выровнен вправо */
+/* Контейнер панели сообщений — фиксированная высота */
 .party-message-bar {
-    flex-shrink: 0;
-    display: flex;
-    justify-content: flex-end;
+    flex: 0 0 auto;
     width: 100%;
 }
 
 /* Панель сообщений — ширина совпадает с секцией игрока */
 .party-messages-panel {
     width: 360px;
+    max-width: 100%;
     height: clamp(28px, 3.5vw, 40px);
     background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
     border-radius: 8px;
@@ -1095,6 +1094,15 @@ h2 {
     min-height: 0;
     display: flex;
     flex-direction: row;
+    gap: clamp(4px, 0.5vw, 8px);
+}
+
+/* Правая колонка — Сообщения + Карты игрока */
+.party-right-column {
+    flex: 0 0 auto;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
     gap: clamp(4px, 0.5vw, 8px);
 }
 
@@ -1261,8 +1269,8 @@ h2 {
 
 /* Секция карт игрока (правая) — фиксированная ширина на 2 карты 170px */
 .party-player-section {
-    flex: 0 0 auto;
-    width: 360px; /* 2×170 карта + 4 gap + 8 padding контейнера + 12 padding секции + запас */
+    flex: 1;
+    width: 100%;
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 2px 6px 6px 6px;
@@ -1742,6 +1750,10 @@ h2 {
 
     .opponent-profile {
         flex-direction: row;
+    }
+
+    .party-right-column {
+        width: 100%;
     }
 
     .party-player-section {

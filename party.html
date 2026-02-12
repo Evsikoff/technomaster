@@ -9,13 +9,6 @@
 </head>
 <body class="party-screen">
     <div class="party-frame">
-        <!-- Панель сообщений (над основной областью, выровнена по секции игрока) -->
-        <div class="party-message-bar">
-            <div class="party-messages-panel">
-                <div id="messageContent" class="message-content">Загрузка партии...</div>
-            </div>
-        </div>
-
         <!-- Основная игровая область -->
         <div class="party-main-area">
             <!-- Секция оппонента (компактная) -->
@@ -51,12 +44,20 @@
                 </div>
             </section>
 
-            <!-- Секция карт игрока -->
-            <section class="party-player-section">
-                <div id="playerHandContainer" class="player-hand-container">
-                    <!-- Карты игрока будут отрисованы здесь -->
+            <!-- Правая колонка: Сообщения + Карты игрока -->
+            <div class="party-right-column">
+                <div class="party-message-bar">
+                    <div class="party-messages-panel">
+                        <div id="messageContent" class="message-content">Загрузка партии...</div>
+                    </div>
                 </div>
-            </section>
+
+                <section class="party-player-section">
+                    <div id="playerHandContainer" class="player-hand-container">
+                        <!-- Карты игрока будут отрисованы здесь -->
+                    </div>
+                </section>
+            </div>
         </div>
 
         <!-- Оверлей для боя -->
