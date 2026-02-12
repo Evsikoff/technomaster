@@ -258,13 +258,10 @@ function showMessage(text, duration = 0) {
         }
     }
 
-    schedulePartyLayoutSync();
-
     if (duration > 0) {
         setTimeout(() => {
             messageEl.textContent = '';
             messageEl.style.fontSize = '';
-            schedulePartyLayoutSync();
         }, duration);
     }
 }
@@ -415,9 +412,9 @@ function syncPartyLayoutDimensions() {
     }
 
     const panelRect = messagesPanel.getBoundingClientRect();
-    const messageHeight = panelRect.height;
-    const handHeight = handContainer.getBoundingClientRect().height;
-    const targetHeight = Math.max(0, Math.round(messageHeight + handHeight));
+    const messageHeight = messageBar.offsetHeight || messagesPanel.offsetHeight || panelRect.height;
+    const handHeight = handContainer.offsetHeight || handContainer.getBoundingClientRect().height;
+    const targetHeight = Math.max(0, handHeight + messageHeight);
     const frame = document.querySelector('.party-frame');
 
     messageBar.style.width = `${Math.round(panelRect.width)}px`;
@@ -426,7 +423,7 @@ function syncPartyLayoutDimensions() {
     opponentSection.style.height = `${targetHeight}px`;
 
     if (frame) {
-        frame.style.setProperty('--party-message-panel-height', `${Math.round(messageHeight)}px`);
+        frame.style.setProperty('--party-message-panel-height', `${messageHeight}px`);
     }
 }
 
