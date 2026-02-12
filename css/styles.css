@@ -1065,13 +1065,18 @@ h2 {
 /* Панель сообщений — ширина совпадает с секцией игрока */
 .party-messages-panel {
     width: 360px;
+    height: clamp(28px, 3.5vw, 40px);
     background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
     border-radius: 8px;
-    padding: clamp(4px, 0.6vw, 8px) clamp(6px, 1vw, 12px);
+    padding: 0 clamp(6px, 1vw, 12px);
     border: 1px solid rgba(135, 206, 235, 0.3);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .message-content {
