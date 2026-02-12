@@ -184,7 +184,83 @@ function createCardElement(card, draggable = true) {
         cardElement.addEventListener('dragend', handleDragEnd);
     }
 
+    cardElement.addEventListener('click', handleCardClick);
+
     return cardElement;
+}
+
+/**
+ * Перемещает карту из колоды в руку
+ * @param {number} cardId
+ * @returns {Promise<boolean>} true, если карта перемещена
+ */
+async function moveCardToHandById(cardId) {
+    if (handSetupState.handCards.length >= HAND_SIZE) {
+        return false;
+    }
+
+    const cardIndex = handSetupState.deckCards.findIndex(c => c.id === cardId);
+    if (cardIndex === -1) {
+        return false;
+    }
+
+    const card = handSetupState.deckCards[cardIndex];
+    handSetupState.deckCards.splice(cardIndex, 1);
+    card.inHand = true;
+    handSetupState.handCards.push(card);
+
+    await saveCardInHandState(card.id, true);
+    return true;
+}
+
+/**
+ * Перемещает карту из руки обратно в колоду
+ * @param {number} cardId
+ * @returns {Promise<boolean>} true, если карта перемещена
+ */
+async function moveCardToDeckById(cardId) {
+    const cardIndex = handSetupState.handCards.findIndex(c => c.id === cardId);
+    if (cardIndex === -1) {
+        return false;
+    }
+
+    const card = handSetupState.handCards[cardIndex];
+    handSetupState.handCards.splice(cardIndex, 1);
+    card.inHand = false;
+    handSetupState.deckCards.push(card);
+
+    await saveCardInHandState(card.id, false);
+    return true;
+}
+
+/**
+ * Обработчик клика по карте
+ * @param {MouseEvent} e
+ */
+async function handleCardClick(e) {
+    const cardEl = e.currentTarget.closest('.game-card');
+    if (!cardEl) {
+        return;
+    }
+
+    const cardId = parseInt(cardEl.dataset.cardId, 10);
+    if (!cardId) {
+        return;
+    }
+
+    let moved = false;
+
+    if (cardEl.closest('.deck-cards-container')) {
+        moved = await moveCardToHandById(cardId);
+    } else if (cardEl.closest('.hand-slot')) {
+        moved = await moveCardToDeckById(cardId);
+    }
+
+    if (moved) {
+        renderDeckCards();
+        renderHandCards();
+        updateStartButtonState();
+    }
 }
 
 /**
@@ -281,19 +357,10 @@ async function handleSlotDrop(e) {
         return;
     }
 
-    // Находим карту в колоде
-    const cardIndex = handSetupState.deckCards.findIndex(c => c.id === cardId);
-    if (cardIndex === -1) return;
-
-    const card = handSetupState.deckCards[cardIndex];
-
-    // Перемещаем карту из колоды в руку
-    handSetupState.deckCards.splice(cardIndex, 1);
-    card.inHand = true;
-    handSetupState.handCards.push(card);
-
-    // Обновляем хранилище
-    await saveCardInHandState(card.id, true);
+    const moved = await moveCardToHandById(cardId);
+    if (!moved) {
+        return;
+    }
 
     // Перерисовываем блоки
     renderDeckCards();
@@ -318,19 +385,10 @@ async function handleDeckDrop(e) {
         return;
     }
 
-    // Находим карту в руке
-    const cardIndex = handSetupState.handCards.findIndex(c => c.id === cardId);
-    if (cardIndex === -1) return;
-
-    const card = handSetupState.handCards[cardIndex];
-
-    // Перемещаем карту из руки в колоду
-    handSetupState.handCards.splice(cardIndex, 1);
-    card.inHand = false;
-    handSetupState.deckCards.push(card);
-
-    // Обновляем хранилище
-    await saveCardInHandState(card.id, false);
+    const moved = await moveCardToDeckById(cardId);
+    if (!moved) {
+        return;
+    }
 
     // Перерисовываем блоки
     renderDeckCards();
