@@ -171,6 +171,12 @@ function updateTabStates() {
  * Инициализирует стартовый экран.
  */
 async function initStartScreen() {
+    // Блокируем взаимодействие до полной загрузки
+    const blocker = document.createElement('div');
+    blocker.id = 'initial-interaction-blocker';
+    blocker.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; background: transparent; cursor: wait;';
+    document.body.appendChild(blocker);
+
     const deckBanner = document.getElementById('deckBanner');
     const guideButton = document.getElementById('guideButton');
     const guideModal = document.getElementById('guideModal');
@@ -269,7 +275,34 @@ async function initStartScreen() {
 
         renderOpponents();
 
+        // Сигнализируем SDK о готовности
+        if (window.userCards?.getCachedYsdk) {
+            const ysdk = window.userCards.getCachedYsdk();
+            if (ysdk) {
+                if (ysdk.features?.LoadingAPI) {
+                    ysdk.features.LoadingAPI.ready();
+                }
+                // Вызов i18n.lang с параметром ru, как просил пользователь
+                if (ysdk.environment?.i18n) {
+                    try {
+                        // Пытаемся вызвать как функцию, если это предусмотрено специфической версией/требованием
+                        if (typeof ysdk.environment.i18n.lang === 'function') {
+                            ysdk.environment.i18n.lang('ru');
+                        } else {
+                            ysdk.environment.i18n.lang = 'ru';
+                        }
+                    } catch (e) {
+                        console.warn('Не удалось установить i18n.lang(ru):', e);
+                    }
+                }
+            }
+        }
+
+        // Убираем блокировщик
+        blocker.remove();
+
     } catch (error) {
+        if (blocker) blocker.remove();
         console.error('Ошибка загрузки стартового экрана:', error);
         const grid = document.getElementById('opponentsGrid');
         if (grid) grid.innerHTML = '<p class="opponents-error">Не удалось загрузить список соперников.</p>';

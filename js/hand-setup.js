@@ -685,6 +685,11 @@ async function initHandSetupScreen() {
         setupClickMechanics();
         setupButtonHandlers();
 
+        // Запускаем GameplayAPI сессию
+        if (window.userCards?.startGameplay) {
+            window.userCards.startGameplay();
+        }
+
         console.log('HandSetup: Инициализация завершена');
 
     } catch (error) {
