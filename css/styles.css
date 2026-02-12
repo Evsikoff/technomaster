@@ -1072,6 +1072,8 @@ h2 {
     text-align: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     min-height: 1.2em;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 /* Основная игровая область */

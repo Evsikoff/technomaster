@@ -227,9 +227,24 @@ function showMessage(text, duration = 0) {
     const messageEl = document.getElementById('messageContent');
     messageEl.textContent = text;
 
+    // Сброс к базовому размеру шрифта
+    messageEl.style.fontSize = '';
+
+    // Уменьшаем шрифт, пока текст не уместится в одну строку
+    if (messageEl.scrollWidth > messageEl.clientWidth) {
+        const baseFontSize = parseFloat(getComputedStyle(messageEl).fontSize);
+        let fontSize = baseFontSize;
+        const minFontSize = 8;
+        while (messageEl.scrollWidth > messageEl.clientWidth && fontSize > minFontSize) {
+            fontSize -= 0.5;
+            messageEl.style.fontSize = `${fontSize}px`;
+        }
+    }
+
     if (duration > 0) {
         setTimeout(() => {
             messageEl.textContent = '';
+            messageEl.style.fontSize = '';
         }, duration);
     }
 }
