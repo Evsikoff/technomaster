@@ -568,7 +568,7 @@ function setupDeckEventHandlers() {
     const collectorBtn = document.getElementById('deckCollectorBtn');
     if (collectorBtn) {
         collectorBtn.addEventListener('click', () => {
-            console.log('Профиль коллекционера - в разработке');
+            window.location.href = 'collector.html';
         });
     }
 
