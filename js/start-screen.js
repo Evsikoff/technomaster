@@ -2,13 +2,14 @@ const OPPONENTS_DB_PATH = 'public/data/cards.db';
 const OPPONENTS_AVATAR_PATH = 'public/img/opponents';
 const MIN_DECK_PULSE_THRESHOLD = 5;
 
+let currentMode = 'standard';
+let opponentsList = [];
+let modeProgress = { standard: 0, hard: 0, hardcore: 0 };
+let userCardCount = 0;
+
 /**
  * Создает DOM-элемент бейджа соперника.
  * @param {Object} opponent
- * @param {number} opponent.id
- * @param {number} opponent.sequence
- * @param {string} opponent.name
- * @param {string} opponent.avatar
  * @param {boolean} isLocked
  * @returns {HTMLButtonElement}
  */
@@ -30,7 +31,7 @@ function createOpponentBadge(opponent, isLocked) {
                 return;
             }
 
-            window.partyOrchestrator.start(opponent.id).catch(error => {
+            window.partyOrchestrator.start(opponent.id, currentMode).catch(error => {
                 console.error('PartyOrchestrator: ошибка запуска партии', error);
                 alert(error?.message || 'Не удалось подготовить партию.');
             });
@@ -89,16 +90,96 @@ async function loadOpponentsFromDb() {
 }
 
 /**
+ * Отрисовывает список соперников в зависимости от текущего режима и прогресса.
+ */
+function renderOpponents() {
+    const opponentsGrid = document.getElementById('opponentsGrid');
+    if (!opponentsGrid) return;
+
+    opponentsGrid.innerHTML = '';
+
+    const hasLowCardCount = userCardCount < MIN_DECK_PULSE_THRESHOLD;
+    const totalOpponents = opponentsList.length;
+
+    // Определяем максимальный доступный уровень для текущего режима
+    let maxUnlockedSequence = 1;
+
+    // Находим "максимальный по сложности режим, в котором победил игрок"
+    let highestModeWithWins = 'none';
+    if (modeProgress.hardcore > 0) highestModeWithWins = 'hardcore';
+    else if (modeProgress.hard > 0) highestModeWithWins = 'hard';
+    else if (modeProgress.standard > 0) highestModeWithWins = 'standard';
+
+    if (currentMode === 'standard') {
+        if (highestModeWithWins === 'none') {
+            maxUnlockedSequence = modeProgress.standard + 1;
+        } else if (highestModeWithWins === 'standard') {
+            maxUnlockedSequence = modeProgress.standard + 1;
+        } else {
+            // Если есть победы в более высоких режимах, значит стандартный пройден полностью
+            maxUnlockedSequence = totalOpponents + 1;
+        }
+    } else if (currentMode === 'hard') {
+        if (highestModeWithWins === 'standard') {
+            maxUnlockedSequence = 1; // Только начали Hard
+        } else if (highestModeWithWins === 'hard') {
+            maxUnlockedSequence = modeProgress.hard + 1;
+        } else {
+            // Пройден Hardcore, значит Hard пройден полностью
+            maxUnlockedSequence = totalOpponents + 1;
+        }
+    } else if (currentMode === 'hardcore') {
+        if (highestModeWithWins === 'hard') {
+            maxUnlockedSequence = 1; // Только начали Hardcore
+        } else if (highestModeWithWins === 'hardcore') {
+            maxUnlockedSequence = modeProgress.hardcore + 1;
+        }
+    }
+
+    opponentsList.forEach(opponent => {
+        const isLocked = hasLowCardCount || opponent.sequence > maxUnlockedSequence;
+        const badge = createOpponentBadge(opponent, isLocked);
+        opponentsGrid.append(badge);
+    });
+
+    updateTabStates();
+}
+
+/**
+ * Обновляет состояние табов (активный/доступный).
+ */
+function updateTabStates() {
+    const totalOpponents = opponentsList.length;
+    const tabs = document.querySelectorAll('.mode-tab');
+
+    tabs.forEach(tab => {
+        const mode = tab.dataset.mode;
+        tab.classList.toggle('active', mode === currentMode);
+
+        let isAvailable = false;
+        if (mode === 'standard') {
+            isAvailable = true;
+        } else if (mode === 'hard') {
+            isAvailable = modeProgress.standard >= totalOpponents;
+        } else if (mode === 'hardcore') {
+            isAvailable = modeProgress.hard >= totalOpponents;
+        }
+
+        tab.disabled = !isAvailable;
+    });
+}
+
+/**
  * Инициализирует стартовый экран.
  */
 async function initStartScreen() {
     const deckBanner = document.getElementById('deckBanner');
-    const opponentsGrid = document.getElementById('opponentsGrid');
     const guideButton = document.getElementById('guideButton');
     const guideModal = document.getElementById('guideModal');
     const guideModalClose = document.getElementById('guideModalClose');
+    const modeTabs = document.getElementById('modeTabs');
 
-    if (!deckBanner || !opponentsGrid || !guideButton || !guideModal || !guideModalClose) {
+    if (!deckBanner || !guideButton || !guideModal || !guideModalClose) {
         return;
     }
 
@@ -126,76 +207,74 @@ async function initStartScreen() {
         }
     });
 
+    if (modeTabs) {
+        modeTabs.addEventListener('click', (event) => {
+            const tab = event.target.closest('.mode-tab');
+            if (tab && !tab.disabled) {
+                currentMode = tab.dataset.mode;
+                renderOpponents();
+            }
+        });
+    }
+
     try {
         console.log('StartScreen: Start initializing...');
-        console.log('StartScreen: Checking window.userCards:', window.userCards);
 
         // Ждём завершения инициализации контроллера хранилища
         if (window.userCards?.whenReady) {
-            console.log('StartScreen: Ожидаю завершения инициализации контроллера хранилища...');
             await window.userCards.whenReady();
-            console.log('StartScreen: Контроллер хранилища инициализирован.');
         }
 
         let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
-            window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve(0)
+            window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve({ standard: 0, hard: 0, hardcore: 0 })
         ]);
 
-        console.log(`StartScreen: Card count determined as: ${cardCount}`);
-        console.log(`StartScreen: Max opponent coolness determined as: ${maxCoolness}`);
-        console.log(`StartScreen: window.cardRenderer is available: ${!!window.cardRenderer}`);
+        userCardCount = cardCount;
+        modeProgress = typeof maxCoolness === 'object' ? maxCoolness : { standard: Number(maxCoolness), hard: 0, hardcore: 0 };
 
         // Если карт 0, генерируем стартовую колоду
-        if (cardCount === 0 && window.cardRenderer) {
-            console.log('StartScreen: Карт 0. Запуск генерации стартовой колоды...');
-            try {
-                await window.cardRenderer.init();
-                const rules = window.cardRenderer.getStarterDeckRules();
-
-                if (rules) {
-                    // Генерируем колоду
-                    const deck = window.cardRenderer.generateDeck(rules);
-                    console.log(`StartScreen: Сгенерировано ${deck.length} карт.`);
-
-                    // Сохраняем (Yandex Cloud + Browser)
-                    if (window.userCards.saveUserDeck) {
-                        await window.userCards.saveUserDeck(deck);
-
-                        // Обновляем счетчик
-                        cardCount = deck.length;
-                        console.log(`StartScreen: Счетчик карт обновлен до ${cardCount}`);
-                    }
+        if (userCardCount === 0 && window.cardRenderer) {
+            await window.cardRenderer.init();
+            const rules = window.cardRenderer.getStarterDeckRules();
+            if (rules) {
+                const deck = window.cardRenderer.generateDeck(rules);
+                if (window.userCards.saveUserDeck) {
+                    await window.userCards.saveUserDeck(deck);
+                    userCardCount = deck.length;
                 }
-            } catch (genError) {
-                console.error('StartScreen: Ошибка при генерации стартовой колоды:', genError);
             }
         }
 
-        const opponents = await loadOpponentsFromDb();
+        opponentsList = await loadOpponentsFromDb();
 
         // Клик по баннеру «МОЯ КОЛОДА» — переход на экран колоды
         deckBanner.addEventListener('click', () => {
             window.location.href = 'deck.html';
         });
 
-        const hasLowCardCount = cardCount < MIN_DECK_PULSE_THRESHOLD;
+        const hasLowCardCount = userCardCount < MIN_DECK_PULSE_THRESHOLD;
         if (hasLowCardCount) {
             deckBanner.classList.add('deck-banner--pulse');
         } else {
             deckBanner.classList.remove('deck-banner--pulse');
         }
 
-        const maxUnlockedSequence = Math.max(1, Number(maxCoolness) + 1);
+        // Автоматически выбираем максимально доступный режим при загрузке
+        if (modeProgress.hard >= opponentsList.length && opponentsList.length > 0) {
+            currentMode = 'hardcore';
+        } else if (modeProgress.standard >= opponentsList.length && opponentsList.length > 0) {
+            currentMode = 'hard';
+        } else {
+            currentMode = 'standard';
+        }
 
-        opponents.forEach(opponent => {
-            const isLocked = hasLowCardCount || opponent.sequence > maxUnlockedSequence;
-            const badge = createOpponentBadge(opponent, isLocked);
-            opponentsGrid.append(badge);
-        });
+        renderOpponents();
+
     } catch (error) {
         console.error('Ошибка загрузки стартового экрана:', error);
-        opponentsGrid.innerHTML = '<p class="opponents-error">Не удалось загрузить список соперников.</p>';
+        const grid = document.getElementById('opponentsGrid');
+        if (grid) grid.innerHTML = '<p class="opponents-error">Не удалось загрузить список соперников.</p>';
     }
 }
 

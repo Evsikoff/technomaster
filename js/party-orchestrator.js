@@ -246,8 +246,8 @@ async function preparePlayerHand(userData) {
     return playerCards;
 }
 
-function storePendingOpponent(opponentId) {
-    sessionStorage.setItem(PARTY_PENDING_KEY, JSON.stringify({ opponentId }));
+function storePendingOpponent(opponentId, gameMode) {
+    sessionStorage.setItem(PARTY_PENDING_KEY, JSON.stringify({ opponentId, gameMode }));
 }
 
 function readPendingOpponent() {
@@ -267,37 +267,39 @@ function clearPendingOpponent() {
     sessionStorage.removeItem(PARTY_PENDING_KEY);
 }
 
-function launchPartyScreen(opponentId, playerHand, opponentHand) {
+function launchPartyScreen(opponentId, playerHand, opponentHand, gameMode) {
     const payload = {
         opponentId,
         playerHand,
-        opponentHand
+        opponentHand,
+        gameMode
     };
 
     sessionStorage.setItem(PARTY_PAYLOAD_KEY, JSON.stringify(payload));
     window.location.href = 'party.html';
 }
 
-async function startParty(opponentId) {
+async function startParty(opponentId, gameMode = 'standard') {
     const storageType = getStorageType();
-    console.log(`PartyOrchestrator: Используем хранилище ${storageType}.`);
+    console.log(`PartyOrchestrator: Используем хранилище ${storageType}. Режим: ${gameMode}`);
 
     const userData = await ensureUserData();
     const playerCards = await preparePlayerHand(userData);
 
     if (playerCards.length > PARTY_HAND_SIZE) {
-        storePendingOpponent(opponentId);
+        storePendingOpponent(opponentId, gameMode);
         window.location.href = `hand-setup.html?opponentId=${encodeURIComponent(opponentId)}&party=1`;
         return;
     }
 
     await window.userCards.saveUserData(userData);
-    await finishParty(opponentId);
+    await finishParty(opponentId, gameMode);
 }
 
-async function finishParty(opponentId) {
+async function finishParty(opponentId, gameMode) {
     const pendingOpponent = readPendingOpponent();
     const resolvedOpponentId = opponentId || pendingOpponent?.opponentId;
+    const resolvedGameMode = gameMode || pendingOpponent?.gameMode || 'standard';
 
     if (!resolvedOpponentId) {
         throw new Error('Не удалось определить оппонента для партии.');
@@ -317,7 +319,7 @@ async function finishParty(opponentId) {
 
     const opponentHand = getCardsByCardholder(userData, opponentCardholder.id).filter(card => card.inHand);
 
-    launchPartyScreen(resolvedOpponentId, playerHand, opponentHand);
+    launchPartyScreen(resolvedOpponentId, playerHand, opponentHand, resolvedGameMode);
 }
 
 function hasPendingParty() {

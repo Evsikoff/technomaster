@@ -44,6 +44,22 @@
 
             <section class="opponents-section">
                 <h2 class="section-title">Соперники</h2>
+
+                <div class="mode-tabs" id="modeTabs">
+                    <button class="mode-tab active" data-mode="standard" type="button">
+                        <span class="mode-tab__name">Стандартный</span>
+                        <span class="mode-tab__desc">(см. руководство)</span>
+                    </button>
+                    <button class="mode-tab" data-mode="hard" type="button">
+                        <span class="mode-tab__name">Сложный</span>
+                        <span class="mode-tab__desc">(удары в спину не вызывают комбо)</span>
+                    </button>
+                    <button class="mode-tab" data-mode="hardcore" type="button">
+                        <span class="mode-tab__name">Хардкор</span>
+                        <span class="mode-tab__desc">(удары в спину вызывают комбо, но ты всегда ходишь первый)</span>
+                    </button>
+                </div>
+
                 <div class="opponents-grid" id="opponentsGrid">
                     <!-- Бейджи соперников будут добавлены динамически -->
                 </div>
