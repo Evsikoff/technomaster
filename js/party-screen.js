@@ -227,9 +227,24 @@ function showMessage(text, duration = 0) {
     const messageEl = document.getElementById('messageContent');
     messageEl.textContent = text;
 
+    // Сброс к базовому размеру шрифта
+    messageEl.style.fontSize = '';
+
+    // Уменьшаем шрифт, пока текст не уместится в одну строку
+    if (messageEl.scrollWidth > messageEl.clientWidth) {
+        const baseFontSize = parseFloat(getComputedStyle(messageEl).fontSize);
+        let fontSize = baseFontSize;
+        const minFontSize = 8;
+        while (messageEl.scrollWidth > messageEl.clientWidth && fontSize > minFontSize) {
+            fontSize -= 0.5;
+            messageEl.style.fontSize = `${fontSize}px`;
+        }
+    }
+
     if (duration > 0) {
         setTimeout(() => {
             messageEl.textContent = '';
+            messageEl.style.fontSize = '';
         }, duration);
     }
 }
@@ -330,29 +345,18 @@ function scalePlayerHandToFit() {
     if (containerHeight === 0 || containerWidth === 0) return;
 
     const gap = 4;
-    const maxScale = 0.85;
+    const cols = 2;
+    const rows = Math.ceil(cards.length / cols);
 
-    // Перебираем варианты колонок (1, 2, 3) и выбираем тот, что даёт максимальный масштаб
-    let bestScale = 0;
-    let bestColumns = 2;
+    // Предпочтительный масштаб 0.85 (как в deck-detail-modal), но уменьшаем если не влезает
+    const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
+    const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
+    const scale = Math.min(0.85, scaleW, scaleH);
 
-    for (let cols = 1; cols <= 3; cols++) {
-        const rows = Math.ceil(cards.length / cols);
-        const scaleH = (containerHeight - (rows - 1) * gap) / (280 * rows);
-        const scaleW = (containerWidth - (cols - 1) * gap) / (200 * cols);
-        const s = Math.min(scaleH, scaleW, maxScale);
-        if (s > bestScale) {
-            bestScale = s;
-            bestColumns = cols;
-        }
-    }
-
-    const scale = bestScale;
     const cardWidth = Math.floor(200 * scale);
     const cardHeight = Math.floor(280 * scale);
 
-    // Устанавливаем число колонок в гриде
-    container.style.gridTemplateColumns = `repeat(${bestColumns}, ${cardWidth}px)`;
+    container.style.gridTemplateColumns = `repeat(${cols}, ${cardWidth}px)`;
 
     cards.forEach(card => {
         card.style.width = `${cardWidth}px`;
@@ -421,8 +425,8 @@ function initGameField() {
 }
 
 /**
- * Масштабирование игрового поля под доступную высоту.
- * Поле прижимается к top-left, секция обтягивает поле по ширине.
+ * Масштабирование игрового поля под доступное пространство секции.
+ * Поле масштабируется по обоим измерениям, центрируется в секции.
  */
 function scaleFieldToFit() {
     const wrapper = document.getElementById('gameFieldContainer');
@@ -431,30 +435,26 @@ function scaleFieldToFit() {
 
     const section = wrapper.closest('.party-field-section');
 
-    // Сбрасываем масштаб и ширину секции для точного измерения
+    // Сбрасываем масштаб для точного измерения натуральных размеров поля
     field.style.transform = 'none';
-    if (section) {
-        section.style.width = '';
-    }
 
     const fieldWidth = field.scrollWidth;
     const fieldHeight = field.scrollHeight;
     if (fieldWidth === 0 || fieldHeight === 0) return;
 
-    // Масштабируем только по высоте (ширина секции подстроится)
+    // Доступное пространство внутри wrapper
+    const wrapperWidth = wrapper.clientWidth;
     const wrapperHeight = wrapper.clientHeight;
-    const scale = Math.min(wrapperHeight / fieldHeight, 1);
+
+    // Масштабируем по обоим измерениям, выбирая минимальный масштаб
+    const scale = Math.min(wrapperWidth / fieldWidth, wrapperHeight / fieldHeight);
 
     field.style.transform = `scale(${scale})`;
     field.style.transformOrigin = 'top left';
 
-    // Обтягиваем секцию по фактической ширине масштабированного поля
-    if (section) {
-        const padding = parseFloat(getComputedStyle(section).paddingLeft) +
-                         parseFloat(getComputedStyle(section).paddingRight);
-        const scaledWidth = fieldWidth * scale + padding;
-        section.style.width = `${scaledWidth}px`;
-    }
+    // Устанавливаем wrapper размеры для центрирования
+    wrapper.style.width = `${fieldWidth * scale}px`;
+    wrapper.style.height = `${fieldHeight * scale}px`;
 }
 
 /**
