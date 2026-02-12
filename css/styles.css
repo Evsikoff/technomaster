@@ -763,6 +763,11 @@ h2 {
     flex: 1;
 }
 
+.hand-setup-frame .deck-section .draggable-card:hover {
+    transform: none;
+    box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.6);
+}
+
 .hand-setup-frame .actions-section {
     padding-top: 0;
     gap: clamp(4px, 0.8vw, 8px);

@@ -258,7 +258,7 @@ function handleDragLeave(e) {
  * @param {number} cardId
  */
 async function moveCardToHand(cardId) {
-    // Check if card is already in hand
+    // Проверяем, не находится ли карта уже в руке
     if (handSetupState.handCards.some(c => c.id === cardId)) return;
 
     if (handSetupState.handCards.length >= HAND_SIZE) {
@@ -558,13 +558,14 @@ function setupDragAndDrop() {
 }
 
 /**
- * Настраивает клик-механику для карт (быстрый перенос)
+ * Настраивает механику клика для карт (быстрый перенос)
  */
 function setupClickMechanics() {
     const deckContainer = document.getElementById('deckContainer');
     if (deckContainer) {
         deckContainer.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
+            // Если кликнули по карте и она не перетаскивается в данный момент
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
                 await moveCardToHand(cardId);
@@ -576,6 +577,7 @@ function setupClickMechanics() {
     if (handSlots) {
         handSlots.addEventListener('click', async (e) => {
             const cardEl = e.target.closest('.game-card');
+            // Если кликнули по карте и она не перетаскивается в данный момент
             if (cardEl && !cardEl.classList.contains('dragging')) {
                 const cardId = parseInt(cardEl.dataset.cardId, 10);
                 await moveCardToDeck(cardId);
