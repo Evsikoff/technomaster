@@ -808,6 +808,35 @@ async function processCardLevelUpAndSave(oldCardId, cardGenerator) {
     return result;
 }
 
+/**
+ * Проверяет наличие незавершённой партии и перенаправляет на неё.
+ * Вызывается на экранах, где игрок не должен находиться во время активной партии.
+ * @returns {Promise<boolean>} true если был выполнен редирект
+ */
+async function checkAndRedirectToActiveParty() {
+    if (!isInitialized) {
+        await whenReady();
+    }
+
+    const data = cachedUserData || await getUserData();
+    if (!data?.activeParty?.isGameActive) {
+        return false;
+    }
+
+    const snapshot = data.activeParty;
+
+    // Восстанавливаем sessionStorage payload для совместимости с party-screen
+    sessionStorage.setItem('technomaster.party.payload', JSON.stringify({
+        opponentId: snapshot.opponentId,
+        playerHand: snapshot.playerHand,
+        opponentHand: snapshot.opponentHand,
+        gameMode: snapshot.gameMode
+    }));
+
+    window.location.href = 'party.html?resume=1';
+    return true;
+}
+
 // Экспорт в глобальную область видимости
 window.userCards = {
     // Основные функции
@@ -835,7 +864,8 @@ window.userCards = {
     getCachedYsdk,
     getStorageType,
     createEmptyUserDataStructure,
-    createInitialUserDataStructure
+    createInitialUserDataStructure,
+    checkAndRedirectToActiveParty
 };
 
 // Автоматическая инициализация при загрузке скрипта

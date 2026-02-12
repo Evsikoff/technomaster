@@ -225,6 +225,12 @@ async function initStartScreen() {
             await window.userCards.whenReady();
         }
 
+        // Проверяем наличие незавершённой партии — если есть, перенаправляем
+        if (window.userCards?.checkAndRedirectToActiveParty) {
+            const redirected = await window.userCards.checkAndRedirectToActiveParty();
+            if (redirected) return;
+        }
+
         let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),
             window.userCards?.getMaxOpponentCoolness?.() ?? Promise.resolve({ standard: 0, hard: 0, hardcore: 0 })
