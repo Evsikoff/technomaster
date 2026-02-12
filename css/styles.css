@@ -1050,7 +1050,7 @@ h2 {
     display: flex;
     flex-direction: column;
     padding: clamp(4px, 0.8vw, 10px);
-    gap: clamp(2px, 0.3vw, 4px);
+    gap: 0;
     position: relative;
 }
 
@@ -1280,7 +1280,7 @@ h2 {
     grid-template-columns: repeat(2, 170px);
     gap: 4px;
     overflow: hidden;
-    padding: 4px;
+    padding: 2px;
     align-content: start;
     justify-content: center;
 }
