@@ -94,10 +94,37 @@ async function loadOpponentsFromDb() {
 async function initStartScreen() {
     const deckBanner = document.getElementById('deckBanner');
     const opponentsGrid = document.getElementById('opponentsGrid');
+    const guideButton = document.getElementById('guideButton');
+    const guideModal = document.getElementById('guideModal');
+    const guideModalClose = document.getElementById('guideModalClose');
 
-    if (!deckBanner || !opponentsGrid) {
+    if (!deckBanner || !opponentsGrid || !guideButton || !guideModal || !guideModalClose) {
         return;
     }
+
+    const openGuideModal = () => {
+        guideModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeGuideModal = () => {
+        guideModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    guideButton.addEventListener('click', openGuideModal);
+    guideModalClose.addEventListener('click', closeGuideModal);
+    guideModal.addEventListener('click', event => {
+        if (event.target === guideModal) {
+            closeGuideModal();
+        }
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !guideModal.classList.contains('hidden')) {
+            closeGuideModal();
+        }
+    });
 
     try {
         console.log('StartScreen: Start initializing...');

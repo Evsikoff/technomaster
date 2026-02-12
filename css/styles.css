@@ -43,6 +43,26 @@ body {
     text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
+.guide-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: clamp(12px, 1.4vw, 15px);
+    font-weight: 700;
+    color: #ffe89a;
+    background: rgba(10, 16, 31, 0.7);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.guide-button:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: translateY(-1px);
+}
+
 .start-main {
     flex: 1;
     min-height: 0;
@@ -200,6 +220,110 @@ body {
 .opponents-error {
     text-align: center;
     color: #ff9b9b;
+}
+
+.guide-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(3, 7, 18, 0.82);
+    padding: 16px;
+}
+
+.guide-modal.hidden {
+    display: none;
+}
+
+.guide-modal__content {
+    width: min(1000px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.9) rgba(20, 30, 50, 0.7);
+    padding: clamp(18px, 2.2vw, 30px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    background: linear-gradient(180deg, #16213e 0%, #0f172a 100%);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    position: relative;
+    line-height: 1.5;
+}
+
+.guide-modal__content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.guide-modal__content::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.7);
+    border-radius: 999px;
+}
+
+.guide-modal__content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.95), rgba(255, 78, 80, 0.8));
+    border-radius: 999px;
+    border: 2px solid rgba(20, 30, 50, 0.7);
+}
+
+.guide-modal__content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ffd700, rgba(255, 78, 80, 0.95));
+}
+
+.guide-modal__close {
+    position: sticky;
+    top: 0;
+    float: right;
+    border: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.guide-modal__title {
+    color: #ffd700;
+    margin-bottom: 14px;
+    text-align: left;
+    font-size: clamp(22px, 2.2vw, 30px);
+}
+
+.guide-modal__content h3,
+.guide-modal__content h4 {
+    color: #87ceeb;
+    margin-top: 14px;
+    margin-bottom: 10px;
+}
+
+.guide-modal__content p,
+.guide-modal__content li {
+    color: #e6ecf5;
+}
+
+.guide-modal__content ul,
+.guide-modal__content ol {
+    margin-left: 22px;
+    margin-bottom: 10px;
+}
+
+.guide-modal__content hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin: 18px 0;
+}
+
+.guide-modal__image {
+    display: block;
+    width: min(620px, 100%);
+    margin: 10px auto 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .container {
