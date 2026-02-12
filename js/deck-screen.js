@@ -512,6 +512,11 @@ async function initDeckScreen() {
             await window.userCards.whenReady();
         }
 
+        // Проверяем наличие незавершённой партии — если есть, перенаправляем
+        if (window.userCards?.checkAndRedirectToActiveParty) {
+            if (await window.userCards.checkAndRedirectToActiveParty()) return;
+        }
+
         // Инициализируем рендерер карт и БД параллельно
         const [db] = await Promise.all([
             initDeckDatabase(),

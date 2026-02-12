@@ -357,6 +357,11 @@ async function initCollectorScreen() {
             await window.userCards.whenReady();
         }
 
+        // Проверяем наличие незавершённой партии — если есть, перенаправляем
+        if (window.userCards?.checkAndRedirectToActiveParty) {
+            if (await window.userCards.checkAndRedirectToActiveParty()) return;
+        }
+
         const db = await initCollectorDatabase();
         collectorState.db = db;
 

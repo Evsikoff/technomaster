@@ -372,16 +372,26 @@ function scalePlayerHandToFit() {
 /**
  * Инициализация и отрисовка игрового поля
  */
-function initGameField() {
+function initGameField(options = {}) {
     const container = document.getElementById('gameFieldContainer');
 
     // Генерируем поле с ячейками 170×238 (соответствует scale 0.85 карты 200×280)
-    const fieldData = gameFieldRenderer.renderField({
-        unavailableCount: null, // случайное количество 0-6
+    const fieldRenderOptions = {
         cellWidth: 170,
         cellHeight: 238,
         cellGap: 6
-    });
+    };
+
+    // Если переданы фиксированные unavailableCells (при восстановлении партии),
+    // используем их; иначе — случайная генерация
+    if (options.unavailableCells) {
+        fieldRenderOptions.unavailableCount = options.unavailableCells.length;
+        fieldRenderOptions.unavailableCells = options.unavailableCells;
+    } else {
+        fieldRenderOptions.unavailableCount = null; // случайное количество 0-6
+    }
+
+    const fieldData = gameFieldRenderer.renderField(fieldRenderOptions);
 
     // Сохраняем данные поля
     partyScreenState.gameField = fieldData.element;
@@ -1167,9 +1177,7 @@ async function handleGameEnd(event) {
 
     showMessage(resultText);
 
-    if (winner !== 'player') {
-        clearPartyPayload();
-    }
+    clearPartyPayload();
 }
 
 /**
@@ -1266,6 +1274,124 @@ function getPartyScreenState() {
 }
 
 /**
+ * Восстановление партии из сохранённого снимка в персистентном хранилище.
+ */
+async function resumePartyFromSnapshot() {
+    console.log('PartyScreen: Восстановление партии из снимка...');
+
+    setScreenMode(PartyScreenMode.LOADING);
+    showMessage('Восстановление партии...');
+
+    // Настраиваем кнопку возврата
+    const returnButton = document.getElementById('partyReturnButton');
+    if (returnButton) {
+        returnButton.addEventListener('click', async () => {
+            clearPartyPayload();
+            if (window.partyGameOrchestrator?.clearActivePartySnapshot) {
+                await window.partyGameOrchestrator.clearActivePartySnapshot();
+            }
+            window.location.href = 'index.html';
+        });
+    }
+
+    // Настраиваем руководство (аналогично initPartyScreen)
+    const guideButton = document.getElementById('partyGuideButton');
+    const guideModal = document.getElementById('guideModal');
+    const guideModalClose = document.getElementById('guideModalClose');
+
+    if (guideButton && guideModal && guideModalClose) {
+        const openGuideModal = () => {
+            guideModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeGuideModal = () => {
+            guideModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        guideButton.addEventListener('click', openGuideModal);
+        guideModalClose.addEventListener('click', closeGuideModal);
+        guideModal.addEventListener('click', event => {
+            if (event.target === guideModal) {
+                closeGuideModal();
+            }
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !guideModal.classList.contains('hidden')) {
+                closeGuideModal();
+            }
+        });
+    }
+
+    try {
+        // Ждём готовности хранилища
+        if (window.userCards?.whenReady) {
+            await window.userCards.whenReady();
+        }
+
+        // Загружаем снимок из персистентного хранилища
+        const userData = await window.userCards.getUserData();
+        const snapshot = userData?.activeParty;
+
+        if (!snapshot || !snapshot.isGameActive) {
+            showMessage('Ошибка: активная партия не найдена');
+            console.error('PartyScreen: Снимок активной партии не найден');
+            setScreenMode(PartyScreenMode.GAME_END);
+            return;
+        }
+
+        console.log('PartyScreen: Снимок партии загружен:', snapshot);
+
+        // Заполняем состояние экрана из снимка
+        partyScreenState.opponentId = snapshot.opponentId;
+        partyScreenState.playerHand = snapshot.playerHand || [];
+        partyScreenState.opponentHand = snapshot.opponentHand || [];
+
+        // Инициализируем рендерер карт
+        await window.cardRenderer.init();
+
+        // Загружаем данные оппонента
+        partyScreenState.opponentData = await getOpponentDataFromDb(snapshot.opponentId);
+        updateOpponentDisplay();
+
+        // Инициализируем игровое поле С СОХРАНЁННЫМИ заблокированными ячейками
+        const fieldData = initGameField({ unavailableCells: snapshot.unavailableCells });
+
+        // Восстанавливаем карты на поле
+        const fieldCardsObj = snapshot.fieldCards || {};
+        for (const [cellIndexStr, cardData] of Object.entries(fieldCardsObj)) {
+            const cellIndex = parseInt(cellIndexStr, 10);
+            placeCardOnField(cellIndex, cardData, cardData.owner);
+        }
+
+        // Отрисовываем руки и счёт
+        renderOpponentHand();
+        renderPlayerHand();
+        updateScore();
+
+        partyScreenState.isReady = true;
+
+        console.log('PartyScreen: Восстановление завершено');
+
+        // Запускаем оркестратор в режиме возобновления
+        if (window.partyGameOrchestrator?.resume) {
+            partyScreenState.orchestratorActive = true;
+            await window.partyGameOrchestrator.resume(snapshot);
+        } else {
+            console.warn('PartyScreen: Оркестратор недоступен для возобновления');
+            showMessage('Ошибка: не удалось возобновить партию');
+            setScreenMode(PartyScreenMode.GAME_END);
+        }
+
+    } catch (error) {
+        console.error('PartyScreen: Ошибка восстановления партии:', error);
+        showMessage(`Ошибка восстановления: ${error.message}`);
+    }
+}
+
+/**
  * Главная функция инициализации экрана партии
  */
 async function initPartyScreen() {
@@ -1276,8 +1402,11 @@ async function initPartyScreen() {
 
     const returnButton = document.getElementById('partyReturnButton');
     if (returnButton) {
-        returnButton.addEventListener('click', () => {
+        returnButton.addEventListener('click', async () => {
             clearPartyPayload();
+            if (window.partyGameOrchestrator?.clearActivePartySnapshot) {
+                await window.partyGameOrchestrator.clearActivePartySnapshot();
+            }
             window.location.href = 'index.html';
         });
     }
@@ -1313,6 +1442,13 @@ async function initPartyScreen() {
     }
 
     try {
+        // Проверяем, нужно ли возобновить партию из снимка
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('resume') === '1') {
+            await resumePartyFromSnapshot();
+            return;
+        }
+
         // Получаем данные партии
         const payload = getPartyPayload();
 

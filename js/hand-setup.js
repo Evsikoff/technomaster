@@ -652,6 +652,11 @@ async function initHandSetupScreen() {
             await window.userCards.whenReady();
         }
 
+        // Проверяем наличие незавершённой партии — если есть, перенаправляем
+        if (window.userCards?.checkAndRedirectToActiveParty) {
+            if (await window.userCards.checkAndRedirectToActiveParty()) return;
+        }
+
         await window.cardRenderer.init();
 
         const [opponentData, deckRuleData, playerCards] = await Promise.all([

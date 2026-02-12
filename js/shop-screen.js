@@ -609,6 +609,11 @@ async function initShopScreen() {
             await window.userCards.whenReady();
         }
 
+        // Проверяем наличие незавершённой партии — если есть, перенаправляем
+        if (window.userCards && window.userCards.checkAndRedirectToActiveParty) {
+            if (await window.userCards.checkAndRedirectToActiveParty()) return;
+        }
+
         // Инициализируем рендерер карт и БД параллельно
         var results = await Promise.all([
             initShopDatabase(),

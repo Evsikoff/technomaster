@@ -256,6 +256,9 @@ const partyGameOrchestrator = (() => {
         // Логируем в историю
         logGameEvent('game_start', { firstTurn: state.currentTurn });
 
+        // Сохраняем снимок активной партии в персистентное хранилище
+        await saveActivePartySnapshot();
+
         // Задержка перед первым ходом
         await delay(1500);
 
@@ -939,6 +942,9 @@ const partyGameOrchestrator = (() => {
     async function checkGameEnd() {
         syncFieldState();
 
+        // Сохраняем снимок после каждого хода
+        await saveActivePartySnapshot();
+
         // Подсчитываем карты на поле
         let cardsOnField = 0;
         let playerCards = 0;
@@ -1396,10 +1402,13 @@ const partyGameOrchestrator = (() => {
                 }
             }
 
-            // 6. Сохраняем данные
+            // 6. Очищаем снимок активной партии (в том же объекте, чтобы избежать двойного сохранения)
+            userData.activeParty = null;
+
+            // 7. Сохраняем данные
             await window.userCards.saveUserData(userData);
 
-            console.log('PartyGameOrchestrator: Прогресс игры сохранён');
+            console.log('PartyGameOrchestrator: Прогресс игры сохранён, снимок партии очищен');
 
         } catch (error) {
             console.error('PartyGameOrchestrator: Ошибка сохранения прогресса:', error);
@@ -1470,6 +1479,123 @@ const partyGameOrchestrator = (() => {
         }
     }
 
+    // === Сохранение/восстановление активной партии ===
+
+    /**
+     * Сохраняет снимок активной партии в персистентное хранилище.
+     * Вызывается при старте игры и после каждого хода.
+     */
+    async function saveActivePartySnapshot() {
+        try {
+            if (!window.userCards?.getUserData || !window.userCards?.saveUserData) {
+                console.warn('PartyGameOrchestrator: userCards API недоступен для сохранения снимка');
+                return;
+            }
+
+            // Синхронизируем состояние поля с экраном
+            syncFieldState();
+
+            // Собираем fieldCards из экрана (Map → Object)
+            let fieldCardsObj = {};
+            if (state.screenApi?.getState) {
+                const screenState = state.screenApi.getState();
+                fieldCardsObj = screenState.fieldCards || {};
+            }
+
+            const snapshot = {
+                version: 1,
+                startedAt: new Date().toISOString(),
+                opponentId: state.opponentId,
+                gameMode: state.gameMode,
+                playerHand: state.playerHand,
+                opponentHand: state.opponentHand,
+                unavailableCells: state.unavailableCells,
+                fieldCards: fieldCardsObj,
+                currentTurn: state.currentTurn,
+                turnNumber: state.turnNumber,
+                isGameActive: state.isGameActive
+            };
+
+            const userData = await window.userCards.getUserData();
+            if (userData) {
+                userData.activeParty = snapshot;
+                await window.userCards.saveUserData(userData);
+                console.log('PartyGameOrchestrator: Снимок активной партии сохранён');
+            }
+        } catch (error) {
+            console.error('PartyGameOrchestrator: Ошибка сохранения снимка партии:', error);
+        }
+    }
+
+    /**
+     * Очищает снимок активной партии из персистентного хранилища.
+     */
+    async function clearActivePartySnapshot() {
+        try {
+            if (!window.userCards?.getUserData || !window.userCards?.saveUserData) {
+                return;
+            }
+
+            const userData = await window.userCards.getUserData();
+            if (userData) {
+                userData.activeParty = null;
+                await window.userCards.saveUserData(userData);
+                console.log('PartyGameOrchestrator: Снимок активной партии очищен');
+            }
+        } catch (error) {
+            console.error('PartyGameOrchestrator: Ошибка очистки снимка партии:', error);
+        }
+    }
+
+    /**
+     * Возобновление игры из сохранённого снимка.
+     * Восстанавливает состояние оркестратора без инициализации нового поля и монетки.
+     */
+    async function resume(snapshot) {
+        console.log('PartyGameOrchestrator: Возобновление игры из снимка');
+
+        // Сохраняем ссылку на API экрана
+        state.screenApi = window.partyScreen;
+
+        // Восстанавливаем состояние из снимка
+        state.opponentId = snapshot.opponentId;
+        state.gameMode = snapshot.gameMode;
+        state.playerHand = snapshot.playerHand;
+        state.opponentHand = snapshot.opponentHand;
+        state.unavailableCells = snapshot.unavailableCells;
+        state.currentTurn = snapshot.currentTurn;
+        state.turnNumber = snapshot.turnNumber;
+        state.isGameActive = true;
+        state.isProcessingMove = false;
+        state.gameHistory = [];
+        state.currentMoveBattles = [];
+        state.pendingCaptures = [];
+
+        // Получаем данные оппонента
+        if (state.opponentId && window.partyScreen) {
+            state.opponentData = await getOpponentData(state.opponentId);
+        }
+
+        // Синхронизируем состояние поля с экраном (карты уже размещены)
+        syncFieldState();
+
+        // Логируем событие возобновления
+        logGameEvent('game_resume', {
+            currentTurn: state.currentTurn,
+            turnNumber: state.turnNumber
+        });
+
+        addSystemMessage('Партия восстановлена!');
+        await delay(1000);
+
+        // Продолжаем с нужного хода
+        if (state.currentTurn === 'player') {
+            await startPlayerTurn();
+        } else {
+            await startRivalTurn();
+        }
+    }
+
     /**
      * Получение текущего состояния оркестратора
      */
@@ -1488,10 +1614,12 @@ const partyGameOrchestrator = (() => {
     // === Публичный API ===
     return {
         start,
+        resume,
         onPlayerMove,
         onFieldStateUpdate,
         getState,
-        addSystemMessage
+        addSystemMessage,
+        clearActivePartySnapshot
     };
 })();
 
