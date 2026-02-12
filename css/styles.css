@@ -1244,10 +1244,10 @@ h2 {
     margin-top: -140px;
 }
 
-/* Секция карт игрока (правая) — фиксированная ширина на 2 карты */
+/* Секция карт игрока (правая) — фиксированная ширина на 2 карты 170px */
 .party-player-section {
     flex: 0 0 auto;
-    width: clamp(140px, 16vw, 230px);
+    width: 360px; /* 2×170 карта + 4 gap + 8 padding контейнера + 12 padding секции + запас */
     background: rgba(30, 60, 40, 0.6);
     border-radius: 10px;
     padding: 6px;
@@ -1257,12 +1257,12 @@ h2 {
     gap: 4px;
 }
 
-/* Контейнер карт игрока - сетка 2 колонки */
+/* Контейнер карт игрока - сетка 2 колонки по 170px */
 .player-hand-container {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(2, 170px);
     gap: 4px;
     overflow: hidden;
     padding: 4px;
