@@ -49,6 +49,7 @@ const partyGameOrchestrator = (() => {
         isGameActive: false,
         isProcessingMove: false,
         isSavingProgress: false,
+        isPartyResultRecorded: false,
 
         // Результаты боев текущего хода
         currentMoveBattles: [],
@@ -253,6 +254,7 @@ const partyGameOrchestrator = (() => {
         }
 
         addSystemMessage(firstTurnMessage);
+        state.isPartyResultRecorded = false;
 
         // Логируем в историю
         logGameEvent('game_start', { firstTurn: state.currentTurn });
@@ -1172,6 +1174,7 @@ const partyGameOrchestrator = (() => {
      * Обработка победы игрока
      */
     async function handlePlayerVictory() {
+        await recordPartyResultIfNeeded('player');
         addSystemMessage('Выберите карту соперника для взятия!');
 
         // Получаем ID карт оппонента, которые он выставил на поле
@@ -1309,36 +1312,9 @@ const partyGameOrchestrator = (() => {
 
             // Используем новую функцию recordPartyResult для консистентности
             if (window.userCards?.recordPartyResult) {
-                const maxRetries = 2;
-                let partySaved = false;
-
-                for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-                    partySaved = await window.userCards.recordPartyResult(
-                        state.opponentId,
-                        winner === 'player',
-                        state.opponentData?.sequence || 1,
-                        state.gameMode
-                    );
-
-                    if (partySaved !== false) {
-                        break;
-                    }
-
-                    if (attempt < maxRetries) {
-                        const retryDelay = 300 + Math.floor(Math.random() * 401);
-                        console.warn(
-                            `PartyGameOrchestrator: recordPartyResult вернул false, повторная попытка ${attempt + 2}/${maxRetries + 1} через ${retryDelay}мс`
-                        );
-                        await delay(retryDelay);
-                    }
-                }
+                const partySaved = await recordPartyResultIfNeeded(winner);
 
                 if (partySaved === false) {
-                    console.error('PartyGameOrchestrator: Не удалось сохранить результат партии после повторных попыток', {
-                        opponentId: state.opponentId,
-                        gameMode: state.gameMode,
-                        winner
-                    });
                     addSystemMessage('Не удалось сохранить результат партии. Проверьте соединение и попробуйте ещё раз.');
                 }
             } else {
@@ -1444,6 +1420,51 @@ const partyGameOrchestrator = (() => {
                 });
             }
         }
+    }
+
+    async function recordPartyResultIfNeeded(winner) {
+        if (state.isPartyResultRecorded) {
+            return true;
+        }
+
+        if (!window.userCards?.recordPartyResult) {
+            return false;
+        }
+
+        const maxRetries = 2;
+        let partySaved = false;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+            partySaved = await window.userCards.recordPartyResult(
+                state.opponentId,
+                winner === 'player',
+                state.opponentData?.sequence || 1,
+                state.gameMode
+            );
+
+            if (partySaved !== false) {
+                state.isPartyResultRecorded = true;
+                break;
+            }
+
+            if (attempt < maxRetries) {
+                const retryDelay = 300 + Math.floor(Math.random() * 401);
+                console.warn(
+                    `PartyGameOrchestrator: recordPartyResult вернул false, повторная попытка ${attempt + 2}/${maxRetries + 1} через ${retryDelay}мс`
+                );
+                await delay(retryDelay);
+            }
+        }
+
+        if (partySaved === false) {
+            console.error('PartyGameOrchestrator: Не удалось сохранить результат партии после повторных попыток', {
+                opponentId: state.opponentId,
+                gameMode: state.gameMode,
+                winner
+            });
+        }
+
+        return partySaved;
     }
 
     /**
