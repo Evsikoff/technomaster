@@ -348,6 +348,10 @@ function setupCollectorEventHandlers() {
  * Инициализация экрана
  */
 async function initCollectorScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingError = document.getElementById('loadingError');
+    const loadingText = document.getElementById('loadingText');
+
     try {
         console.log('CollectorScreen: Начинаю инициализацию...');
 
@@ -368,8 +372,22 @@ async function initCollectorScreen() {
         setupCollectorEventHandlers();
 
         console.log('CollectorScreen: Инициализация завершена.');
+
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
     } catch (error) {
         console.error('CollectorScreen: Ошибка инициализации:', error);
+
+        if (loadingError) {
+            loadingError.textContent = 'Ошибка загрузки: ' + (error?.message || 'Неизвестная ошибка');
+            loadingError.classList.add('visible');
+        }
+        if (loadingText) loadingText.style.display = 'none';
+
+        const spinner = loadingScreen?.querySelector('.loading-spinner');
+        if (spinner) spinner.style.display = 'none';
+
         const body = document.getElementById('collectorBody');
         if (body) {
             body.innerHTML = '<p class="error">Не удалось загрузить данные коллекции.</p>';

@@ -641,11 +641,28 @@ function setupButtonHandlers() {
 async function initHandSetupScreen() {
     console.log('HandSetup: Инициализация экрана настройки руки...');
 
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingError = document.getElementById('loadingError');
+    const loadingText = document.getElementById('loadingText');
+
     handSetupState.opponentId = getOpponentIdFromUrl();
 
     if (!handSetupState.opponentId) {
         console.error('HandSetup: Не указан идентификатор оппонента');
-        document.getElementById('opponentName').textContent = 'Ошибка: не указан оппонент';
+        const errorMsg = 'Ошибка: не указан оппонент';
+        if (document.getElementById('opponentName')) {
+            document.getElementById('opponentName').textContent = errorMsg;
+        }
+
+        if (loadingError) {
+            loadingError.textContent = errorMsg;
+            loadingError.classList.add('visible');
+        }
+        if (loadingText) loadingText.style.display = 'none';
+
+        const spinner = loadingScreen?.querySelector('.loading-spinner');
+        if (spinner) spinner.style.display = 'none';
+
         return;
     }
 
@@ -696,8 +713,22 @@ async function initHandSetupScreen() {
 
         console.log('HandSetup: Инициализация завершена');
 
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+
     } catch (error) {
         console.error('HandSetup: Ошибка инициализации:', error);
+
+        if (loadingError) {
+            loadingError.textContent = 'Ошибка загрузки: ' + (error?.message || 'Неизвестная ошибка');
+            loadingError.classList.add('visible');
+        }
+        if (loadingText) loadingText.style.display = 'none';
+
+        const spinner = loadingScreen?.querySelector('.loading-spinner');
+        if (spinner) spinner.style.display = 'none';
+
         document.getElementById('opponentName').textContent = 'Ошибка загрузки';
         document.getElementById('deckContainer').innerHTML =
             `<div class="error">Ошибка загрузки: ${error.message}</div>`;

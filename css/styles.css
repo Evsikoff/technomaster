@@ -3262,3 +3262,64 @@ img {
         font-size: 11px;
     }
 }
+
+/* ========== GLOBAL LOADING SCREEN ========== */
+
+.global-loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.global-loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loading-spinner {
+    width: clamp(40px, 8vw, 60px);
+    height: clamp(40px, 8vw, 60px);
+    border: 5px solid rgba(255, 215, 0, 0.2);
+    border-top-color: #ffd700;
+    border-radius: 50%;
+    animation: globalSpin 1s linear infinite;
+}
+
+.loading-text {
+    font-size: clamp(16px, 3vw, 24px);
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    text-align: center;
+}
+
+.loading-error {
+    display: none;
+    color: #ff6b6b;
+    font-size: clamp(14px, 2.5vw, 18px);
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.4;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px 25px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.loading-error.visible {
+    display: block;
+}
+
+@keyframes globalSpin {
+    to { transform: rotate(360deg); }
+}
