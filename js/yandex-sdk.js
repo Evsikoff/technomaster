@@ -297,14 +297,42 @@ async function saveUserDataToYandexCloud(data) {
         return false;
     }
 
+    let payloadSizeBytes = -1;
+
+    try {
+        const serializedData = JSON.stringify(data);
+        payloadSizeBytes = new TextEncoder().encode(serializedData).length;
+    } catch (serializationError) {
+        console.error('Yandex Games: ошибка сериализации данных перед сохранением.', {
+            payloadType: typeof data,
+            payloadSizeBytes,
+            message: serializationError?.message,
+            stack: serializationError?.stack,
+            error: serializationError
+        });
+        return false;
+    }
+
     try {
         /** @type {Player} */
         const player = await ysdk.getPlayer();
         await player.setData({ userData: data });
-        console.log('Yandex Games: данные успешно сохранены в облако.');
+        console.log('Yandex Games: данные успешно сохранены в облако.', { payloadSizeBytes });
         return true;
     } catch (e) {
-        console.error('Yandex Games: ошибка сохранения данных в облако.', e);
+        const isSdkOrNetworkIssue = !navigator.onLine || /network|timeout|fetch|sdk|getPlayer|setData/i.test(String(e?.message || ''));
+        console.error(
+            isSdkOrNetworkIssue
+                ? 'Yandex Games: ошибка SDK/сети при сохранении данных в облако.'
+                : 'Yandex Games: ошибка данных/валидации при сохранении в облако.',
+            {
+                payloadSizeBytes,
+                online: navigator.onLine,
+                message: e?.message,
+                stack: e?.stack,
+                error: e
+            }
+        );
         return false;
     }
 }
