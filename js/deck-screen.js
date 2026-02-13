@@ -502,6 +502,10 @@ function renderDeckScreen(userData) {
  * Инициализация экрана колоды
  */
 async function initDeckScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingError = document.getElementById('loadingError');
+    const loadingText = document.getElementById('loadingText');
+
     try {
         console.log('DeckScreen: Начинаю инициализацию...');
 
@@ -533,8 +537,27 @@ async function initDeckScreen() {
         setupDeckEventHandlers();
 
         console.log('DeckScreen: Инициализация завершена.');
+
+        if (loadingScreen) {
+            // Ждем два кадра, чтобы браузер успел отрисовать изменения в DOM
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    loadingScreen.classList.add('hidden');
+                });
+            });
+        }
     } catch (error) {
         console.error('DeckScreen: Ошибка инициализации:', error);
+
+        if (loadingError) {
+            loadingError.textContent = 'Ошибка загрузки: ' + (error?.message || 'Неизвестная ошибка');
+            loadingError.classList.add('visible');
+        }
+        if (loadingText) loadingText.style.display = 'none';
+
+        const spinner = loadingScreen?.querySelector('.loading-spinner');
+        if (spinner) spinner.style.display = 'none';
+
         const grid = document.getElementById('deckCollectionGrid');
         if (grid) {
             grid.innerHTML = '<p class="error">Не удалось загрузить коллекцию карт.</p>';

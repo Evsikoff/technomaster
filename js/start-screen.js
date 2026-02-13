@@ -171,6 +171,10 @@ function updateTabStates() {
  * Инициализирует стартовый экран.
  */
 async function initStartScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingError = document.getElementById('loadingError');
+    const loadingText = document.getElementById('loadingText');
+
     // Блокируем взаимодействие до полной загрузки
     const blocker = document.createElement('div');
     blocker.id = 'initial-interaction-blocker';
@@ -311,12 +315,34 @@ async function initStartScreen() {
             }
         }
 
+        // Убираем загрузочный экран перед снятием блокировщика
+        if (loadingScreen) {
+            // Ждем два кадра, чтобы браузер успел отрисовать изменения в DOM
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    loadingScreen.classList.add('hidden');
+                });
+            });
+        }
+
         // Убираем блокировщик
         blocker.remove();
 
     } catch (error) {
         if (blocker) blocker.remove();
         console.error('Ошибка загрузки стартового экрана:', error);
+
+        if (loadingError) {
+            loadingError.textContent = 'Ошибка загрузки: ' + (error?.message || 'Неизвестная ошибка');
+            loadingError.classList.add('visible');
+        }
+        if (loadingText) {
+            loadingText.style.display = 'none';
+        }
+
+        const spinner = loadingScreen?.querySelector('.loading-spinner');
+        if (spinner) spinner.style.display = 'none';
+
         const grid = document.getElementById('opponentsGrid');
         if (grid) grid.innerHTML = '<p class="opponents-error">Не удалось загрузить список соперников.</p>';
     }
