@@ -609,6 +609,10 @@ function setupButtonHandlers() {
     const backBtn = document.getElementById('backToStartBtn');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
+            // Остановка GameplayAPI при возврате
+            if (window.userCards?.stopGameplay) {
+                window.userCards.stopGameplay();
+            }
             window.location.href = 'index.html';
         });
     }
