@@ -290,7 +290,7 @@ async function startParty(opponentId, gameMode = 'standard') {
         return;
     }
 
-    await window.userCards.saveUserData(userData);
+    // Сохранение произойдет внутри finishParty после подготовки руки оппонента
     await finishParty(opponentId, gameMode);
 }
 
