@@ -30,7 +30,8 @@ const GameEventType = {
     FIELD_STATE: 'field_state',
     MESSAGE: 'message',
     OPPONENT_MOVE: 'opponent_move',
-    GAME_END: 'game_end'
+    GAME_END: 'game_end',
+    PROGRESS_SAVED: 'progress_saved'
 };
 
 /**
@@ -74,7 +75,10 @@ const partyScreenState = {
     isReady: false,
 
     // Оркестратор управляет игрой
-    orchestratorActive: false
+    orchestratorActive: false,
+
+    // Сохранение прогресса
+    progressSaved: false
 };
 
 /**
@@ -914,6 +918,10 @@ async function handleGameEvent(event) {
             await handleGameEnd(event);
             break;
 
+        case GameEventType.PROGRESS_SAVED:
+            partyScreenState.progressSaved = true;
+            break;
+
         default:
             console.warn('PartyScreen: Неизвестный тип события:', event.type);
     }
@@ -1154,6 +1162,7 @@ async function handleOpponentMove(event) {
  */
 async function handleGameEnd(event) {
     const { winner, playerScore, opponentScore } = event;
+    partyScreenState.progressSaved = false;
 
     setScreenMode(PartyScreenMode.GAME_END);
 
@@ -1275,6 +1284,11 @@ async function initPartyScreen() {
     const returnButton = document.getElementById('partyReturnButton');
     if (returnButton) {
         returnButton.addEventListener('click', () => {
+            if (window.partyGameOrchestrator?.isSavingProgress?.()) {
+                showMessage('Сохранение...');
+                return;
+            }
+
             // Остановка GameplayAPI при нажатии "Вернуться"
             if (window.userCards?.stopGameplay) {
                 window.userCards.stopGameplay();
