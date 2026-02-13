@@ -7,6 +7,25 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/vendor/sql-wasm.js"></script>
     <script src="js/sql-init.js"></script>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+        // Определяем переменную окружения для контроллера хранилища
+        (function() {
+            try {
+                var isInYandexIframe = (window !== window.top) &&
+                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
+                    window.location.hostname.endsWith('yandex.net');
+
+                if (!isInYandexIframe && !isYandexHost) {
+                    window.userDataStorage = 'localStorage';
+                    console.log('ENV: userDataStorage = "localStorage" (не Яндекс Игры)');
+                }
+            } catch (e) {
+                console.log('ENV: Возможно в iframe Яндекс Игр');
+            }
+        })();
+    </script>
 </head>
 <body class="party-screen">
     <div class="party-frame">
