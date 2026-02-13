@@ -1309,12 +1309,38 @@ const partyGameOrchestrator = (() => {
 
             // Используем новую функцию recordPartyResult для консистентности
             if (window.userCards?.recordPartyResult) {
-                await window.userCards.recordPartyResult(
-                    state.opponentId,
-                    winner === 'player',
-                    state.opponentData?.sequence || 1,
-                    state.gameMode
-                );
+                const maxRetries = 2;
+                let partySaved = false;
+
+                for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+                    partySaved = await window.userCards.recordPartyResult(
+                        state.opponentId,
+                        winner === 'player',
+                        state.opponentData?.sequence || 1,
+                        state.gameMode
+                    );
+
+                    if (partySaved !== false) {
+                        break;
+                    }
+
+                    if (attempt < maxRetries) {
+                        const retryDelay = 300 + Math.floor(Math.random() * 401);
+                        console.warn(
+                            `PartyGameOrchestrator: recordPartyResult вернул false, повторная попытка ${attempt + 2}/${maxRetries + 1} через ${retryDelay}мс`
+                        );
+                        await delay(retryDelay);
+                    }
+                }
+
+                if (partySaved === false) {
+                    console.error('PartyGameOrchestrator: Не удалось сохранить результат партии после повторных попыток', {
+                        opponentId: state.opponentId,
+                        gameMode: state.gameMode,
+                        winner
+                    });
+                    addSystemMessage('Не удалось сохранить результат партии. Проверьте соединение и попробуйте ещё раз.');
+                }
             } else {
                 // Фоллбэк если функция не найдена (не должно случаться)
                 userData.parties.push({
