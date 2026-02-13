@@ -539,7 +539,12 @@ async function initDeckScreen() {
         console.log('DeckScreen: Инициализация завершена.');
 
         if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
+            // Ждем два кадра, чтобы браузер успел отрисовать изменения в DOM
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    loadingScreen.classList.add('hidden');
+                });
+            });
         }
     } catch (error) {
         console.error('DeckScreen: Ошибка инициализации:', error);

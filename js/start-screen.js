@@ -317,7 +317,12 @@ async function initStartScreen() {
 
         // Убираем загрузочный экран перед снятием блокировщика
         if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
+            // Ждем два кадра, чтобы браузер успел отрисовать изменения в DOM
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    loadingScreen.classList.add('hidden');
+                });
+            });
         }
 
         // Убираем блокировщик
