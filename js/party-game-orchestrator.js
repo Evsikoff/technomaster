@@ -1303,25 +1303,20 @@ const partyGameOrchestrator = (() => {
                 userData.parties = [];
             }
 
-            // Используем новую функцию recordPartyResult для консистентности
-            if (window.userCards?.recordPartyResult) {
-                await window.userCards.recordPartyResult(
-                    state.opponentId,
-                    winner === 'player',
-                    state.opponentData?.sequence || 1,
-                    state.gameMode
-                );
-            } else {
-                // Фоллбэк если функция не найдена (не должно случаться)
-                userData.parties.push({
-                    id: Date.now(),
-                    opponent_id: state.opponentId,
-                    win: winner === 'player',
-                    opponent_power: state.opponentData?.sequence || 1,
-                    gameMode: state.gameMode,
-                    date: new Date().toISOString()
-                });
-            }
+            // Добавляем запись о партии напрямую в объект userData
+            // Мы не вызываем recordPartyResult, чтобы избежать двойного сохранения в облако,
+            // так как в конце этой функции всё равно вызывается saveUserData(userData).
+            const maxPartyId = userData.parties.reduce((max, party) => Math.max(max, party.id || 0), 0);
+            const newParty = {
+                id: maxPartyId + 1,
+                opponent_id: state.opponentId,
+                win: winner === 'player',
+                opponent_power: state.opponentData?.sequence || 1,
+                gameMode: state.gameMode,
+                date: new Date().toISOString()
+            };
+            userData.parties.push(newParty);
+            console.log(`PartyGameOrchestrator: Добавлена запись о партии #${newParty.id}`);
 
             // 2. Применяем прокачку карт
             const leveledUpCards = state.playerHand.filter(c => c.used && c.leveledUp);

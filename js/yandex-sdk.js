@@ -86,7 +86,10 @@ async function checkYandexGamesEnvironment() {
         return isYandexGamesEnvironment;
     }
 
-    // Проверяем глобальную переменную окружения userDataStorage
+    // ВАЖНО: Если мы находимся в iframe, это ВЫСОКАЯ вероятность Яндекс Игр.
+    const isInIframe = typeof window !== 'undefined' && window !== window.top;
+
+    // Проверяем глобальную переменную окружения userDataStorage (для отладки)
     if (typeof window !== 'undefined' && window.userDataStorage === 'localStorage') {
         console.log('Yandex Games: Найдена переменная окружения userDataStorage = "localStorage".');
         console.log('Yandex Games: Принудительно используется localStorage.');
@@ -120,9 +123,18 @@ async function checkYandexGamesEnvironment() {
         return true;
 
     } catch (error) {
-        // Ошибка инициализации - не на Яндекс Играх
+        // Ошибка инициализации
         const errorMessage = error?.message || String(error);
         console.log(`Yandex Games: Ошибка инициализации SDK: "${errorMessage}"`);
+
+        // Если мы в iframe, но SDK упал - всё равно пробуем считать это Яндекс Играми
+        // (но SDK не будет доступен)
+        if (isInIframe) {
+            console.log('Yandex Games: Ошибка SDK, но мы в iframe. Пробую режим облака (возможны ошибки доступа).');
+            isYandexGamesEnvironment = true;
+            return true;
+        }
+
         console.log('Yandex Games: Игра запущена НЕ на Яндекс Играх.');
         isYandexGamesEnvironment = false;
         cachedYsdk = null;
@@ -191,15 +203,18 @@ function isValidUserDataStructure(data) {
         return false;
     }
 
-    // Проверяем наличие основных массивов
+    // Проверяем наличие обязательных массивов
     if (!Array.isArray(data.cardholders)) {
         return false;
     }
     if (!Array.isArray(data.cards)) {
         return false;
     }
+
+    // Авто-исправление: если parties отсутствует, создаем его (не считаем структуру невалидной)
     if (!Array.isArray(data.parties)) {
-        return false;
+        console.log('isValidUserDataStructure: поле parties отсутствует, инициализирую пустым массивом');
+        data.parties = [];
     }
 
     return true;
@@ -310,22 +325,6 @@ async function saveUserDataToYandexCloud(data) {
 }
 
 /**
- * Внутренняя функция получения данных из хранилища без ожидания инициализации контроллера.
- * @returns {Promise<object|null>}
- */
-async function fetchUserDataInternal() {
-    let data = null;
-
-    if (userDataStorage === 'yandexCloud') {
-        data = await getUserDataFromYandexCloud();
-    } else {
-        data = getUserDataFromLocalStorage();
-    }
-
-    return data;
-}
-
-/**
  * Получает данные пользователя из соответствующего хранилища.
  * Гарантирует завершение инициализации контроллера.
  * @returns {Promise<object|null>}
@@ -376,16 +375,33 @@ async function initUserDataStorageController() {
 
     console.log(`Тип хранилища: ${userDataStorage}`);
 
-    // Шаг 2: Проверяем наличие структуры данных
-    let userData = await fetchUserDataInternal();
+    // Шаг 2: Получаем данные с учетом миграции
+    let userData = null;
 
+    if (userDataStorage === 'yandexCloud') {
+        userData = await getUserDataFromYandexCloud();
+
+        // Миграция: если в облаке пусто, пробуем взять из localStorage
+        if (!userData || !isValidUserDataStructure(userData)) {
+            console.log('Yandex Cloud: данные отсутствуют. Проверяю локальное хранилище для миграции...');
+            const localData = getUserDataFromLocalStorage();
+            if (localData && isValidUserDataStructure(localData)) {
+                console.log('Yandex Cloud: найдены локальные данные. Мигрирую в облако...');
+                userData = localData;
+                // Сразу сохраним в облако
+                await saveUserDataToYandexCloud(userData);
+            }
+        }
+    } else {
+        userData = getUserDataFromLocalStorage();
+    }
+
+    // Шаг 3: Если данных все еще нет - создаем новую структуру
     if (!userData || !isValidUserDataStructure(userData)) {
-        // Структура отсутствует - создаём новую
-        console.log('Структура данных не найдена в хранилище. Создаю новую структуру...');
-
+        console.log('Структура данных не найдена. Создаю новую структуру...');
         userData = createInitialUserDataStructure();
 
-        // Сохраняем созданную структуру
+        // Сохраняем созданную структуру во все доступные места
         const saved = await saveUserData(userData);
         if (saved) {
             console.log('Структура данных успешно создана и сохранена.');
