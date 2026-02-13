@@ -58,12 +58,18 @@ function hasYandexGamesIndicators() {
             return true;
         }
 
-        // Проверяем, запущены ли мы в iframe с Яндекс-реферером
+        // Проверяем, запущены ли мы в iframe.
+        // В Яндекс Играх приложение всегда работает в iframe.
         const isInIframe = window !== window.top;
+        if (isInIframe) {
+            return true;
+        }
+
+        // Проверяем реферер (для первого входа)
         const referrer = typeof document !== 'undefined' ? document.referrer : '';
         const hasYandexReferrer = referrer.includes('yandex.ru') || referrer.includes('yandex.net');
 
-        return isInIframe && hasYandexReferrer;
+        return hasYandexReferrer;
     } catch (e) {
         return false;
     }
@@ -304,14 +310,10 @@ async function saveUserDataToYandexCloud(data) {
 }
 
 /**
- * Получает данные пользователя из соответствующего хранилища.
+ * Внутренняя функция получения данных из хранилища без ожидания инициализации контроллера.
  * @returns {Promise<object|null>}
  */
-async function getUserData() {
-    if (cachedUserData) {
-        return cachedUserData;
-    }
-
+async function fetchUserDataInternal() {
     let data = null;
 
     if (userDataStorage === 'yandexCloud') {
@@ -320,11 +322,19 @@ async function getUserData() {
         data = getUserDataFromLocalStorage();
     }
 
-    if (data) {
-        cachedUserData = data;
-    }
-
     return data;
+}
+
+/**
+ * Получает данные пользователя из соответствующего хранилища.
+ * Гарантирует завершение инициализации контроллера.
+ * @returns {Promise<object|null>}
+ */
+async function getUserData() {
+    if (isInitialized && cachedUserData) {
+        return cachedUserData;
+    }
+    return await whenReady();
 }
 
 /**
@@ -367,7 +377,7 @@ async function initUserDataStorageController() {
     console.log(`Тип хранилища: ${userDataStorage}`);
 
     // Шаг 2: Проверяем наличие структуры данных
-    let userData = await getUserData();
+    let userData = await fetchUserDataInternal();
 
     if (!userData || !isValidUserDataStructure(userData)) {
         // Структура отсутствует - создаём новую

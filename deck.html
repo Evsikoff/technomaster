@@ -9,17 +9,24 @@
     <script src="js/sql-init.js"></script>
     <script src="https://yandex.ru/games/sdk/v2"></script>
     <script>
+        // Определяем переменную окружения для контроллера хранилища
         (function() {
             try {
-                var isInYandexIframe = (window !== window.top) &&
-                    (document.referrer.includes('yandex.ru') || document.referrer.includes('yandex.net'));
+                // В iframe мы всегда предполагаем возможность наличия Яндекс SDK.
+                // Реферер проверяем только как дополнительный признак, но не как обязательный,
+                // так как при навигации внутри iframe реферер меняется на наш собственный домен.
+                var isInIframe = (window !== window.top);
                 var isYandexHost = window.location.hostname.endsWith('yandex.ru') ||
                     window.location.hostname.endsWith('yandex.net');
 
-                if (!isInYandexIframe && !isYandexHost) {
+                if (!isInIframe && !isYandexHost) {
                     window.userDataStorage = 'localStorage';
+                    console.log('ENV: userDataStorage = "localStorage" (не Яндекс Игры)');
                 }
-            } catch (e) {}
+            } catch (e) {
+                // При ошибке доступа к window.top (cross-origin) - мы точно в iframe
+                console.log('ENV: Возможно в iframe Яндекс Игр');
+            }
         })();
     </script>
 </head>
