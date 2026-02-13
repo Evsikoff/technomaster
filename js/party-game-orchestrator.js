@@ -48,6 +48,7 @@ const partyGameOrchestrator = (() => {
         // Статус игры
         isGameActive: false,
         isProcessingMove: false,
+        isSavingProgress: false,
 
         // Результаты боев текущего хода
         currentMoveBattles: [],
@@ -1285,6 +1286,7 @@ const partyGameOrchestrator = (() => {
      * Сохранение прогресса игры
      */
     async function saveGameProgress(winner, rewardCardId, lostCardId) {
+        let saveSucceeded = false;
         try {
             // Получаем текущие данные пользователя
             if (!window.userCards?.getUserData) {
@@ -1297,6 +1299,8 @@ const partyGameOrchestrator = (() => {
                 console.warn('PartyGameOrchestrator: Данные пользователя недоступны');
                 return;
             }
+
+            state.isSavingProgress = true;
 
             // 1. Обновляем историю партий
             if (!userData.parties) {
@@ -1398,11 +1402,21 @@ const partyGameOrchestrator = (() => {
 
             // 6. Сохраняем данные
             await window.userCards.saveUserData(userData);
+            saveSucceeded = true;
 
             console.log('PartyGameOrchestrator: Прогресс игры сохранён');
 
         } catch (error) {
             console.error('PartyGameOrchestrator: Ошибка сохранения прогресса:', error);
+        } finally {
+            state.isSavingProgress = false;
+
+            if (state.screenApi?.handleEvent) {
+                await state.screenApi.handleEvent({
+                    type: 'progress_saved',
+                    success: saveSucceeded
+                });
+            }
         }
     }
 
@@ -1478,11 +1492,16 @@ const partyGameOrchestrator = (() => {
             currentTurn: state.currentTurn,
             turnNumber: state.turnNumber,
             isGameActive: state.isGameActive,
+            isSavingProgress: state.isSavingProgress,
             playerHand: state.playerHand,
             opponentHand: state.opponentHand,
             fieldState: state.fieldState,
             gameHistory: state.gameHistory
         };
+    }
+
+    function isSavingProgress() {
+        return state.isSavingProgress;
     }
 
     // === Публичный API ===
@@ -1491,6 +1510,7 @@ const partyGameOrchestrator = (() => {
         onPlayerMove,
         onFieldStateUpdate,
         getState,
+        isSavingProgress,
         addSystemMessage
     };
 })();
