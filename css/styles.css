@@ -1291,6 +1291,37 @@ img {
     min-height: 100vh;
 }
 
+/* Во время партии — прокрутка вместо перемасштабирования */
+.party-screen.game-locked {
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.6);
+}
+
+.party-screen.game-locked::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.party-screen.game-locked::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.6);
+    border-radius: 999px;
+}
+
+.party-screen.game-locked::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.85), rgba(255, 78, 80, 0.7));
+    border-radius: 999px;
+    min-height: 30px;
+}
+
+.party-screen.game-locked::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 1), rgba(255, 78, 80, 0.9));
+}
+
+.party-screen.game-locked::-webkit-scrollbar-corner {
+    background: rgba(20, 30, 50, 0.6);
+}
+
 .party-frame {
     width: min(100vw, calc(100vh * 16 / 9));
     height: min(100vh, calc(100vw * 9 / 16));
@@ -1300,6 +1331,11 @@ img {
     padding: clamp(4px, 0.8vw, 10px);
     gap: 0;
     position: relative;
+}
+
+/* Фиксированные размеры фрейма во время партии */
+.party-screen.game-locked .party-frame {
+    flex-shrink: 0;
 }
 
 /* Контейнер панели сообщений — фиксированная высота */
@@ -2005,38 +2041,38 @@ img {
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    .party-main-area {
+    .party-screen:not(.game-locked) .party-main-area {
         flex-direction: column;
     }
 
-    .party-opponent-section {
+    .party-screen:not(.game-locked) .party-opponent-section {
         width: 100%;
         flex-direction: row;
         align-items: center;
         gap: 8px;
     }
 
-    .opponent-profile {
+    .party-screen:not(.game-locked) .opponent-profile {
         flex-direction: row;
     }
 
-    .party-right-column {
+    .party-screen:not(.game-locked) .party-right-column {
         width: 100%;
     }
 
-    .party-player-section {
+    .party-screen:not(.game-locked) .party-player-section {
         width: 100%;
         flex-direction: row;
     }
 
-    .player-hand-container {
+    .party-screen:not(.game-locked) .player-hand-container {
         flex-direction: row;
         flex-wrap: wrap;
         overflow-x: auto;
         overflow-y: hidden;
     }
 
-    .player-hand-card {
+    .party-screen:not(.game-locked) .player-hand-card {
         width: auto;
     }
 }

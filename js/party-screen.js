@@ -410,11 +410,9 @@ function initGameField() {
         }
     });
 
-    // Пересчитываем масштаб при изменении размера окна
-    window.addEventListener('resize', () => {
-        scaleFieldToFit();
-        scalePlayerHandToFit();
-    });
+    // Фиксируем размеры фрейма после начальной подстройки,
+    // чтобы при изменении окна появлялись полосы прокрутки вместо перемасштабирования
+    lockPartyFrameSize();
 
     // Инициализируем SVG-оверлей для предиктивных стрелок
     if (window.PredictionHelper) {
@@ -457,6 +455,69 @@ function scaleFieldToFit() {
     // Устанавливаем wrapper размеры для центрирования
     wrapper.style.width = `${fieldWidth * scale}px`;
     wrapper.style.height = `${fieldHeight * scale}px`;
+}
+
+/**
+ * Фиксация размеров фрейма партии после начальной подстройки.
+ * Устанавливает фиксированные pixel-размеры на .party-frame,
+ * а также замораживает все vw/clamp-зависимые CSS-свойства внутренних элементов,
+ * чтобы при уменьшении окна появлялись полосы прокрутки без смещения компонентов.
+ */
+function lockPartyFrameSize() {
+    const partyFrame = document.querySelector('.party-frame');
+    const partyScreen = document.querySelector('.party-screen');
+    if (!partyFrame || !partyScreen) return;
+
+    // Запоминаем текущие вычисленные размеры фрейма
+    const rect = partyFrame.getBoundingClientRect();
+    partyFrame.style.width = `${rect.width}px`;
+    partyFrame.style.height = `${rect.height}px`;
+
+    // Замораживаем vw/clamp-зависимые свойства внутренних элементов
+    freezeComputedStyles(partyFrame);
+
+    // Включаем режим прокрутки на body
+    partyScreen.classList.add('game-locked');
+}
+
+/**
+ * Замораживает вычисленные значения CSS-свойств, зависящих от viewport (clamp/vw),
+ * устанавливая их как inline-стили с фиксированными pixel-значениями.
+ */
+function freezeComputedStyles(root) {
+    const propsToFreeze = ['width', 'height', 'padding', 'gap', 'font-size'];
+
+    // Селекторы элементов с vw-зависимыми стилями
+    const selectors = [
+        '.party-main-area',
+        '.party-right-column',
+        '.party-opponent-section',
+        '.opponent-profile',
+        '.opponent-avatar-large',
+        '.opponent-name-display',
+        '.opponent-power-display',
+        '.opponent-hand-counter',
+        '.opponent-cards-label',
+        '.opponent-cards-count',
+        '.party-score',
+        '.score-label',
+        '.party-messages-panel',
+        '.message-content',
+        '.party-field-section',
+    ];
+
+    selectors.forEach(selector => {
+        const elements = root.querySelectorAll(selector);
+        elements.forEach(el => {
+            const computed = getComputedStyle(el);
+            propsToFreeze.forEach(prop => {
+                const value = computed.getPropertyValue(prop);
+                if (value && value !== 'normal' && value !== 'none') {
+                    el.style.setProperty(prop, value);
+                }
+            });
+        });
+    });
 }
 
 /**
