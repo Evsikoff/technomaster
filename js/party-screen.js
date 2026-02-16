@@ -1289,12 +1289,32 @@ async function initPartyScreen() {
                 return;
             }
 
-            // Остановка GameplayAPI при нажатии "Вернуться"
-            if (window.userCards?.stopGameplay) {
-                window.userCards.stopGameplay();
+            function performReturn() {
+                // Остановка GameplayAPI при нажатии "Вернуться"
+                if (window.userCards?.stopGameplay) {
+                    window.userCards.stopGameplay();
+                }
+                clearPartyPayload();
+                window.location.href = 'index.html';
             }
-            clearPartyPayload();
-            window.location.href = 'index.html';
+
+            const ysdk = window.userCards?.getCachedYsdk?.();
+            if (!ysdk) {
+                performReturn();
+                return;
+            }
+
+            ysdk.adv.showFullscreenAdv({
+                callbacks: {
+                    onClose: function(wasShown) {
+                        performReturn();
+                    },
+                    onError: function(error) {
+                        console.error('PartyScreen: Ошибка полноэкранной рекламы:', error);
+                        performReturn();
+                    }
+                }
+            });
         });
     }
 
