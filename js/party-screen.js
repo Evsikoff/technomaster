@@ -410,11 +410,9 @@ function initGameField() {
         }
     });
 
-    // Пересчитываем масштаб при изменении размера окна
-    window.addEventListener('resize', () => {
-        scaleFieldToFit();
-        scalePlayerHandToFit();
-    });
+    // Фиксируем размеры фрейма после начальной подстройки,
+    // чтобы при изменении окна появлялись полосы прокрутки вместо перемасштабирования
+    lockPartyFrameSize();
 
     // Инициализируем SVG-оверлей для предиктивных стрелок
     if (window.PredictionHelper) {
@@ -457,6 +455,26 @@ function scaleFieldToFit() {
     // Устанавливаем wrapper размеры для центрирования
     wrapper.style.width = `${fieldWidth * scale}px`;
     wrapper.style.height = `${fieldHeight * scale}px`;
+}
+
+/**
+ * Фиксация размеров фрейма партии после начальной подстройки.
+ * Устанавливает фиксированные pixel-размеры на .party-frame,
+ * чтобы при уменьшении окна/фрейма появлялись полосы прокрутки,
+ * а не пересчитывались размеры элементов.
+ */
+function lockPartyFrameSize() {
+    const partyFrame = document.querySelector('.party-frame');
+    const partyScreen = document.querySelector('.party-screen');
+    if (!partyFrame || !partyScreen) return;
+
+    // Запоминаем текущие вычисленные размеры фрейма
+    const rect = partyFrame.getBoundingClientRect();
+    partyFrame.style.width = `${rect.width}px`;
+    partyFrame.style.height = `${rect.height}px`;
+
+    // Включаем режим прокрутки на body
+    partyScreen.classList.add('game-locked');
 }
 
 /**
