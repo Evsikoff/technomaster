@@ -1363,6 +1363,7 @@ img {
 }
 
 .message-content {
+    width: 100%;
     font-size: clamp(12px, 1.8vw, 18px);
     color: #ffd700;
     text-align: center;
@@ -1370,6 +1371,8 @@ img {
     min-height: 1.2em;
     white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
 }
 
 /* Основная игровая область */
