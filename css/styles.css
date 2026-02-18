@@ -15,6 +15,38 @@ body {
     -webkit-touch-callout: none;
 }
 
+/* ========== ГЛОБАЛЬНЫЕ СТИЛИ ПОЛОС ПРОКРУТКИ ========== */
+/* Стилизует полосы прокрутки браузера в едином тёмно-золотом стиле игры */
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.6) rgba(20, 30, 50, 0.8);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(20, 30, 50, 0.8);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.85), rgba(255, 78, 80, 0.7));
+    border-radius: 999px;
+    min-height: 30px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 1), rgba(255, 78, 80, 0.9));
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(20, 30, 50, 0.8);
+}
+
 .start-screen {
     overflow: hidden;
     margin: 0;
