@@ -36,7 +36,7 @@ function getTransactionType(price) {
 }
 
 /**
- * Возвращает текст кнопки цены
+ * Возвращает HTML-содержимое кнопки цены
  * @param {number} price
  * @returns {string}
  */
@@ -44,7 +44,7 @@ function getPriceLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Бесплатно';
     if (type === TRANSACTION_TYPE.REWARDED) return 'За видео';
-    return price + ' \uD83E\uDE99';
+    return price + ' <img src="public/img/coin.png" class="shop-coin-icon" alt="монет">';
 }
 
 /**
@@ -60,7 +60,7 @@ function getPriceBtnClass(price) {
 }
 
 /**
- * Возвращает текст CTA-кнопки для модального окна
+ * Возвращает HTML-содержимое CTA-кнопки для модального окна
  * @param {number} price
  * @returns {string}
  */
@@ -68,7 +68,7 @@ function getCtaLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Смотреть рекламу';
     if (type === TRANSACTION_TYPE.REWARDED) return 'Смотреть видео';
-    return 'Купить за ' + price + ' \uD83E\uDE99';
+    return 'Купить за ' + price + ' <img src="public/img/coin.png" class="shop-coin-icon" alt="монет">';
 }
 
 // ========================================
@@ -154,7 +154,7 @@ function createBlisterCard(blister) {
     // Кнопка цены
     const priceBtn = document.createElement('button');
     priceBtn.className = 'shop-price-btn ' + getPriceBtnClass(blister.blister_price);
-    priceBtn.textContent = getPriceLabel(blister.blister_price);
+    priceBtn.innerHTML = getPriceLabel(blister.blister_price);
     priceBtn.type = 'button';
     card.appendChild(priceBtn);
 
@@ -226,7 +226,7 @@ function openProductModal(blister) {
     techEl.textContent = techParts.join(' \u2022 ');
 
     // CTA
-    ctaBtn.textContent = getCtaLabel(blister.blister_price);
+    ctaBtn.innerHTML = getCtaLabel(blister.blister_price);
     ctaBtn.className = 'shop-product-cta ' + getPriceBtnClass(blister.blister_price);
     ctaBtn.disabled = false;
 
