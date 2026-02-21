@@ -168,6 +168,136 @@ function updateTabStates() {
 }
 
 /**
+ * Генерирует карты из блистера и добавляет их в userData при обработке зависшей покупки на старте.
+ * @param {object} blister
+ */
+async function generateAndSaveBlisterAtStartup(blister) {
+    await window.cardRenderer.init();
+
+    const deckParams = {
+        deck_size: blister.deck_size,
+        level_min: blister.level_min,
+        level_max: blister.level_max,
+        group_1_weight: blister.group_1_weight,
+        group_2_weight: blister.group_2_weight,
+        group_3_weight: blister.group_3_weight,
+        group_4_weight: blister.group_4_weight
+    };
+
+    const generatedCards = window.cardRenderer.generateDeck(deckParams);
+
+    const userData = await window.userCards.getUserData();
+    if (!userData) return;
+
+    const playerCardholder = userData.cardholders.find(function(ch) { return ch.player === true; });
+    if (!playerCardholder) return;
+
+    let maxCardId = userData.cards.reduce(function(max, card) {
+        return Math.max(max, card.id || 0);
+    }, 0);
+
+    const newCards = generatedCards.map(function(generated) {
+        maxCardId++;
+        const rp = generated.renderParams;
+        return {
+            id: maxCardId,
+            cardholder_id: playerCardholder.id,
+            cardTypeId: rp.cardTypeId,
+            arrowTopLeft: rp.arrowTopLeft,
+            arrowTop: rp.arrowTop,
+            arrowTopRight: rp.arrowTopRight,
+            arrowRight: rp.arrowRight,
+            arrowBottomRight: rp.arrowBottomRight,
+            arrowBottom: rp.arrowBottom,
+            arrowBottomLeft: rp.arrowBottomLeft,
+            arrowLeft: rp.arrowLeft,
+            ownership: 'player',
+            cardLevel: rp.cardLevel,
+            attackLevel: rp.attackLevel,
+            attackType: rp.attackType,
+            mechanicalDefense: rp.mechanicalDefense,
+            electricalDefense: rp.electricalDefense,
+            inHand: false
+        };
+    });
+
+    userData.cards = userData.cards.concat(newCards);
+    await window.userCards.saveUserData(userData);
+
+    console.log('StartScreen: Выдано ' + newCards.length + ' карт из зависшей покупки блистера "' + blister.blister_name + '"');
+}
+
+/**
+ * Проверяет и обрабатывает незавершённые инап-покупки при старте игры.
+ * Вызывается после инициализации SDK, до показа экрана.
+ */
+async function checkPendingPurchasesAtStartup() {
+    const ysdk = window.userCards.getCachedYsdk();
+    if (!ysdk) return;
+
+    let payments;
+    try {
+        payments = await ysdk.getPayments({ signed: false });
+    } catch (err) {
+        console.warn('StartScreen: Не удалось инициализировать покупки для проверки зависших:', err);
+        return;
+    }
+
+    let purchases;
+    try {
+        purchases = await payments.getPurchases();
+    } catch (err) {
+        console.warn('StartScreen: Ошибка получения зависших покупок:', err);
+        return;
+    }
+
+    if (!purchases || purchases.length === 0) return;
+
+    // Загружаем блистеры из БД
+    let blisters = [];
+    try {
+        const SQL = await SqlLoader.init();
+        const response = await fetch(OPPONENTS_DB_PATH);
+        const buffer = await response.arrayBuffer();
+        const db = new SQL.Database(new Uint8Array(buffer));
+
+        const result = db.exec(
+            "SELECT * FROM deck_rules WHERE blister_name IS NOT NULL AND blister_name != '' ORDER BY blister_price ASC"
+        );
+        if (result.length > 0) {
+            const columns = result[0].columns;
+            blisters = result[0].values.map(function(row) {
+                const obj = {};
+                columns.forEach(function(col, i) { obj[col] = row[i]; });
+                return obj;
+            });
+        }
+    } catch (err) {
+        console.error('StartScreen: Ошибка загрузки блистеров при проверке покупок:', err);
+        return;
+    }
+
+    for (let i = 0; i < purchases.length; i++) {
+        const p = purchases[i];
+        if (!p.productID || !p.productID.startsWith('blister_')) continue;
+
+        const deckRuleId = parseInt(p.productID.replace('blister_', ''), 10);
+        if (isNaN(deckRuleId)) continue;
+
+        const blister = blisters.find(function(b) { return b.id === deckRuleId; });
+        if (!blister) continue;
+
+        try {
+            await payments.consumePurchase(p.purchaseToken);
+            await generateAndSaveBlisterAtStartup(blister);
+            console.log('StartScreen: Обработана зависшая покупка:', p.productID);
+        } catch (err) {
+            console.error('StartScreen: Ошибка обработки зависшей покупки:', p.productID, err);
+        }
+    }
+}
+
+/**
  * Инициализирует стартовый экран.
  */
 async function initStartScreen() {
@@ -232,6 +362,9 @@ async function initStartScreen() {
         if (window.userCards?.whenReady) {
             await window.userCards.whenReady();
         }
+
+        // Проверяем и обрабатываем незавершённые инап-покупки
+        await checkPendingPurchasesAtStartup();
 
         let [cardCount, maxCoolness] = await Promise.all([
             window.userCards?.getUserCardCount?.() ?? Promise.resolve(0),

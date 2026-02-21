@@ -2227,7 +2227,7 @@ img {
     gap: 4px;
     cursor: pointer;
     transition: transform 0.2s ease;
-    width: clamp(100px, 10vw, 150px);
+    width: clamp(115px, 11.5vw, 173px);
 }
 
 .deck-collection-slot:hover {
@@ -2236,15 +2236,15 @@ img {
 
 .deck-slot-card-wrap {
     position: relative;
-    width: clamp(100px, 10vw, 150px);
-    height: clamp(140px, 14vw, 210px);
+    width: clamp(115px, 11.5vw, 173px);
+    height: clamp(161px, 16.1vw, 242px);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .deck-slot-card-wrap .game-card {
-    transform: scale(0.55);
+    transform: scale(0.6325);
     transform-origin: center;
     pointer-events: none;
 }
@@ -2605,16 +2605,16 @@ img {
     }
 
     .deck-collection-slot {
-        width: 90px;
+        width: 104px;
     }
 
     .deck-slot-card-wrap {
-        width: 90px;
-        height: 126px;
+        width: 104px;
+        height: 145px;
     }
 
     .deck-slot-card-wrap .game-card {
-        transform: scale(0.42);
+        transform: scale(0.48);
     }
 
     .deck-instance-card {
@@ -2782,6 +2782,15 @@ img {
     background: linear-gradient(120deg, #f9d423, #ff4e50);
     color: #0f1b2d;
     box-shadow: 0 4px 12px rgba(249, 212, 35, 0.3);
+}
+
+.shop-coin-icon {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: middle;
+    object-fit: contain;
+    margin-left: 2px;
 }
 
 /* Модальное окно товара */
