@@ -168,6 +168,82 @@ function updateTabStates() {
 }
 
 /**
+ * Показывает оверлей полученных карт на стартовом экране.
+ * Использует те же CSS-классы, что и shop-screen.js.
+ * @param {Array} cards
+ * @param {string} blisterName
+ */
+function showReceivedCardsOnStart(cards, blisterName) {
+    var overlay = document.createElement('div');
+    overlay.className = 'shop-received-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.zIndex = '10001';
+
+    var panel = document.createElement('div');
+    panel.className = 'shop-received-panel';
+
+    var title = document.createElement('h2');
+    title.className = 'shop-received-title';
+    title.textContent = blisterName;
+    panel.appendChild(title);
+
+    var subtitle = document.createElement('p');
+    subtitle.className = 'shop-received-subtitle';
+    subtitle.textContent = 'Получено карт: ' + cards.length;
+    panel.appendChild(subtitle);
+
+    var grid = document.createElement('div');
+    grid.className = 'shop-received-grid';
+
+    cards.forEach(function(card) {
+        var wrap = document.createElement('div');
+        wrap.className = 'shop-received-card';
+
+        var cardElement = window.cardRenderer.renderCard({
+            cardTypeId: card.cardTypeId,
+            arrowTopLeft: card.arrowTopLeft,
+            arrowTop: card.arrowTop,
+            arrowTopRight: card.arrowTopRight,
+            arrowRight: card.arrowRight,
+            arrowBottomRight: card.arrowBottomRight,
+            arrowBottom: card.arrowBottom,
+            arrowBottomLeft: card.arrowBottomLeft,
+            arrowLeft: card.arrowLeft,
+            ownership: 'player',
+            cardLevel: String(card.cardLevel),
+            attackLevel: String(card.attackLevel),
+            attackType: card.attackType,
+            mechanicalDefense: String(card.mechanicalDefense),
+            electricalDefense: String(card.electricalDefense)
+        });
+
+        wrap.appendChild(cardElement);
+        grid.appendChild(wrap);
+    });
+
+    panel.appendChild(grid);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'shop-received-close-btn';
+    closeBtn.textContent = 'Отлично!';
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', function() {
+        overlay.remove();
+    });
+    panel.appendChild(closeBtn);
+
+    overlay.appendChild(panel);
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+
+    document.body.appendChild(overlay);
+}
+
+/**
  * Генерирует карты из блистера и добавляет их в userData при обработке зависшей покупки на старте.
  * @param {object} blister
  */
@@ -225,6 +301,8 @@ async function generateAndSaveBlisterAtStartup(blister) {
     await window.userCards.saveUserData(userData);
 
     console.log('StartScreen: Выдано ' + newCards.length + ' карт из зависшей покупки блистера "' + blister.blister_name + '"');
+
+    showReceivedCardsOnStart(newCards, blister.blister_name);
 }
 
 /**
