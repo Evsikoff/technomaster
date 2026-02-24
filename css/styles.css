@@ -2784,13 +2784,10 @@ img {
     box-shadow: 0 4px 12px rgba(249, 212, 35, 0.3);
 }
 
-.shop-coin-icon {
+.shop-currency-symbol {
     display: inline-block;
-    width: 1.1em;
-    height: 1.1em;
-    vertical-align: middle;
-    object-fit: contain;
-    margin-left: 2px;
+    margin-left: 4px;
+    font-weight: bold;
 }
 
 /* Модальное окно товара */

@@ -44,7 +44,7 @@ function getPriceLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Бесплатно';
     if (type === TRANSACTION_TYPE.REWARDED) return 'За видео';
-    return price + ' <img src="public/img/coin.png" class="shop-coin-icon" alt="монет">';
+    return price + ' <span class="shop-currency-symbol" aria-label="рублей">₽</span>';
 }
 
 /**
@@ -68,7 +68,7 @@ function getCtaLabel(price) {
     const type = getTransactionType(price);
     if (type === TRANSACTION_TYPE.INTERSTITIAL) return 'Смотреть рекламу';
     if (type === TRANSACTION_TYPE.REWARDED) return 'Смотреть видео';
-    return 'Купить за ' + price + ' <img src="public/img/coin.png" class="shop-coin-icon" alt="монет">';
+    return 'Купить за ' + price + ' <span class="shop-currency-symbol" aria-label="рублей">₽</span>';
 }
 
 // ========================================
