@@ -107,7 +107,8 @@ async function checkYandexGamesEnvironment() {
         console.log('Yandex Games: Попытка инициализации SDK...');
 
         // Устанавливаем таймаут на инициализацию (5 секунд)
-        const initPromise = window.YaGames.init();
+        // Инициализация с параметром signed: false (по умолчанию)
+        const initPromise = window.YaGames.init({ signed: false });
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('SDK init timeout')), 5000);
         });
