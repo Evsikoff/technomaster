@@ -2799,8 +2799,8 @@ img {
     position: absolute;
     top: -6px;
     right: -6px;
-    width: clamp(32px, 3.5vw, 48px);
-    height: clamp(32px, 3.5vw, 48px);
+    width: clamp(38px, 4.2vw, 58px);
+    height: clamp(38px, 4.2vw, 58px);
     background: linear-gradient(135deg, #ff6b00, #ff0000);
     color: #fff;
     font-size: clamp(9px, 1vw, 13px);
@@ -2815,8 +2815,8 @@ img {
 }
 
 .shop-discount-badge--modal {
-    width: clamp(44px, 5vw, 64px);
-    height: clamp(44px, 5vw, 64px);
+    width: clamp(53px, 6vw, 77px);
+    height: clamp(53px, 6vw, 77px);
     font-size: clamp(11px, 1.3vw, 16px);
     top: -10px;
     right: -10px;
